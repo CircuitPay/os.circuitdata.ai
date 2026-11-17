@@ -5,7 +5,7 @@ import { ClerkBridgeContext } from './clerkBridge'
 
 /** Exposes Clerk's session to the rest of the app through the bridge. Lives inside ClerkProvider. */
 const ClerkBridgeProvider = ({ children }: { children: ReactNode }) => {
-  const { isLoaded, isSignedIn, userId, orgId, getToken, signOut } = useAuth()
+  const { isLoaded, isSignedIn, userId, orgId, orgRole, getToken, signOut } = useAuth()
   const clerk = useClerk()
   return (
     <ClerkBridgeContext.Provider value={{
@@ -17,6 +17,9 @@ const ClerkBridgeProvider = ({ children }: { children: ReactNode }) => {
       signOut: () => signOut(),
       switchOrganization: (organizationId) => clerk.setActive({ organization: organizationId }),
       openUserProfile: () => clerk.openUserProfile(),
+      isOrganizationAdmin: Boolean(orgId) && orgRole === 'org:admin',
+      // Members is the profile's first page, so the panel opens where administrators invite.
+      openOrganizationMembers: () => clerk.openOrganizationProfile(),
     }}>
       {children}
     </ClerkBridgeContext.Provider>

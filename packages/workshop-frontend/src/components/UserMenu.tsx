@@ -47,6 +47,11 @@ export default function UserMenu() {
             Manage account
           </DropdownMenu.Item>
         )}
+        {clerk?.isOrganizationAdmin && (
+          <DropdownMenu.Item onClick={clerk.openOrganizationMembers} className={MENU_ITEM}>
+            Invite members
+          </DropdownMenu.Item>
+        )}
         <DropdownMenu.Item
           onClick={() => navigate({ to: '/providers' })}
           className={MENU_ITEM}

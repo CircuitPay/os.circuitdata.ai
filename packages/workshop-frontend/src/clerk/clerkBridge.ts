@@ -17,6 +17,13 @@ export type ClerkBridge = {
   /** Makes `organizationId` the active organization, or the personal workspace for null. */
   switchOrganization: (organizationId: string | null) => Promise<void>
   openUserProfile: () => void
+  /**
+   * Whether the user administers the active organization (role `org:admin`); false in the personal
+   * workspace. Only decides what to offer: Clerk enforces who may invite.
+   */
+  isOrganizationAdmin: boolean
+  /** Opens the active organization's members panel, where administrators invite and revoke. */
+  openOrganizationMembers: () => void
 }
 
 export const ClerkBridgeContext = createContext<ClerkBridge | null>(null)

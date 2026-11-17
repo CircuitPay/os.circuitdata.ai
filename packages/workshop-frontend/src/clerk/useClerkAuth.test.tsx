@@ -32,6 +32,8 @@ function bridge(overrides: Partial<ClerkBridge> = {}): ClerkBridge {
     signOut: vi.fn<ClerkBridge['signOut']>(async () => {}),
     switchOrganization: vi.fn<ClerkBridge['switchOrganization']>(async () => {}),
     openUserProfile: vi.fn<ClerkBridge['openUserProfile']>(),
+    isOrganizationAdmin: false,
+    openOrganizationMembers: vi.fn<ClerkBridge['openOrganizationMembers']>(),
     ...overrides,
   }
 }

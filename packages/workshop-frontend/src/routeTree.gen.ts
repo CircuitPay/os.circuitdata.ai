@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BlueprintsRouteImport } from './routes/blueprints'
 import { Route as ContextRouteImport } from './routes/context'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as FilesRouteImport } from './routes/files'
 import { Route as GatekeepersRouteImport } from './routes/gatekeepers'
 import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as OutputsRouteImport } from './routes/outputs'
@@ -50,6 +51,11 @@ const ContextRoute = ContextRouteImport.update({
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilesRoute = FilesRouteImport.update({
+  id: '/files',
+  path: '/files',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GatekeepersRoute = GatekeepersRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/blueprints': typeof BlueprintsRoute
   '/context': typeof ContextRoute
   '/explore': typeof ExploreRoute
+  '/files': typeof FilesRoute
   '/gatekeepers': typeof GatekeepersRoute
   '/organization': typeof OrganizationRoute
   '/outputs': typeof OutputsRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/blueprints': typeof BlueprintsRoute
   '/context': typeof ContextRoute
   '/explore': typeof ExploreRoute
+  '/files': typeof FilesRoute
   '/gatekeepers': typeof GatekeepersRoute
   '/organization': typeof OrganizationRoute
   '/outputs': typeof OutputsRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/blueprints': typeof BlueprintsRoute
   '/context': typeof ContextRoute
   '/explore': typeof ExploreRoute
+  '/files': typeof FilesRoute
   '/gatekeepers': typeof GatekeepersRoute
   '/organization': typeof OrganizationRoute
   '/outputs': typeof OutputsRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/blueprints'
     | '/context'
     | '/explore'
+    | '/files'
     | '/gatekeepers'
     | '/organization'
     | '/outputs'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/blueprints'
     | '/context'
     | '/explore'
+    | '/files'
     | '/gatekeepers'
     | '/organization'
     | '/outputs'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/blueprints'
     | '/context'
     | '/explore'
+    | '/files'
     | '/gatekeepers'
     | '/organization'
     | '/outputs'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   BlueprintsRoute: typeof BlueprintsRoute
   ContextRoute: typeof ContextRoute
   ExploreRoute: typeof ExploreRoute
+  FilesRoute: typeof FilesRoute
   GatekeepersRoute: typeof GatekeepersRoute
   OrganizationRoute: typeof OrganizationRoute
   OutputsRoute: typeof OutputsRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/files': {
+      id: '/files'
+      path: '/files'
+      fullPath: '/files'
+      preLoaderRoute: typeof FilesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gatekeepers': {
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlueprintsRoute: BlueprintsRoute,
   ContextRoute: ContextRoute,
   ExploreRoute: ExploreRoute,
+  FilesRoute: FilesRoute,
   GatekeepersRoute: GatekeepersRoute,
   OrganizationRoute: OrganizationRoute,
   OutputsRoute: OutputsRoute,

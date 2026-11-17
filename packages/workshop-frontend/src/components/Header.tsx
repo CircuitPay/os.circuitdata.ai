@@ -3,6 +3,7 @@ import { Hexagon, List, X } from '@phosphor-icons/react'
 import { useOptionalAuthenticatedApi } from '../AuthContext'
 import { useGatekeeperApps } from '../useGatekeeperApps'
 import { useSiteName } from '../ServerConfigContext'
+import { useClerkBridge } from '../clerk/clerkBridge'
 import { useState, useEffect, useRef } from 'react'
 import UserMenu from './UserMenu'
 import WorkspaceSwitcher from '../clerk/WorkspaceSwitcher'
@@ -13,6 +14,9 @@ export default function Header() {
   const auth = useOptionalAuthenticatedApi()
   const gatekeeperApps = useGatekeeperApps()
   const siteName = useSiteName()
+  const clerkBridge = useClerkBridge()
+  // Files belong to a workspace, so they are offered only where sign-in has workspaces (Clerk).
+  const filesOffered = auth !== null && clerkBridge !== null
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const headerRef = useRef<HTMLElement>(null)
@@ -80,6 +84,15 @@ export default function Header() {
             >
               Explore
             </Link>
+            {filesOffered && (
+              <Link
+                to="/files"
+                className={navLinkClass}
+                activeProps={{ className: navLinkActiveClass }}
+              >
+                Files
+              </Link>
+            )}
             {gatekeeperApps.map((app) => (
               <Link
                 key={app.id}
@@ -146,6 +159,16 @@ export default function Header() {
             >
               Explore
             </Link>
+            {filesOffered && (
+              <Link
+                to="/files"
+                onClick={closeMobileMenu}
+                className={navLinkClass}
+                activeProps={{ className: navLinkActiveClass }}
+              >
+                Files
+              </Link>
+            )}
             {gatekeeperApps.map((app) => (
               <Link
                 key={app.id}
@@ -174,6 +197,14 @@ export default function Header() {
                 >
                   Profile
                 </Link>
+                {clerkBridge?.isOrganizationAdmin && (
+                  <button
+                    onClick={() => { closeMobileMenu(); clerkBridge.openOrganizationMembers() }}
+                    className={`text-left ${navLinkClass} hover:bg-kumo-tint`}
+                  >
+                    Invite members
+                  </button>
+                )}
                 <Link
                   to="/providers"
                   onClick={closeMobileMenu}
