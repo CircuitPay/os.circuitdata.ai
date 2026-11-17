@@ -1243,6 +1243,11 @@
           "type": "r2_bucket"
         },
         {
+          "bucket_name": "$R2_TENANT_FILES_NAME",
+          "name": "TENANT_FILES",
+          "type": "r2_bucket"
+        },
+        {
           "name": "BROWSER",
           "type": "browser"
         },

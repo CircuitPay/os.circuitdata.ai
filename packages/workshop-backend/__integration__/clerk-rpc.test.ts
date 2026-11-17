@@ -53,7 +53,8 @@ describe("Clerk sign-in", () => {
     expect(err.message).toMatch(/disabled/i);
     const token = await failure(publicApi.authenticate("x:y"));
     expect(getAuthErrorCode(token)).toBe(AUTH_ERROR_CODES.sessionNotPermitted);
-    expect((await publicApi.getServerConfig()).clerk).toEqual({ publishableKey: "pk_test_abc" });
+    expect((await publicApi.getServerConfig()).clerk)
+        .toEqual({ publishableKey: "pk_test_abc", singleOrganization: false });
   });
 
   it("refuses Clerk sessions on a deployment without Clerk", async () => {
@@ -127,6 +128,7 @@ describe("single-tenant deployment", () => {
     using publicApi = await connect({ TENANT_MODE: "single", TENANT_ID: pinned });
     using member = await signIn(publicApi, { sub: fresh("user"), org: pinned });
     expect((await member.getWorkspaceInfo()).tenantId).toBe(pinned);
+    expect((await publicApi.getServerConfig()).clerk?.singleOrganization).toBe(true);
 
     const refused = AUTH_ERROR_CODES.sessionNotPermitted;
     const sub = fresh("user");

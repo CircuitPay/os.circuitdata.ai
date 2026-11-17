@@ -87,8 +87,8 @@ export default defineConfig({
         bindings: { PUBLIC_BASE_URL: 'https://workshop.example/' },
         // The overseer loads gadget code through this, so a test can run a real gadget facet.
         workerLoaders: { LOADER: {} },
-        // Where a blueprint's content is published to and read back from.
-        r2Buckets: ['BLUEPRINT_CONTENT'],
+        // Where a blueprint's content is published to and read back from, and where tenant files go.
+        r2Buckets: ['BLUEPRINT_CONTENT', 'TENANT_FILES'],
         durableObjects: {
           TEST_OVERSEER: { className: 'OverseerDurableObject', useSQLite: true },
           TEST_USER: { className: 'UserDurableObject', useSQLite: true },

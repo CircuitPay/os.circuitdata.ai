@@ -38,6 +38,17 @@ unless configured, and a deployment without it behaves exactly as before. Design
 While Clerk is enabled, password login and signup, `authenticate(token)`, gatekeeper sign-in and the
 native-app device handoff are refused. Do not combine Clerk with `CF_ACCESS_AUD`.
 
+## Workspaces and invitations
+
+- The header's workspace switcher (Clerk `OrganizationSwitcher`) lists the personal workspace and
+  the user's organizations, and creates organizations (which then become active). On a dedicated
+  deployment (`TENANT_MODE=single`, sent to the browser as `ServerConfig.clerk.singleOrganization`)
+  it offers neither the personal workspace nor creation; the backend refuses those tenants anyway.
+- **Invite members** (profile menu, and the mobile menu) opens Clerk's `OrganizationProfile` on its
+  Members page: invite by email with a role, see pending invitations, revoke them. It is offered only
+  while an organization is active and the user's role in it is `org:admin`; Clerk enforces who may
+  actually invite.
+
 ## Configuration
 
 All environment-driven; none of it is in `AdminConfig`, so an admin session cannot change it.
@@ -86,6 +97,10 @@ An organization's administrators can set its display name, a PNG logo and an acc
 - Administrator means the verified token's organization role (`admin`, or `org:admin` in session token v1), refreshed at every `renewSession()` and checked again on each `TenantAdminApi` call -- a capability held after demotion refuses. It is not `ADMINS` and grants nothing else.
 - Members read it with `AuthenticatedApi.getBranding()`; the logo arrives as an inline data URL, since an image request carries no sign-in.
 - Operators (the `ADMINS` list) have an **Organizations** tab in the admin panel: turn per-organization branding off (everyone sees the deployment's; saved branding is kept) and clear one organization's. Changes are logged as `branding.changed` with ids only.
+
+## Files
+
+Each workspace has a shared file area (**Files** in the navigation), stored in the `TENANT_FILES` R2 bucket; see [tenant files](tenant-files.md).
 
 ## Deploying
 

@@ -37,6 +37,10 @@
     {
       "binding": "BLUEPRINT_CONTENT",
       "bucket_name": "gadgets-blueprint-content"
+    },
+    {
+      "binding": "TENANT_FILES",
+      "bucket_name": "gadgets-tenant-files"
     }
   ],
   "worker_loaders": [

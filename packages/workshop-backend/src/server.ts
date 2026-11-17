@@ -37,8 +37,9 @@ import { isClerkEnabled } from "./auth/config.js";
 import { verifyClerkSessionToken, type ClerkClaims } from "./auth/clerk.js";
 import { handleClerkWebhook } from "./auth/clerk-webhook.js";
 import { effectiveBranding, TenantAdminApiImpl } from "./tenant-branding.js";
+import { TenantFilesApiImpl, filesLimits } from "./tenant-files.js";
 import { isOrganizationAdmin, makeUserKey, personalTenantId, resolveTenant, tenantOfProfileId, userIdOfProfileId, type TenantContext } from "./tenant.js";
-import type { WorkspaceInfo } from "@gadgets/workshop-shared/api";
+import type { TenantFilesApi, WorkspaceInfo } from "@gadgets/workshop-shared/api";
 import {
   blueprintScreenshotFields, isBlueprintIsolation, isBundledBlueprint, readBlueprintFor,
   type BlueprintCaller,
@@ -844,6 +845,19 @@ class AuthenticatedApiImpl extends RpcTarget implements AuthenticatedApi {
     return new TenantAdminApiImpl(
         this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId),
         tenant.tenantId, tenant.userId, assertAllowed);
+  }
+
+  async getFilesApi(): Promise<RpcStub<TenantFilesApi> | null> {
+    const tenant = this.clerkSession;
+    // A tenant is what scopes files, so a connection without one has none; and a deployment that
+    // has not been given the bucket cannot offer them.
+    if (!tenant || !this.env.TENANT_FILES) return null;
+    this.#assertSessionLive();
+    // @ts-expect-error Cap'n Web RPC stubs and native RPC targets are compatible but the type
+    //     system doesn't know this.
+    return new TenantFilesApiImpl(
+        this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId),
+        this.env.TENANT_FILES, tenant.tenantId, () => this.#clerkTenant(), filesLimits(this.env));
   }
 
   async getAdminApi(): Promise<RpcStub<AdminApi> | null> {

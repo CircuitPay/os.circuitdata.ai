@@ -30,6 +30,10 @@ declare global {
       // Blueprint storage bindings.
       BLUEPRINTS: KVNamespace;             // Workers KV for blueprint metadata lookup
       BLUEPRINT_CONTENT: R2Bucket;         // R2 bucket for blueprint code snapshots
+      TENANT_FILES: R2Bucket;              // R2 bucket for per-tenant user files
+      // Optional operator overrides of the tenant file limits, as positive integers of bytes.
+      TENANT_FILES_MAX_FILE_BYTES?: string;
+      TENANT_FILES_QUOTA_BYTES?: string;
 
       // User avatar storage.
       AVATARS: KVNamespace;                // Workers KV for user avatar images

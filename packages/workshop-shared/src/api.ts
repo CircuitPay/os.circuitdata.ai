@@ -960,6 +960,15 @@ export interface AuthenticatedApi extends RpcTarget {
    */
   getTenantAdminApi(): Promise<RpcStub<TenantAdminApi> | null>;
 
+  // --- Tenant files ---
+
+  /**
+   * A capability for the active tenant's files, or null when the session is not a Clerk session or
+   * the deployment has no file storage configured. A personal workspace has its own file area. Dispose
+   * it when done.
+   */
+  getFilesApi(): Promise<RpcStub<TenantFilesApi> | null>;
+
   // --- Blueprints ---
 
   /**
@@ -1562,10 +1571,137 @@ export interface TenantAdminApi extends RpcTarget {
   setLogo(png: Uint8Array | null): Promise<void>;
 }
 
+/** One file in a tenant's file area, as its members see it. */
+export type TenantFile = {
+  /** Opaque handle for `TenantFilesApi.downloadFile()` and `removeFile()`. */
+  id: string;
+
+  /** The display name. Unique among the tenant's files. */
+  name: string;
+
+  /** Size in bytes. */
+  size: number;
+
+  /** The sanitized `type/subtype` the file was uploaded as, or `application/octet-stream`. */
+  contentType: string;
+
+  /** Whether the browser may open the file inline (an image or a PDF); every other file downloads. */
+  previewable: boolean;
+
+  /** Who added the file. `name` is null when it was not known at upload; it outlives membership. */
+  uploader: { name: string | null; isMe: boolean };
+
+  /** When the upload completed. */
+  uploadedAt: Date;
+
+  /** Whether the caller may remove it now: they uploaded it, or they administer the organization. */
+  mayRemove: boolean;
+};
+
+/** A tenant's storage in use, and the limits an upload is held to. */
+export type TenantFilesUsage = {
+  /** Bytes held by the tenant's files, including uploads in progress and removals not yet finished. */
+  usedBytes: number;
+
+  /** The most bytes the tenant may hold. */
+  quotaBytes: number;
+
+  /** How many files are listed. */
+  fileCount: number;
+
+  /** The largest single file accepted. */
+  maxFileBytes: number;
+};
+
+/** What an upload does when the tenant already has a file with the same name. */
+export type FileNameConflict =
+    /** Refuse the upload. */
+    | "reject"
+    /** Replace the existing file. Allowed only to someone who may remove it. */
+    | "replace"
+    /** Keep both: the new file is named `name (2).ext`, or the first free number. */
+    | "keep-both";
+
+/** The details of an upload; the bytes travel in the stream passed beside it. */
+export type FileUploadRequest = {
+  /** The display name: 1 to 255 characters, no control characters, no `/` or `\`. */
+  name: string;
+
+  /** The exact length of the stream in bytes; a stream of any other length is refused. */
+  size: number;
+
+  /** The type the browser reports; sanitized, and refused if it is on the deny-list. */
+  contentType: string;
+
+  /** What to do when `name` is taken. */
+  onConflict: FileNameConflict;
+};
+
+/** A file's bytes with what is needed to save or show them. */
+export type FileDownload = {
+  /** The display name, for the saved file. */
+  name: string;
+
+  /** Size in bytes. */
+  size: number;
+
+  /** The stored type for a previewable file, `application/octet-stream` for every other. */
+  contentType: string;
+
+  /** The file's bytes. */
+  stream: ReadableStream<Uint8Array>;
+};
+
+/**
+ * Manages the files of the tenant a connection acts in. Minted by `AuthenticatedApi.getFilesApi()`.
+ * It reaches only that tenant's files: no method takes a tenant or a storage key, and an id from
+ * another tenant is answered exactly like an id that does not exist. Every method re-checks that the
+ * session is live and reads the caller's current role, so a member removed from the organization is
+ * refused on their next call.
+ */
+export interface TenantFilesApi extends RpcTarget {
+  /** The tenant's storage in use and its limits. */
+  getUsage(): Promise<TenantFilesUsage>;
+
+  /**
+   * One page of the tenant's files, newest first. `query` keeps names containing it, ignoring case;
+   * `after` is the `next` of the previous page; `limit` is 1 to 100 (default 50). `next` is absent on
+   * the last page.
+   */
+  listFiles(options: { query?: string; after?: string; limit?: number }):
+      Promise<{ files: TenantFile[]; next?: string }>;
+
+  /** Which of `names` (at most 100) are already held by a listed file, so the caller can ask what to do. */
+  findExisting(names: string[]): Promise<string[]>;
+
+  /**
+   * Stores a file and returns it with its final name. Nothing is listed unless the whole stream
+   * arrived. Refused, with a message saying why and nothing stored, for an invalid or deny-listed name
+   * or type, a size over `maxFileBytes`, no room in the quota, a stream whose length is not
+   * `request.size`, a taken name under "reject", and "replace" of a file the caller may not remove.
+   */
+  uploadFile(request: FileUploadRequest, body: ReadableStream<Uint8Array>): Promise<TenantFile>;
+
+  /** The bytes of a listed file. Throws "File not found." for any other id. */
+  downloadFile(id: string): Promise<FileDownload>;
+
+  /**
+   * Removes a file at once and for every member. Throws "File not found." for an unknown id, and
+   * refuses anyone who neither uploaded the file nor administers the organization.
+   */
+  removeFile(id: string): Promise<void>;
+}
+
 /** What the browser needs to start Clerk. Public by design. */
 export type ClerkClientConfig = {
   /** The Clerk publishable key (`pk_...`). */
   publishableKey: string;
+
+  /**
+   * True on a deployment dedicated to one organization (`TENANT_MODE=single`), which admits no one
+   * else: the client then offers neither the personal workspace nor creating organizations.
+   */
+  singleOrganization: boolean;
 };
 
 /** The tenant a connection acts in, as returned by `AuthenticatedApi.getWorkspaceInfo()`. */

@@ -9,6 +9,7 @@ import { isCloudflareLimitsEnabled } from "./ai-gateway-billing/config.js";
 import { getAuthVendorBinding } from "./auth/auth-vendors.js";
 import { readAdminConfig } from "./admin-config.js";
 import { siteLogoImage } from "./site-logo.js";
+import { isSingleTenant } from "./tenant.js";
 
 const logger = createWorkshopLogger("workshop.deployment.config");
 
@@ -60,7 +61,7 @@ export async function getServerConfig(env: Cloudflare.Env): Promise<ServerConfig
     bannerColor: config.banner.color,
     accentColor: config.accentColor,
     clerk: isClerkEnabled(env) && env.CLERK_PUBLISHABLE_KEY
-        ? { publishableKey: env.CLERK_PUBLISHABLE_KEY }
+        ? { publishableKey: env.CLERK_PUBLISHABLE_KEY, singleOrganization: isSingleTenant(env) }
         : undefined,
   };
 }

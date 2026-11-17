@@ -42,6 +42,9 @@ export default defineGadgetsWorker({
     BLUEPRINTS: bindings.kv(),
     AVATARS: bindings.kv(),
     BLUEPRINT_CONTENT: bindings.r2({ name: "gadgets-blueprint-content" }),
+    // User files, one prefix per tenant (see src/tenant-files.ts). Kept apart from the blueprint
+    // bucket: user-chosen content must not share a namespace with code the platform depends on.
+    TENANT_FILES: bindings.r2({ name: "gadgets-tenant-files" }),
     LOADER: bindings.workerLoader(),
   },
 
