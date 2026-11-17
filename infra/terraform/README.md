@@ -56,7 +56,7 @@ Only the router is public. Everything else is reachable through service bindings
 
 ### Why a script uploads most Workers
 
-The provider's `cloudflare_workers_script` (v5.28) has no `worker_loader` binding (the Gadget
+The provider's `cloudflare_workers_script` (v5.29) has no `worker_loader` binding (the Gadget
 sandbox cannot run without it), no service-binding `props` (the backend passes the context
 gatekeeper's sharing domain that way), and forwards Durable Object migrations as written instead of
 computing what a script still needs. The uploader does what Wrangler does for exactly those things
