@@ -1,11 +1,11 @@
 import type { RpcStub } from 'capnweb'
 import type { TenantFile, TenantFilesApi } from '@gadgets/workshop-shared/api'
-import { triggerBlobDownload } from '../fileTransfers'
+import { saveBlobToFile } from '../fileTransfers'
 
 /** Saves the file to the user's device under its own name. */
 export const downloadFile = async (api: RpcStub<TenantFilesApi>, file: TenantFile): Promise<void> => {
   const { name, contentType, stream } = await api.downloadFile(file.id)
-  triggerBlobDownload(await new Response(stream, { headers: { 'Content-Type': contentType } }).blob(), name)
+  saveBlobToFile(await new Response(stream, { headers: { 'Content-Type': contentType } }).blob(), name)
 }
 
 /**
@@ -19,7 +19,7 @@ export const openFile = async (api: RpcStub<TenantFilesApi>, file: TenantFile): 
   try {
     const { name, contentType, stream } = await api.downloadFile(file.id)
     const blob = await new Response(stream, { headers: { 'Content-Type': contentType } }).blob()
-    if (!tab) return triggerBlobDownload(blob, name)
+    if (!tab) return saveBlobToFile(blob, name)
     const url = URL.createObjectURL(blob)
     tab.location.href = url
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000)

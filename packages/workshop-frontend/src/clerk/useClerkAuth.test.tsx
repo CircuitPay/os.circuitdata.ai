@@ -45,6 +45,7 @@ type FakeSession = {
   renewSession: () => Promise<void>
   getWorkspaceInfo: () => Promise<WorkspaceInfo>
   rememberWorkspace: () => Promise<void>
+  onRpcBroken: (callback: () => void) => void
   [Symbol.dispose]: () => void
 }
 
@@ -54,6 +55,7 @@ function session(whoami: () => Promise<unknown> = async () => ({ type: 'user' })
     renewSession: async () => {},
     getWorkspaceInfo: async () => personal,
     rememberWorkspace: async () => {},
+    onRpcBroken: () => {},
     [Symbol.dispose]: vi.fn<() => void>(),
   }
 }
