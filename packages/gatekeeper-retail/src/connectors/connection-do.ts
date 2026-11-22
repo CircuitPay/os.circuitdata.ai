@@ -695,9 +695,12 @@ export class RetailConnection extends DurableObject<Cloudflare.Env> {
   /** Keeps the page raw in R2, then ingests it as one batch. */
   async #ingest(meta: Meta, runId: number, page: FetchedPage): Promise<void> {
     const dataset = this.#dataset(meta);
-    const bytes = new TextEncoder().encode(page.raw);
-    await dataset.putRawObject(meta.datasetId, { sourceId: meta.sourceId!, runId, kind: "provider_page" },
-      new Blob([bytes]).stream(), bytes.byteLength);
+    // A page that only navigates (e.g. seeking to the oldest Stripe events page) carries no records.
+    if (page.raw) {
+      const bytes = new TextEncoder().encode(page.raw);
+      await dataset.putRawObject(meta.datasetId, { sourceId: meta.sourceId!, runId, kind: "provider_page" },
+        new Blob([bytes]).stream(), bytes.byteLength);
+    }
     if (hasRecords(page.batch)) await dataset.ingestBatch(meta.datasetId, runId, page.batch);
   }
 

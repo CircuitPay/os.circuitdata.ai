@@ -163,6 +163,8 @@ export function mapInvoice(invoice: StripeObject, locationRef: string): MappedSt
       discountAmount: 0,
       taxAmount: int(invoice.tax) || arrayOf(invoice, "total_taxes").reduce((sum, tax) => sum + int(tax.amount), 0),
       totalAmount: int(invoice.total),
+      // stripe.ts reads every page of `lines` before mapping.
+      linesComplete: true,
     },
     lineItems,
   };
@@ -190,6 +192,8 @@ export function mapCheckoutSession(session: StripeObject, locationRef: string): 
       taxAmount: int(details.amount_tax),
       serviceChargeAmount: int(details.amount_shipping),
       totalAmount: int(session.amount_total),
+      // stripe.ts reads every page of `line_items` before mapping.
+      linesComplete: true,
     },
     lineItems,
   };

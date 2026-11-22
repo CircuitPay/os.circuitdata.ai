@@ -90,6 +90,12 @@ export type OrderRecord = RecordBase & {
   totalAmount: number;
   pricesIncludeTax?: boolean;
   guestCount?: number | null;
+  /**
+   * The batch carries every current line of this order (a provider's full order snapshot), so a
+   * stored line of the order missing from the batch was removed at the source and is soft-deleted.
+   * Leave unset when lines may arrive in several batches (CSV files).
+   */
+  linesComplete?: boolean;
 };
 
 export type ModifierRecord = { name: string; price_amount: number; quantity: number };
@@ -283,6 +289,7 @@ class BatchWriter {
         : records;
       for (const record of ordered) this.#writeRecord(table, record);
     }
+    this.#retireRemovedLines(batch);
     const totalMismatch = this.#recomputeOrderTotals();
     for (const key of this.#dirtyDays) {
       const [locationId, businessDate] = splitDayKey(key);
@@ -634,6 +641,48 @@ class BatchWriter {
         runId, table, id, ++this.#seq, image, now + UNDO_RETENTION_DAYS * 86_400);
     }
     return { op, id, before };
+  }
+
+  /**
+   * For orders whose snapshot lists every line (`linesComplete`), soft-deletes the stored lines the
+   * snapshot no longer has, so a line removed from an open order stops counting in its totals and
+   * rollups. Import runs keep pre-images, as for any other change.
+   */
+  #retireRemovedLines(batch: IngestBatch): void {
+    const { sourceId, runId, mappingVersion, now } = this.#context;
+    for (const order of batch.orders ?? []) {
+      if (!order.linesComplete) continue;
+      const orderId = this.#ids.get(`orders\0${order.sourceRecordId}`);
+      if (orderId == null) continue; // the order itself was rejected
+      const current = new Set((batch.lineItems ?? [])
+        .filter(line => line.orderRef === order.sourceRecordId)
+        .map(line => line.sourceRecordId));
+      const stale = this.#sql.exec<Row>(
+        "SELECT * FROM store_line_items WHERE order_id = ? AND source_id = ? AND deleted_at IS NULL",
+        orderId, sourceId).toArray().filter(row => !current.has(row.source_record_id as string));
+      if (stale.length === 0) continue;
+      const counts = this.#counts.line_items ??= { fetched: 0, written: 0, updated: 0, skipped: 0, rejected: 0 };
+      for (const row of stale) {
+        const id = row.id as number;
+        if (this.#context.runKind === "import") {
+          const origin = this.#sql.exec<Row>(
+            "SELECT raw_object_id, row_index FROM row_origins WHERE table_name = 'line_items' AND row_id = ?", id,
+          ).toArray()[0] ?? null;
+          this.#sql.exec(
+            "INSERT INTO row_versions (run_id, table_name, row_id, seq, before, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+            runId, "line_items", id, ++this.#seq, JSON.stringify({ ...row, [ORIGIN_KEY]: origin }),
+            now + UNDO_RETENTION_DAYS * 86_400);
+        }
+        this.#sql.exec(
+          "UPDATE store_line_items SET deleted_at = ?, run_id = ?, mapping_version = ?, updated_at = ?, " +
+          "rebuild_gen = COALESCE(?, rebuild_gen) WHERE id = ?",
+          now, runId, mappingVersion, now, this.#context.rebuildGen ?? null, id);
+        counts.updated++;
+      }
+      this.#touchedOrders.add(orderId);
+      const info = this.#order(orderId);
+      this.#markDay(info.locationId, info.businessDate);
+    }
   }
 
   /** Resolves a reference to another record of the same source, or rejects the row. */

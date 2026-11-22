@@ -161,10 +161,16 @@ export class StripeConnector implements Connector<StripeCreds> {
           customers: objects.map(mapStripeCustomer).filter(record => record !== null),
         }));
       case "invoices":
-        return this.#list(creds, "/v1/invoices", query, {}, objects => this.#orders(objects.map(invoice => mapInvoice(invoice, locationRef))), context);
+        return this.#list(creds, "/v1/invoices", query, {}, async objects => {
+          const invoices = await Promise.all(objects.map(invoice => this.#completeLines(creds, invoice, "invoice")));
+          return this.#orders(invoices.map(invoice => mapInvoice(invoice, locationRef)));
+        }, context);
       case "checkout_sessions":
         return this.#list(creds, "/v1/checkout/sessions", query, { "expand[]": "data.line_items", status: "complete" },
-          objects => this.#orders(objects.map(session => mapCheckoutSession(session, locationRef))), context);
+          async objects => {
+            const sessions = await Promise.all(objects.map(session => this.#completeLines(creds, session, "checkout.session")));
+            return this.#orders(sessions.map(session => mapCheckoutSession(session, locationRef)));
+          }, context);
       case "payments":
         return this.#list(creds, "/v1/charges", query, { "expand[]": "data.balance_transaction" }, objects => ({
           transactions: objects.map(charge => mapCharge(charge, locationRef)).filter(record => record !== null),
@@ -212,19 +218,44 @@ export class StripeConnector implements Connector<StripeCreds> {
       case "customer": batch = { customers: [mapStripeCustomer(object)].filter(record => record !== null) }; break;
       case "product": batch = { products: [mapStripeProduct(object)].filter(record => record !== null) }; break;
       case "price": batch = { products: [mapStripePrice(object, null)].filter(record => record !== null) }; break;
-      case "invoice": batch = this.#orders([mapInvoice(object, locationRef)]); break;
+      case "invoice": batch = this.#orders([mapInvoice(await this.#completeLines(creds, object, "invoice"), locationRef)]); break;
       case "checkout.session": {
         // Events carry sessions without their line items; read them.
         const id = typeof object.id === "string" ? object.id : "";
         const session = id && !object.line_items
           ? (await this.#get(creds, `/v1/checkout/sessions/${encodeURIComponent(id)}?expand[]=line_items`)).body
           : object;
-        batch = this.#orders([mapCheckoutSession(session, locationRef)]);
+        batch = this.#orders([mapCheckoutSession(await this.#completeLines(creds, session, "checkout.session"), locationRef)]);
         break;
       }
       default: return {};
     }
     return this.#unlinkUnknown(batch, context);
+  }
+
+  /**
+   * Invoices and Checkout sessions embed only the first page of their line items. Read the rest,
+   * so an order's lines (and so its gross sales and units) are complete before mapping.
+   */
+  async #completeLines(creds: StripeCreds, object: StripeObject, type: "invoice" | "checkout.session"): Promise<StripeObject> {
+    const key = type === "invoice" ? "lines" : "line_items";
+    const list = object[key];
+    const id = object.id;
+    if (!isStripeObject(list) || list.has_more !== true || typeof id !== "string") return object;
+    const data = dataOf(list);
+    const base = type === "invoice"
+      ? `/v1/invoices/${encodeURIComponent(id)}/lines`
+      : `/v1/checkout/sessions/${encodeURIComponent(id)}/line_items`;
+    let more = true;
+    while (more) {
+      const last = data.at(-1)?.id;
+      if (typeof last !== "string") throw new Error(`Stripe ${type} ${id} has line items without ids.`);
+      const { body } = await this.#get(creds, `${base}?${new URLSearchParams({ limit: "100", starting_after: last })}`);
+      const page = dataOf(body);
+      data.push(...page);
+      more = body.has_more === true && page.length > 0;
+    }
+    return { ...object, [key]: { ...list, data, has_more: false } };
   }
 
   #orders(mapped: { order: IngestBatch["orders"] extends (infer O)[] | undefined ? O | null : never; lineItems: NonNullable<IngestBatch["lineItems"]> }[]): IngestBatch {
@@ -283,7 +314,7 @@ export class StripeConnector implements Connector<StripeCreds> {
   /** One page of a list endpoint over a `created` window, newest first. */
   async #list(
     creds: StripeCreds, path: string, query: ResourceQuery, extra: Record<string, string>,
-    map: (objects: StripeObject[]) => IngestBatch, context?: ReadContext,
+    map: (objects: StripeObject[]) => IngestBatch | Promise<IngestBatch>, context?: ReadContext,
   ): Promise<FetchedPage> {
     const params = new URLSearchParams({ limit: "100", ...extra });
     if (query.from) params.set("created[gte]", String(Math.floor(Date.parse(query.from) / 1000)));
@@ -291,7 +322,8 @@ export class StripeConnector implements Connector<StripeCreds> {
     if (query.page) params.set("starting_after", query.page);
     const { body, text } = await this.#get(creds, `${path}?${params}`);
     const objects = dataOf(body);
-    const batch = context ? await this.#unlinkUnknown(map(objects), context) : map(objects);
+    const mapped = await map(objects);
+    const batch = context ? await this.#unlinkUnknown(mapped, context) : mapped;
     const last = objects.at(-1)?.id;
     return {
       batch,
@@ -303,18 +335,30 @@ export class StripeConnector implements Connector<StripeCreds> {
   }
 
   /**
-   * The events backstop: `/v1/events` since the last seen event time, oldest first by walking
-   * `ending_before`. Events read with our own credentials are provider data, so their snapshot is
-   * mapped directly; objects whose snapshot lacks what we need are read again.
+   * The events backstop: `/v1/events` since the last seen event time, applied oldest first so later
+   * states win. Stripe lists newest first, so when the window holds more than one page the first
+   * pages only seek (`starting_after`, nothing ingested) to the oldest page; from there each page is
+   * applied and the walk moves toward newer events with `ending_before`. The page cursor records
+   * which: `seek:<id>` or `forward:<id>`. Events read with our own credentials are provider data,
+   * so their snapshot is mapped directly; objects whose snapshot lacks what we need are read again.
    */
   async #events(creds: StripeCreds, query: ResourceQuery, context: ReadContext): Promise<FetchedPage> {
     const params = new URLSearchParams({ limit: "100" });
     const since = query.updatedSince ? Math.floor(Date.parse(query.updatedSince) / 1000) : null;
     if (since !== null) params.set("created[gte]", String(since));
-    if (query.page) params.set("ending_before", query.page);
+    const [mode, cursor] = query.page ? splitEventCursor(query.page) : ["start", null] as const;
+    if (mode === "seek") params.set("starting_after", cursor!);
+    if (mode === "forward") params.set("ending_before", cursor!);
     const { body, text } = await this.#get(creds, `/v1/events?${params}`);
-    // Stripe lists newest first; process oldest first so later states win.
-    const events = dataOf(body).toReversed();
+    const page = dataOf(body);
+    const hasMore = body.has_more === true;
+    // Still above the oldest page: keep seeking without applying anything.
+    if (mode !== "forward" && hasMore) {
+      const oldestId = page.at(-1)?.id;
+      if (typeof oldestId !== "string") throw new Error("Stripe returned an events page without ids.");
+      return { batch: {}, raw: "", fetched: 0, next: { ...query, page: `seek:${oldestId}` }, high: null };
+    }
+    const events = page.toReversed();
     const merged: Required<Pick<IngestBatch, "customers" | "products" | "orders" | "lineItems" | "transactions">> = {
       customers: [], products: [], orders: [], lineItems: [], transactions: [],
     };
@@ -331,14 +375,17 @@ export class StripeConnector implements Connector<StripeCreds> {
       }
     }
     const newestId = events.at(-1)?.id;
+    // Newer events remain when this page was reached by seeking, or a forward page has more.
+    const newerRemain = mode === "seek" || (mode === "forward" && hasMore);
     return {
       batch: merged,
       raw: text,
       fetched: events.length,
-      next: body.has_more === true && typeof newestId === "string" ? { ...query, page: newestId } : null,
+      next: newerRemain && typeof newestId === "string" ? { ...query, page: `forward:${newestId}` } : null,
       high,
     };
   }
+
 
   #basic(): string {
     return `Basic ${btoa(`${this.#config.appSecret}:`)}`;
@@ -377,4 +424,12 @@ function tokenCreds(body: Record<string, unknown>, obtainedAt: number): StripeCr
 
 function dataOf(body: Record<string, unknown>): StripeObject[] {
   return Array.isArray(body.data) ? body.data.filter(isStripeObject) : [];
+}
+
+function splitEventCursor(page: string): readonly ["seek" | "forward", string] {
+  const separator = page.indexOf(":");
+  const mode = page.slice(0, separator);
+  const id = page.slice(separator + 1);
+  if ((mode !== "seek" && mode !== "forward") || !id) throw new Error("Unrecognised Stripe events cursor.");
+  return [mode, id];
 }

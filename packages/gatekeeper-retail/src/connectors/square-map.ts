@@ -234,6 +234,7 @@ export function mapOrder(order: SquareObject): MappedOrder {
       taxAmount: amount(order.total_tax_money),
       tipAmount: amount(order.total_tip_money),
       totalAmount: total,
+      linesComplete: true,
     },
     lineItems,
     refundItems,
