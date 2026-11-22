@@ -23,6 +23,25 @@ const SIGNED_OUT: Outcome = {
 const CLOSE_HINT = 'You can close this window.'
 
 /**
+ * Redeems a provider connection a gatekeeper app started (`openConnectPopup`): obtains the app's
+ * frame over this popup's own session and calls its `ui.redeemConnectHandoff(ticket, nonce)`, which
+ * checks that the ticket belongs to a flow of this member's tenant. The frame is disposed after.
+ */
+async function redeemAppHandoff(
+  api: RpcStub<AuthenticatedApi>, appId: string, ticket: string, nonce: string,
+): Promise<void> {
+  const frame = await api.getGatekeeperApp(appId)
+  if (!frame) throw new Error('This app is not available on this deployment.')
+  // The capability's shape is gatekeeper-defined; a gatekeeper without the method rejects the call.
+  const ui = frame.ui as { redeemConnectHandoff(ticket: string, nonce: string): Promise<unknown>; [Symbol.dispose]?(): void }
+  try {
+    await ui.redeemConnectHandoff(ticket, nonce)
+  } finally {
+    ui[Symbol.dispose]?.()
+  }
+}
+
+/**
  * The page a finished connect / sign-in popup lands on (HANDOFF_PATH), with the single-use ticket
  * in the URL fragment. It redeems the ticket together with the flow's nonce, which only this popup
  * holds: sessionStorage is per top-level browsing context and per origin, so what the Workshop tab
@@ -79,6 +98,12 @@ export default function ConnectHandoffPage() {
       redeem = () => authenticatedApi.completeConnectHandoff(ticket, handoff.nonce)
       done = { title: 'Connected', detail: CLOSE_HINT }
       failed = 'Could not complete the connection'
+    } else if (handoff.kind === 'app') {
+      if (isLoading || authenticatedApi === null) return
+      api = authenticatedApi
+      redeem = () => redeemAppHandoff(authenticatedApi, handoff.appId, ticket, handoff.nonce)
+      done = { title: 'Connected', detail: CLOSE_HINT }
+      failed = 'Could not complete the connection'
     } else {
       api = rpcStub
       redeem = () => rpcStub.confirmLogin(ticket, handoff.nonce)
@@ -110,7 +135,7 @@ export default function ConnectHandoffPage() {
   // A failure while the connection is down is the socket's, not the server's: the redemption is
   // presented again once the session is back, so show the wait rather than a transient error.
   else if (outcome?.failed && connectionLost) outcome = null
-  else if (outcome === null && handoff.kind === 'connect' && !isLoading && authenticatedApi === null) {
+  else if (outcome === null && handoff.kind !== 'login' && !isLoading && authenticatedApi === null) {
     outcome = SIGNED_OUT
   }
 

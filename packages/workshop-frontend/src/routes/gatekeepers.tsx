@@ -26,6 +26,7 @@ import { useDocumentTitle } from '../useDocumentTitle'
 import { useSiteName } from '../ServerConfigContext'
 import { AccountsSubscriberAdapter } from '../accountsSubscriber'
 import { openConnectWindow } from '../connectHandoff'
+import { TenantGatekeepersSection } from '../features/tenant-gatekeepers/TenantGatekeepersSection'
 
 export const Route = createFileRoute('/gatekeepers')({
   component: ConnectorsPage,
@@ -760,6 +761,8 @@ function ConnectorsPage() {
             Loading gatekeepers...
           </div>
         )}
+
+        <TenantGatekeepersSection />
 
         {filteredAccounts.length > 0 && (
           <section className="mb-10">

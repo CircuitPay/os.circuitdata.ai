@@ -13,11 +13,15 @@ import { useTheme } from './ThemeContext'
 import { useServerConfig } from './ServerConfigContext'
 import { forwardTrustedFrameError } from './errorReporting'
 import { useAuthenticatedApi } from './AuthContext'
+import { openAppConnectWindow } from './connectHandoff'
 import {
   normalizeGatekeeperAppPrompt,
   parseGatekeeperAppWorkspaceTarget,
   type GatekeeperAppWorkspaceTarget,
 } from './gatekeeperAppNavigation'
+import type { TenantFile, TenantFilesApi } from '@gadgets/workshop-shared/api'
+import TenantFilePicker from './files/TenantFilePicker'
+import { parseTenantFilePickRequest, type TenantFilePickRequest } from './files/tenantFilePick'
 
 // The content-pane rect, in viewport coordinates, that the app pins its page to while the iframe
 // is full-viewport.
@@ -35,6 +39,13 @@ type OpenTarget = (target: GatekeeperAppWorkspaceTarget) => void
 // can no longer see. Deliberately a lookup, not an enumeration: the app learns nothing new.
 type ResolveWorkspaceTitles = (ids: string[]) => Promise<(string | null)[]>
 type OpenPrompt = (prompt: string) => void
+// Shows the member the tenant file picker; null if they cancel. On a choice, `api` is a files
+// capability the host keeps to itself and disposes once the files are delivered.
+type PickTenantFiles = (request: TenantFilePickRequest) =>
+  Promise<{ api: RpcStub<TenantFilesApi>; files: TenantFile[] } | null>
+type FilePick = { request: TenantFilePickRequest; settle: (files: TenantFile[] | null) => void }
+// The gatekeeper-defined method the host itself calls on the app's `ui` capability with picked files.
+type TenantFileReceiver = { receiveTenantFiles(target: unknown, files: unknown[]): Promise<unknown> }
 
 type OverlayState = 'full' | null
 
@@ -85,6 +96,11 @@ class GatekeeperAppHostImpl extends RpcTarget {
   readonly #openTarget: OpenTarget
   readonly #openPrompt: OpenPrompt
   readonly #resolveWorkspaceTitles: ResolveWorkspaceTitles
+  // The unthrottled gatekeeper capability, for host calls the member confirmed in Workshop.
+  readonly #fileReceiver: TenantFileReceiver
+  readonly #pickTenantFiles: PickTenantFiles
+  // The app's id (its gatekeeper vendor id), which a provider-connect popup redeems through.
+  readonly #appId: string
   #presenting = false
   #theme: GatekeeperAppTheme
   #themeReceiver: RpcStub<GatekeeperAppThemeReceiver> | null = null
@@ -100,6 +116,8 @@ class GatekeeperAppHostImpl extends RpcTarget {
     openTarget: OpenTarget,
     openPrompt: OpenPrompt,
     resolveWorkspaceTitles: ResolveWorkspaceTitles,
+    pickTenantFiles: PickTenantFiles,
+    appId: string,
   ) {
     super()
     this.#theme = theme
@@ -116,6 +134,9 @@ class GatekeeperAppHostImpl extends RpcTarget {
     this.#openTarget = openTarget
     this.#openPrompt = openPrompt
     this.#resolveWorkspaceTitles = resolveWorkspaceTitles
+    this.#fileReceiver = capability
+    this.#pickTenantFiles = pickTenantFiles
+    this.#appId = appId
   }
 
   get ui(): RpcStub<RpcTarget> {
@@ -126,6 +147,36 @@ class GatekeeperAppHostImpl extends RpcTarget {
   // untrusted; navigation stays in-app rather than handing the frame a URL to follow.
   openWorkspace(workspaceId: string, gadgetId?: number): void {
     this.#openTarget(parseGatekeeperAppWorkspaceTarget(workspaceId, gadgetId))
+  }
+
+  // Open a provider-connect flow the app started (its gatekeeper's `beginConnect`) as a disowned
+  // popup holding `{ kind: 'app', appId, nonce }`. ConnectHandoffPage then redeems the ticket with
+  // this app's own `ui.redeemConnectHandoff` over the popup's session. Only https URLs are opened.
+  openConnectPopup(flow: unknown): void {
+    openAppConnectWindow(flow, this.#appId)
+  }
+
+  // Let the member pick tenant files for the app, then hand them straight to the gatekeeper's `ui`
+  // capability and return its reply. The app never receives the files or a files capability, and
+  // each stream is the pipelined download, so the bytes are not awaited in this page.
+  async pickTenantFiles(request: unknown): Promise<unknown | null> {
+    const { accept, multiple, target } = parseTenantFilePickRequest(request)
+    const picked = await this.#pickTenantFiles({ accept, multiple })
+    if (!picked) return null
+    const { api, files } = picked
+    const downloads = files.map(file => api.downloadFile(file.id))
+    try {
+      const deliveries = files.map((file, index) => ({
+        name: file.name,
+        size: file.size,
+        contentType: file.contentType,
+        stream: downloads[index].stream,
+      }))
+      return await this.#fileReceiver.receiveTenantFiles(target, deliveries)
+    } finally {
+      for (const download of downloads) download[Symbol.dispose]()
+      api[Symbol.dispose]()
+    }
   }
 
   // Resolve live titles for workspaces the app already references, so it never renders a stale
@@ -294,6 +345,29 @@ export default function SandboxedGatekeeperApp({ frame, gatekeeperVendorId }: {
   const openPrompt = useCallback<OpenPrompt>((prompt) => {
     navigate({ to: '/', search: { prompt } })
   }, [navigate])
+  // The open file picker; one at a time. Ref-held too, so a teardown can settle it with no render.
+  const [filePick, setFilePick] = useState<FilePick | null>(null)
+  const filePickRef = useRef<FilePick | null>(null)
+  const settleFilePick = useCallback((files: TenantFile[] | null) => {
+    const pick = filePickRef.current
+    if (!pick) return
+    filePickRef.current = null
+    setFilePick(null)
+    pick.settle(files)
+  }, [])
+  const pickTenantFiles = useCallback<PickTenantFiles>(async (request) => {
+    if (filePickRef.current) throw new Error('A file picker is already open.')
+    const files = await new Promise<TenantFile[] | null>((settle) => {
+      const pick = { request, settle }
+      filePickRef.current = pick
+      setFilePick(pick)
+    })
+    if (!files) return null
+    // The host's own capability, so delivery does not depend on the picker staying mounted.
+    const api = await authenticatedApi.getFilesApi()
+    if (!api) throw new Error('Files are unavailable.')
+    return { api, files }
+  }, [authenticatedApi])
   // The gatekeeper capability is `any`: its method shape is gatekeeper-defined and opaque to us.
   const capabilityRef = useRef<any>(null)
   capabilityRef.current = frame.ui
@@ -312,6 +386,7 @@ export default function SandboxedGatekeeperApp({ frame, gatekeeperVendorId }: {
         hostRef.current?.dispose()
         hostRef.current = null
         setOverlayPhase(null)
+        settleFilePick(null)
         return
       }
       if (invalidatedRef.current || !capabilityRef.current) {
@@ -325,6 +400,8 @@ export default function SandboxedGatekeeperApp({ frame, gatekeeperVendorId }: {
         openTarget,
         openPrompt,
         resolveWorkspaceTitles,
+        pickTenantFiles,
+        gatekeeperVendorId,
       )
       hostRef.current = host
       sessionRef.current = newMessagePortRpcSession(port, host)
@@ -354,22 +431,33 @@ export default function SandboxedGatekeeperApp({ frame, gatekeeperVendorId }: {
       hostRef.current?.dispose()
       hostRef.current = null
       setOverlayPhase(null)
+      settleFilePick(null)
     }
     // Re-establish the session if either the HTML or the `ui` capability changes, so a new frame
     // carrying a fresh stub (even with identical HTML) never keeps talking through the stale one.
   }, [frame.iframeHtml, frame.ui, gatekeeperVendorId, openPrompt, openTarget,
-      present, resolveWorkspaceTitles, setOverlayPhase])
+      pickTenantFiles, present, resolveWorkspaceTitles, setOverlayPhase, settleFilePick])
 
   return (
-    <iframe
-      ref={iframeRef}
-      srcDoc={frame.iframeHtml}
-      // allow-scripts: run the app's JS. allow-modals: its beforeunload unsaved-changes guard. Not
-      // allow-same-origin (the frame stays an opaque origin), and the app's CSP keeps connect-src 'none'.
-      sandbox="allow-scripts allow-modals"
-      allow="clipboard-write"
-      title="Gatekeeper app"
-      style={iframeStyleForOverlay(overlay)}
-    />
+    <>
+      <iframe
+        ref={iframeRef}
+        srcDoc={frame.iframeHtml}
+        // allow-scripts: run the app's JS. allow-modals: its beforeunload unsaved-changes guard. Not
+        // allow-same-origin (the frame stays an opaque origin), and the app's CSP keeps connect-src 'none'.
+        sandbox="allow-scripts allow-modals"
+        allow="clipboard-write"
+        title="Gatekeeper app"
+        style={iframeStyleForOverlay(overlay)}
+      />
+      {filePick && (
+        <TenantFilePicker
+          accept={filePick.request.accept}
+          multiple={filePick.request.multiple}
+          onConfirm={settleFilePick}
+          onCancel={() => settleFilePick(null)}
+        />
+      )}
+    </>
   )
 }

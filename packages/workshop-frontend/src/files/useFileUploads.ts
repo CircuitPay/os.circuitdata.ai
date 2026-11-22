@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { RpcStub } from 'capnweb'
-import type { FileNameConflict, TenantFilesApi } from '@gadgets/workshop-shared/api'
+import type { FileNameConflict, TenantFile, TenantFilesApi } from '@gadgets/workshop-shared/api'
 import { trackedStream } from './uploadStream'
 
 export type UploadItem = {
@@ -17,10 +17,10 @@ export type UploadEntry = { file: File; onConflict: FileNameConflict }
 
 /**
  * Uploads files one after another and tracks each: progress while it runs, then done or failed with
- * the reason. A failure does not stop the rest of the batch. `onSettled` runs once the batch ends, so
- * the caller can reload its list.
+ * the reason. A failure does not stop the rest of the batch. `onSettled` runs once the batch ends,
+ * with the files that were stored, so the caller can reload its list.
  */
-export const useFileUploads = (api: RpcStub<TenantFilesApi>, onSettled: () => void) => {
+export const useFileUploads = (api: RpcStub<TenantFilesApi>, onSettled: (uploaded: TenantFile[]) => void) => {
   const [items, setItems] = useState<UploadItem[]>([])
   const nextId = useRef(0)
 
@@ -36,11 +36,12 @@ export const useFileUploads = (api: RpcStub<TenantFilesApi>, onSettled: () => vo
         item: { id: nextId.current++, name: file.name, size: file.size, sentBytes: 0, state: 'uploading' as const },
       }))
       setItems(current => [...current, ...queued.map(entry => entry.item)])
+      const uploaded: TenantFile[] = []
       for (const { file, onConflict, item } of queued) {
         try {
-          await api.uploadFile(
+          uploaded.push(await api.uploadFile(
             { name: file.name, size: file.size, contentType: file.type, onConflict },
-            trackedStream(file, sentBytes => update(item.id, { sentBytes })))
+            trackedStream(file, sentBytes => update(item.id, { sentBytes }))))
           update(item.id, { state: 'done', sentBytes: file.size })
         } catch (error) {
           update(item.id, {
@@ -49,7 +50,7 @@ export const useFileUploads = (api: RpcStub<TenantFilesApi>, onSettled: () => vo
           })
         }
       }
-      onSettled()
+      onSettled(uploaded)
     },
     dismiss: (id: number) => setItems(current => current.filter(item => item.id !== id)),
   }

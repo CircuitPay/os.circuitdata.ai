@@ -12,7 +12,8 @@ import {
 } from "@tanstack/react-router";
 import { newMessagePortRpcSession, RpcStub, RpcTarget } from "capnweb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { GatekeeperUiFrame } from "@gadgets/workshop-shared/gatekeeper";
+import type { TenantFile, TenantFilesApi } from "@gadgets/workshop-shared/api";
+import type { GatekeeperUiFrame, TenantFileDelivery } from "@gadgets/workshop-shared/gatekeeper";
 import type {
   GatekeeperAppTheme,
   GatekeeperAppThemeReceiver,
@@ -36,7 +37,41 @@ const WORKSPACE_ID = "a".repeat(64);
 const listGadgets = vi.fn<() => Promise<{ id: string; title: string }[]>>(async () => [
   { id: WORKSPACE_ID, title: "Daily Brief" },
 ]);
-const authenticatedApi = { listGadgets };
+
+const csvFile: TenantFile = {
+  id: "file-1",
+  name: "march.csv",
+  size: 7,
+  contentType: "text/csv",
+  previewable: false,
+  uploader: { name: "Ann", isMe: true },
+  uploadedAt: new Date("2026-11-01T10:00:00Z"),
+  mayRemove: true,
+};
+
+// A real local capability, so the host's pipelined download resolves the way it does over RPC.
+class TestFilesApi extends RpcTarget {
+  async getUsage() {
+    return { usedBytes: 7, quotaBytes: 1_000, fileCount: 1, maxFileBytes: 100 };
+  }
+  async listFiles() {
+    return { files: [csvFile] };
+  }
+  async downloadFile(id: string) {
+    if (id !== csvFile.id) throw new Error("File not found.");
+    return {
+      name: csvFile.name,
+      size: csvFile.size,
+      contentType: "application/octet-stream",
+      stream: new Response("a,b\n1,2").body!,
+    };
+  }
+}
+
+const filesApi = new RpcStub(new TestFilesApi()) as unknown as RpcStub<TenantFilesApi>;
+// Each caller gets its own duplicate, as each `getFilesApi()` call does, and disposes it.
+const getFilesApi = vi.fn<() => Promise<RpcStub<TenantFilesApi>>>(async () => filesApi.dup());
+const authenticatedApi = { listGadgets, getFilesApi };
 
 vi.mock("./AuthContext", () => ({
   useAuthenticatedApi: () => ({ authenticatedApi }),
@@ -53,9 +88,25 @@ interface TestHost extends RpcTarget {
   openWorkspace(workspaceId: string, gadgetId?: number): Promise<void>;
   resolveWorkspaceTitles(ids: string[]): Promise<(string | null)[]>;
   openPrompt(prompt: string): Promise<void>;
+  pickTenantFiles(request: unknown): Promise<unknown>;
+  openConnectPopup(flow: unknown): Promise<void>;
 }
 
 class EmptyUi extends RpcTarget {}
+
+class FileReceivingUi extends RpcTarget {
+  received: { target: unknown; files: { name: string; size: number; contentType: string; text: string }[] }[] = [];
+
+  async receiveTenantFiles(target: unknown, files: TenantFileDelivery[]) {
+    this.received.push({
+      target,
+      files: await Promise.all(files.map(async ({ name, size, contentType, stream }) => ({
+        name, size, contentType, text: await new Response(stream).text(),
+      }))),
+    });
+    return { importId: "import-1" };
+  }
+}
 
 class TestThemeReceiver extends RpcTarget implements GatekeeperAppThemeReceiver {
   setTheme(_theme: GatekeeperAppTheme): void {}
@@ -77,10 +128,10 @@ describe("SandboxedGatekeeperApp navigation", () => {
     vi.restoreAllMocks();
   });
 
-  it("provides the deployment theme and routes bounded iframe requests", async () => {
+  async function mount(ui: RpcTarget) {
     const frame = {
       iframeHtml: "<!doctype html><title>Scheduler</title>",
-      ui: new RpcStub(new EmptyUi()),
+      ui: new RpcStub(ui),
     } as unknown as GatekeeperUiFrame;
     const rootRoute = createRootRoute({
       component: () => <SandboxedGatekeeperApp frame={frame} gatekeeperVendorId="scheduler" />,
@@ -104,7 +155,8 @@ describe("SandboxedGatekeeperApp navigation", () => {
     const iframe = container.querySelector("iframe");
     if (!iframe) throw new Error("Missing gatekeeper iframe");
     const { port1, port2 } = new MessageChannel();
-    host = newMessagePortRpcSession<TestHost>(port1);
+    const session = newMessagePortRpcSession<TestHost>(port1);
+    host = session;
     window.dispatchEvent(
       new MessageEvent("message", {
         data: { type: "handshake" },
@@ -113,6 +165,24 @@ describe("SandboxedGatekeeperApp navigation", () => {
         ports: [port2],
       }),
     );
+    return { router, iframe, host: session };
+  }
+
+  // The picker dialog, once the host has opened it and its files have loaded.
+  const openedPicker = () => vi.waitFor(() => {
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    if (!dialog?.textContent?.includes(csvFile.name)) throw new Error("The picker is not open");
+    return dialog;
+  });
+
+  const pickerButton = (dialog: HTMLElement, name: string) => {
+    const button = [...dialog.querySelectorAll("button")].find((item) => item.textContent?.trim() === name);
+    if (!button) throw new Error(`No button named ${name}`);
+    return button;
+  };
+
+  it("provides the deployment theme and routes bounded iframe requests", async () => {
+    const { router, iframe, host } = await mount(new EmptyUi());
 
     const themeReceiver = new TestThemeReceiver();
     await expect(host.subscribeTheme(themeReceiver)).resolves.toEqual({
@@ -177,5 +247,67 @@ describe("SandboxedGatekeeperApp navigation", () => {
       await vi.waitFor(() => expect(router.state.location.pathname).toBe("/"));
     });
     expect(router.state.location.search).toEqual({ prompt: "Create a daily brief." });
+  });
+
+  it("hands the files the member picks to the gatekeeper and returns its reply to the app", async () => {
+    const ui = new FileReceivingUi();
+    const { host } = await mount(ui);
+    const target = { newSourceLabel: "Main street" };
+
+    const result = host.pickTenantFiles({ accept: [".csv", "text/csv"], multiple: true, target });
+    const dialog = await openedPicker();
+    // The input the checkbox forwards its clicks to: jsdom has no PointerEvent to forward them with.
+    const choice = [...dialog.querySelectorAll("label")]
+      .find((label) => label.textContent?.includes(csvFile.name))
+      ?.querySelector('[role="checkbox"]')?.nextElementSibling;
+    if (!(choice instanceof HTMLInputElement)) throw new Error("No choice for the file");
+    await act(async () => choice.click());
+    await act(async () => pickerButton(dialog, "Use files").click());
+
+    await expect(result).resolves.toEqual({ importId: "import-1" });
+    // The listing's type, and the bytes of the download the host pipelined into the call.
+    expect(ui.received).toEqual([{
+      target,
+      files: [{ name: "march.csv", size: 7, contentType: "text/csv", text: "a,b\n1,2" }],
+    }]);
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it("returns null when the member cancels, and refuses a malformed request", async () => {
+    const ui = new FileReceivingUi();
+    const { host } = await mount(ui);
+
+    await expect(host.pickTenantFiles({ accept: "csv", multiple: true, target: "source-1" }))
+      .rejects.toThrow("Invalid tenant file pick request.");
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    const result = host.pickTenantFiles({ accept: [".csv"], multiple: false, target: "source-1" });
+    const dialog = await openedPicker();
+    await act(async () => pickerButton(dialog, "Cancel").click());
+
+    await expect(result).resolves.toBeNull();
+    expect(ui.received).toEqual([]);
+  });
+
+  it("opens the app's provider-connect popup with an app handoff record, and refuses non-https URLs", async () => {
+    const { host } = await mount(new EmptyUi());
+    const store = new Map<string, string>();
+    const popup = {
+      opener: window as Window | null,
+      close: vi.fn<() => void>(),
+      sessionStorage: { setItem: (key: string, value: string) => { store.set(key, value); } },
+      location: { replace: vi.fn<(url: string) => void>() },
+    };
+    const open = vi.spyOn(window, "open").mockReturnValue(popup as unknown as Window);
+    const nonce = "c".repeat(64);
+
+    await host.openConnectPopup({ url: "https://connect.squareup.com/oauth2/authorize?state=s", nonce });
+    expect(JSON.parse(store.get("gadgets.handoff")!)).toEqual({ kind: "app", appId: "scheduler", nonce });
+    expect(popup.opener).toBeNull();
+    expect(popup.location.replace).toHaveBeenCalledExactlyOnceWith("https://connect.squareup.com/oauth2/authorize?state=s");
+
+    open.mockClear();
+    await expect(host.openConnectPopup({ url: "javascript:alert(1)", nonce })).rejects.toThrow("https");
+    expect(open).not.toHaveBeenCalled();
   });
 });
