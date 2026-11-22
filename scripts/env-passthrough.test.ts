@@ -56,6 +56,13 @@ const EXPECTED: Record<string, ExpectedArea> = {
     forwarded: ["VITE_FRONTEND_ERROR_REPORTING"],
     injected: ["GATEKEEPER_APP_UNMINIFIED"],
   },
+  // RETAIL_LOAD_SCALE sizes the on-demand load test, which runs from the `test:load` script, never
+  // as a vp task.
+  "packages/gatekeeper-retail": {
+    forwarded: ["VITE_FRONTEND_ERROR_REPORTING"],
+    injected: ["GATEKEEPER_APP_UNMINIFIED"],
+    external: ["RETAIL_LOAD_SCALE"],
+  },
   // `src/worker-inputs.ts` resolves BUNDLED_BLUEPRINTS_DIR only to name a directory for the watcher
   // and `forceRerunTriggers`. The `test` task is cached and strips it; `vitest run` never reads
   // those exports, and `pnpm test:watch` is a script, so it keeps the ambient value.

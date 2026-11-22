@@ -52,6 +52,8 @@ export interface WorkerSpec {
   bindings: Record<string, unknown>[];
   migrations: MigrationEntry[];
   observability?: Record<string, unknown>;
+  /** Runtime limits (`cpu_ms`), when the release raises any. */
+  limits?: Record<string, unknown> | null;
 }
 
 const CONTENT_TYPES: Record<SpecModule["type"], string> = {
@@ -98,6 +100,7 @@ export function buildMetadata(spec: WorkerSpec, migrations: MigrationPayload | u
     compatibility_flags: spec.compatibilityFlags ?? [],
     bindings: spec.bindings,
     ...(spec.observability ? { observability: spec.observability } : {}),
+    ...(spec.limits ? { limits: spec.limits } : {}),
     ...(migrations ? { migrations } : {}),
   };
 }

@@ -195,13 +195,35 @@ sequenceDiagram
     Tab->>Tab: localStorage.authToken = token
 ```
 
+## App connect (a gatekeeper app's own provider connection)
+
+A tenant-held gatekeeper app can hold provider connections of its own, outside the kernel's
+account list (gatekeeper-retail's Square and Stripe sources). The same handoff carries them, with
+the gatekeeper minting and checking the ticket itself:
+
+1. The app calls its gatekeeper's `ui.beginConnect(provider)`, which requires an administrator and
+   returns `{ url, nonce }`; the gatekeeper keeps only the nonce's hash with the flow.
+2. The app asks the host to `openConnectPopup({ url, nonce })`. The host accepts only an `https:`
+   URL and a 64-hex nonce, and opens it with `openDisownedPopup`, storing
+   `{ kind: 'app', appId, nonce }` (the app's gatekeeper vendor id) under `HANDOFF_KEY`.
+3. The provider redirects to the gatekeeper's callback, which checks the flow's single-use OAuth
+   state, exchanges the code, checks the granted scopes, **stages** the grant, records the ticket's
+   hash with the dataset that started the flow, and ends on `connectHandoffPageHtml`.
+4. `ConnectHandoffPage` sees `kind: 'app'`, obtains `getGatekeeperApp(appId)` over the popup's own
+   session and calls `ui.redeemConnectHandoff(ticket, nonce)`, then disposes the frame. The
+   gatekeeper commits the grant only when the ticket was recorded for the caller's own tenant, the
+   nonce matches the same flow, both are live and unused, and the caller can manage. A victim who
+   finishes an attacker's flow redeems against their own tenant, which never recorded that ticket;
+   a refused redemption revokes the staged grant, and an unredeemed one is revoked when it expires.
+
 ## Why the fragment is safe
 
 The ticket travels only in the URL fragment. A browser never sends a fragment to a server nor in a
 `Referer` header, so it appears in no access log on the way; `location.replace()` leaves no history
 entry to revisit; `ConnectHandoffPage` strips it with `history.replaceState` as soon as it has read
 it, and its storage record is spent as it is read, so neither a reload nor a re-render can present
-the ticket twice; and the ticket is single-use and expires two minutes after the flow finishes.
+the ticket twice; and the ticket is single-use and expires two minutes after the flow finishes (an
+app connect's ticket, minted by the gatekeeper, lives for the flow's ten minutes).
 
 The invariant: **the ticket only ever reaches a document on the backend-supplied `targetOrigin`.**
 The kit rejects any `targetOrigin` that is not exactly an origin, and the origin itself comes from

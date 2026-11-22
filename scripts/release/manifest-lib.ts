@@ -77,6 +77,12 @@ export interface ObservabilityConfig {
   };
 }
 
+/** Workers runtime limits, verbatim from wrangler.jsonc. */
+export interface WorkerLimits {
+  /** CPU time per invocation, in milliseconds. */
+  cpu_ms?: number;
+}
+
 /**
  * One Durable Object migration step, verbatim from wrangler.jsonc. Only the operations the
  * deployable workers actually use are named; the index signature carries anything else through
@@ -128,6 +134,8 @@ export interface WranglerConfig {
     not_found_handling?: string;
     run_worker_first?: string[];
   };
+  /** Runtime limits; only the CPU limit is used. */
+  limits?: WorkerLimits;
   /** Plain-text vars, passed through and extended with per-kind template vars. */
   vars?: Record<string, unknown>;
   /** Custom build command wrangler runs before bundling. */
@@ -195,6 +203,8 @@ export interface WorkerEntry {
   vars: Record<string, unknown>;
   /** Workers observability settings. */
   observability: ObservabilityConfig;
+  /** Runtime limits from wrangler.jsonc, when the worker raises any. */
+  limits?: WorkerLimits;
   /** How the deploy service expands installed gatekeepers into `GATEKEEPER_*` bindings. */
   gatekeeperBindingExpansion?: {
     entrypoint?: string;
@@ -254,6 +264,9 @@ const HANDLED_CONFIG_KEYS = new Set([
   // gatekeeper-context's Artifacts binding is closed-beta and cannot be provisioned in arbitrary
   // user accounts; it is dropped from customer manifests (the gatekeeper degrades gracefully).
   "artifacts",
+  // A raised CPU limit (gatekeeper-retail's imports and rollups). Account-independent, so it
+  // passes through verbatim as the upload metadata's `limits`.
+  "limits",
 ]);
 
 const ARTIFACTS_CUT_ALLOWED = new Set(["gatekeeper-context"]);
@@ -298,6 +311,7 @@ const PREINSTALL = new Set(["gatekeeper-context", "gatekeeper-scheduler"]);
 const SINGLETON = new Set([
   "gatekeeper-context",       // (1) ambient ContextLibrary
   "gatekeeper-scheduler",     // (1) ambient ScheduleSession
+  "gatekeeper-retail",        // (1) ambient RetailData, one per tenant
   "gatekeeper-homeassistant", // (2) no inputs; users connect their own URL + token in-app
   "gatekeeper-mcp",           // (2) no inputs; users paste their own endpoints in-app
   "gatekeeper-mcp-portal",    // (2) no inputs; the one portal comes from the deployment's vars
@@ -483,10 +497,11 @@ export function buildWorkerEntry(
     // GatekeeperVendor entrypoint (same shape run-dev-server.ts generates for dev).
     gatekeeperBindingExpansion = {
       entrypoint: "GatekeeperVendor",
-      // gatekeeper-context namespaces each workshop's shared data by a sharingDomain carried in
-      // binding props; the instance's public origin is the natural stable value.
+      // gatekeeper-context and gatekeeper-retail namespace each workshop's data by a sharingDomain
+      // carried in binding props; the instance's public origin is the natural stable value.
       propsByPackage: {
         "gatekeeper-context": { sharingDomain: "$PUBLIC_BASE_URL" },
+        "gatekeeper-retail": { sharingDomain: "$PUBLIC_BASE_URL" },
       },
     };
   } else if (kind === "router") {
@@ -532,6 +547,7 @@ export function buildWorkerEntry(
     bindings,
     vars,
     observability: config.observability ?? { enabled: false },
+    ...(config.limits ? { limits: config.limits } : {}),
     ...(gatekeeperBindingExpansion ? { gatekeeperBindingExpansion } : {}),
     ...(assetsConfig ? { assetsConfig } : {}),
     ...(inputs ? { inputs } : {}),

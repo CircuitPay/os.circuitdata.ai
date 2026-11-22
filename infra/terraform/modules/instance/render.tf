@@ -75,6 +75,7 @@ locals {
       bindings           = local.rendered_bindings[pkg]
       migrations         = local.workers_m[pkg].migrations
       observability      = local.observability[pkg]
+      limits             = try(local.workers_m[pkg].limits, null)
     }
   }
 }
