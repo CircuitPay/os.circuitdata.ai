@@ -1,6 +1,8 @@
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import capnwebValidate from "capnweb-validate/vite";
 import { defineConfig } from "vitest/config";
+import { COMPATIBILITY_DATE } from "@gadgets/scripts/worker-config";
+import { TENANT_TEST_GATEKEEPER_SCRIPT } from "./__integration__/tenant-test-gatekeeper";
 
 const EXPECTED_OPEN_ERROR_CODES = new Set([
   "WORKSPACE_NOT_FOUND",
@@ -18,6 +20,27 @@ export default defineConfig({
       remoteBindings: false,
       wrangler: {
         configPath: "./wrangler.jsonc",
+      },
+      // A tenant-scoped gatekeeper for tenant-gatekeepers.test.ts (see the fixture's header). It is
+      // bound under names that are not GATEKEEPER_*, so only a suite that installs it sees it.
+      miniflare: {
+        serviceBindings: {
+          TENANT_TEST_VENDOR: { name: "tenant-test-gatekeeper", entrypoint: "TenantTestVendor" },
+          TENANT_TEST_CONTROL: { name: "tenant-test-gatekeeper", entrypoint: "TenantTestControl" },
+        },
+        workers: [{
+          name: "tenant-test-gatekeeper",
+          modules: true,
+          script: TENANT_TEST_GATEKEEPER_SCRIPT,
+          compatibilityDate: COMPATIBILITY_DATE,
+          // As on a real gatekeeper: the Workshop persists the account stubs this Worker returns.
+          compatibilityFlags: ["experimental", "nodejs_compat", "allow_irrevocable_stub_storage"],
+          durableObjects: {
+            LEDGER: { className: "TenantTestLedger", useSQLite: true },
+            // Never addressed: the binding is what puts the class in `ctx.exports`.
+            GATEKEEPER: { className: "TenantTestGatekeeper", useSQLite: true },
+          },
+        }],
       },
     }),
   ],

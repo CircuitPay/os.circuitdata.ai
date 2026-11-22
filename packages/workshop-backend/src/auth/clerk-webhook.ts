@@ -88,6 +88,8 @@ export async function applyClerkEvent(
     const userId = asId(data.id);
     if (!userId) return;
     await users.getByName(makeUserKey(personalTenantId(userId), userId)).eraseAccount(at);
+    // The personal workspace is a tenant of its own: its files and tenant-held accounts go too.
+    await directories.getByName(personalTenantId(userId)).eraseTenant(at);
     logger.info("account erased", {
       event: "clerk.account.erased", tenantId: personalTenantId(userId), userId,
     });

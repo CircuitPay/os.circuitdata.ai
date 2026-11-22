@@ -969,6 +969,15 @@ export interface AuthenticatedApi extends RpcTarget {
    */
   getFilesApi(): Promise<RpcStub<TenantFilesApi> | null>;
 
+  // --- Tenant-held gatekeepers ---
+
+  /**
+   * The capability to manage the active tenant's tenant-scoped gatekeepers
+   * (VendorDescription.tenantScoped), or null on a deployment without Clerk. The tenant is fixed
+   * when it is minted and the caller's role is re-read on every call. Dispose it when done.
+   */
+  getTenantGatekeepersApi(): Promise<RpcStub<TenantGatekeepersApi> | null>;
+
   // --- Blueprints ---
 
   /**
@@ -5272,7 +5281,45 @@ export type GatekeeperCreationSpec = {
   type: "ambient";
   vendorId: string;        // the singleton gatekeeper's id (GATEKEEPER_<ID> suffix, lowercased)
   accountId: number;       // the owner's connected-account id for this singleton (in their user DO)
+} | TenantAmbientCreationSpec;
+
+/**
+ * Creation spec of a capsule installed from a tenant-held account (VendorDescription.tenantScoped):
+ * one per vendor per tenant, kept in the tenant's directory rather than in the owner's user DO.
+ * Like "ambient", not user-configured, so excluded from blueprints and reconciled automatically.
+ */
+export type TenantAmbientCreationSpec = {
+  type: "tenantAmbient";
+  /** The tenant-scoped vendor's id (GATEKEEPER_<ID> suffix, lowercased). */
+  vendorId: string;
 };
+
+/** A tenant-scoped gatekeeper as the tenant's members see it. */
+export type TenantGatekeeperInfo = {
+  /** The vendor's id (GATEKEEPER_<ID> suffix, lowercased). */
+  vendorId: string;
+  /** The vendor's display name. */
+  title: string;
+  /** Whether this tenant has turned it on. */
+  enabled: boolean;
+  /** The operator's mode for this vendor; "disabled" means it cannot be enabled. */
+  mode: AmbientGatekeeperMode;
+  /** Whether the caller may enable or disable it right now. */
+  mayManage: boolean;
+};
+
+/**
+ * Manage the active tenant's tenant-scoped gatekeepers. The tenant is fixed when the capability is
+ * minted (a changed active tenant is refused) and the caller's role is re-read on every call.
+ */
+export interface TenantGatekeepersApi extends RpcTarget {
+  /** Every tenant-scoped vendor bound to this deployment, with this tenant's state. */
+  list(): Promise<TenantGatekeeperInfo[]>;
+  /** Mint (first time) and enable the tenant's account. Organization administrators only. */
+  enable(vendorId: string): Promise<void>;
+  /** Stop offering it to workspaces; the account and its data are kept. Administrators only. */
+  disable(vendorId: string): Promise<void>;
+}
 
 /**
  * User-provided metadata controlling how a gatekeeper binding should appear in blueprints.
