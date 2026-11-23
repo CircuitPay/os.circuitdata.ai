@@ -62,6 +62,13 @@ const EXPECTED: Record<string, ExpectedArea> = {
     forwarded: ["VITE_FRONTEND_ERROR_REPORTING"],
     injected: ["GATEKEEPER_APP_UNMINIFIED"],
   },
+  // RETAIL_LOAD_SCALE sizes the on-demand load test, which runs from the `test:load` script, never
+  // as a vp task.
+  "packages/gatekeeper-retail": {
+    forwarded: ["VITE_FRONTEND_ERROR_REPORTING"],
+    injected: ["GATEKEEPER_APP_UNMINIFIED"],
+    external: ["RETAIL_LOAD_SCALE"],
+  },
   // The live-tenant suite (`vitest.contract.config.ts`) and its sign-in and rendering tooling under
   // `scripts/` run as package.json scripts and by hand, never as vp tasks.
   "packages/gatekeeper-microsoft": {

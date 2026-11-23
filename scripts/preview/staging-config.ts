@@ -333,17 +333,20 @@ function previewObservability(config: StagingConfig): ObservabilityConfig {
   };
 }
 
+// Gatekeepers whose binding props carry the workshop's sharingDomain (as in manifest-lib.ts).
+const SHARING_DOMAIN_GATEKEEPERS: ReadonlySet<string> = new Set(["gatekeeper-context", "gatekeeper-retail"]);
+
 // How the backend calls gatekeepers: the GatekeeperVendor RPC entrypoint.
 function backendGatekeeperServices(gatekeepers: string[], baseUrl: string): PreviewService[] {
   return gatekeepers.map((pkgName) => ({
     binding: gatekeeperBindingName(pkgName),
     service: pkgName,
     entrypoint: "GatekeeperVendor",
-    // The Context gatekeeper namespaces each workshop's shared data by a "sharingDomain" carried
-    // in its binding props (packages/gatekeeper-context/src/domain.ts). Using the preview's own
-    // origin — as manifest-lib.ts does with $PUBLIC_BASE_URL — keeps each preview's collections
-    // isolated from every other preview sharing the baseline gatekeeper.
-    ...(pkgName === "gatekeeper-context" ? { props: { sharingDomain: baseUrl } } : {}),
+    // The Context and Retail gatekeepers namespace each workshop's shared data by a "sharingDomain"
+    // carried in their binding props (packages/gatekeeper-context/src/domain.ts). Using the
+    // preview's own origin — as manifest-lib.ts does with $PUBLIC_BASE_URL — keeps each preview's
+    // data isolated from every other preview sharing the baseline gatekeeper.
+    ...(SHARING_DOMAIN_GATEKEEPERS.has(pkgName) ? { props: { sharingDomain: baseUrl } } : {}),
   }));
 }
 

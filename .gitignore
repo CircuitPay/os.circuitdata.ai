@@ -65,3 +65,6 @@ release-out/
 
 # A saved Terraform plan holds the values it would apply, secrets included.
 *.tfplan
+
+# Local env for a live Terraform root (may be a 1Password/direnv pipe); secrets never committed.
+infra/terraform/*/.envrc

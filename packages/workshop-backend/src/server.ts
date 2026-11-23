@@ -40,8 +40,9 @@ import { verifyClerkSessionToken, type ClerkClaims } from "./auth/clerk.js";
 import { handleClerkWebhook } from "./auth/clerk-webhook.js";
 import { effectiveBranding, TenantAdminApiImpl } from "./tenant-branding.js";
 import { TenantFilesApiImpl, filesLimits } from "./tenant-files.js";
+import { TenantAccessImpl, TenantGatekeepersApiImpl } from "./tenant-gatekeepers.js";
 import { isOrganizationAdmin, makeUserKey, personalTenantId, resolveTenant, tenantOfProfileId, userIdOfProfileId, type TenantContext } from "./tenant.js";
-import type { TenantFilesApi, WorkspaceInfo } from "@gadgets/workshop-shared/api";
+import type { TenantFilesApi, TenantGatekeepersApi, WorkspaceInfo } from "@gadgets/workshop-shared/api";
 import {
   blueprintScreenshotFields, isBlueprintIsolation, isBundledBlueprint, readBlueprintFor,
   type BlueprintCaller,
@@ -832,16 +833,19 @@ class AuthenticatedApiImpl extends RpcTarget implements AuthenticatedApi {
   // --- Gatekeeper management apps ---
 
   // The management apps available to the current user: their connected accounts that declare a
-  // top-level UI (AccountDescription.providesUi). The app id is the gatekeeper's routing id (its
-  // vendor id, e.g. "context"), so each app is hosted at /gatekeepers/<vendorId>. UI-providing
-  // accounts are auto-provisioned singletons (one per vendor), so the vendor id identifies them.
+  // top-level UI (AccountDescription.providesUi), then their tenant's enabled tenant-held accounts
+  // that declare one. The app id is the gatekeeper's routing id (its vendor id, e.g. "context"), so
+  // each app is hosted at /gatekeepers/<vendorId>. UI-providing accounts are singletons (one per
+  // vendor per user, or per tenant), so the vendor id identifies them.
   async listGatekeeperApps(): Promise<GatekeeperAppInfo[]> {
     // listProvidedAccounts provisions auto-provisioned accounts first (idempotent), so their apps
     // appear in the nav even before the user opens a gadget — in a single round trip.
-    let accounts = await this.#user.listProvidedAccounts();
-    return accounts
-        .filter((account: (typeof accounts)[number]) => account.description.providesUi)
-        .map((account: (typeof accounts)[number]) => ({
+    let [accounts, tenantAccounts] = await Promise.all([
+      this.#user.listProvidedAccounts(), this.#tenantAppAccounts(),
+    ]);
+    return [...accounts, ...tenantAccounts]
+        .filter(account => account.description.providesUi)
+        .map(account => ({
           id: account.vendorId,
           title: account.description.providesUi!.title,
           icon: account.description.providesUi!.icon,
@@ -854,9 +858,33 @@ class AuthenticatedApiImpl extends RpcTarget implements AuthenticatedApi {
     let user = this.#user;  // one stub for both calls
     let accounts = await user.listProvidedAccounts();
     let app = accounts.find(account => account.vendorId === vendorId && account.description.providesUi);
-    if (!app) return null;
     // isAdmin is supplied fresh per open so admin-gated features reflect the user's current status.
-    return user.startAccountAppUi(app.accountId, { isAdmin: this.#isAdmin() });
+    if (app) return user.startAccountAppUi(app.accountId, { isAdmin: this.#isAdmin() });
+
+    let tenantApp = (await this.#tenantAppAccounts())
+        .find(account => account.vendorId === vendorId && account.description.providesUi);
+    if (!tenantApp) return null;
+    let tenant = this.#clerkTenant();
+    // The member's role is not passed as a fact: `access` re-reads this connection's live session on
+    // every call, so a demotion or a tenant switch reaches the app on its next action.
+    return this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId).startTenantAppUi(vendorId, {
+      isAdmin: this.#isAdmin(),
+      tenant: {
+        memberId: tenant.userKey,
+        memberName: (await user.whoami()).name ?? null,
+        access: new TenantAccessImpl(tenant.tenantId, () => this.#clerkTenant()),
+      },
+    });
+  }
+
+  // The active tenant's tenant-held accounts that are offered now; none without a Clerk tenant.
+  async #tenantAppAccounts() {
+    let tenant = this.clerkSession;
+    if (!tenant) return [];
+    this.#assertSessionLive();
+    let accounts = await this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId)
+        .listTenantAccounts();
+    return accounts.filter(account => account.active);
   }
 
   async createGatekeeperUserSelection(
@@ -916,6 +944,17 @@ class AuthenticatedApiImpl extends RpcTarget implements AuthenticatedApi {
     return new TenantFilesApiImpl(
         this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId),
         this.env.TENANT_FILES, tenant.tenantId, () => this.#clerkTenant(), filesLimits(this.env));
+  }
+
+  async getTenantGatekeepersApi(): Promise<RpcStub<TenantGatekeepersApi> | null> {
+    // Tenant-held accounts belong to a tenant, which only a Clerk session has.
+    if (!this.clerkSession) return null;
+    const tenant = this.#clerkTenant();
+    // @ts-expect-error Cap'n Web RPC stubs and native RPC targets are compatible but the type
+    //     system doesn't know this.
+    return new TenantGatekeepersApiImpl(
+        this.ctx.exports.UserDirectoryDurableObject.getByName(tenant.tenantId), this.env,
+        tenant.tenantId, () => this.#clerkTenant());
   }
 
   async getAdminApi(): Promise<RpcStub<AdminApi> | null> {

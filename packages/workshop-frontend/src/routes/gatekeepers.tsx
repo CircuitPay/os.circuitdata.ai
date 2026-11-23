@@ -26,6 +26,7 @@ import { useDocumentTitle } from '../useDocumentTitle'
 import { useSiteName } from '../ServerConfigContext'
 import { AccountsSubscriberAdapter } from '../accountsSubscriber'
 import { openConnectWindow } from '../connectHandoff'
+import { TenantGatekeepersSection } from '../features/tenant-gatekeepers/TenantGatekeepersSection'
 import { AuthPopupCancelledError } from '../features/native-app/authPopup'
 import { nativeApp } from '../features/native-app/nativeApp'
 
@@ -775,6 +776,8 @@ function ConnectorsPage() {
             Loading gatekeepers...
           </div>
         )}
+
+        <TenantGatekeepersSection />
 
         {filteredAccounts.length > 0 && (
           <section className="mb-10">

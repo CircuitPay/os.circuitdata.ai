@@ -91,3 +91,9 @@ allowBuilds:
   protobufjs: true
   sharp: true
   workerd: true
+
+patchedDependencies:
+  # Exports the wasm-bindgen glue and the .wasm, so gatekeeper-retail can instantiate the parser from
+  # a precompiled module import: the package's own init() fetches or reads the file, which workerd
+  # cannot (specs/006-retail-data-layer/research.md R4). Drop it when the package exports them.
+  '@guanmingchiu/sqlparser-ts@0.63.0': patches/@guanmingchiu__sqlparser-ts@0.63.0.patch

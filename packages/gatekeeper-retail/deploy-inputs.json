@@ -1,0 +1,25 @@
+[
+  {
+    "name": "SQUARE_CLIENT_ID",
+    "kind": "secret",
+    "label": "Square application ID",
+    "consoleUrl": "https://developer.squareup.com/apps",
+    "setupSteps": [
+      "In the Square Developer Console, create an application (or open an existing one).",
+      "Under OAuth, add the redirect URL below for the Production environment (use the Sandbox tab and a sandbox- application ID to test against Square's sandbox).",
+      "Under Webhooks > Subscriptions, add a subscription with the notification URL {PUBLIC_BASE_URL}/gatekeeper/retail/webhooks/square for the order, payment, refund, customer, catalog and inventory events.",
+      "Copy the Application ID, the Application secret and the subscription's signature key here."
+    ],
+    "redirectUriTemplate": "{PUBLIC_BASE_URL}/gatekeeper/retail/oauth/square"
+  },
+  {
+    "name": "SQUARE_CLIENT_SECRET",
+    "kind": "secret",
+    "label": "Square application secret"
+  },
+  {
+    "name": "SQUARE_WEBHOOK_SIGNATURE_KEY",
+    "kind": "secret",
+    "label": "Square webhook signature key"
+  }
+]

@@ -63,6 +63,9 @@ overrides:
   '@lezer/markdown': 1.6.4
   '@earendil-works/pi-agent-core>@earendil-works/pi-ai': 1.5.2
 
+patchedDependencies:
+  '@guanmingchiu/sqlparser-ts@0.63.0': e11648cd432defaa3c0db9d06dcec90ea5e39d4048d140aed03885eec904afd9
+
 importers:
 
   .:
@@ -922,6 +925,106 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.1.0)(@vitest/browser-playwright@5.1.0)(@vitest/browser-preview@5.1.0)(@vitest/ui@5.1.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.162.0(@cloudflare/workers-types@5.20261115.1)(@types/node@26.1.0)
+
+  packages/gatekeeper-retail:
+    dependencies:
+      '@gadgets/error-reporting':
+        specifier: workspace:*
+        version: link:../error-reporting
+      '@gadgets/gatekeeper-kit':
+        specifier: workspace:*
+        version: link:../gatekeeper-kit
+      '@gadgets/observability':
+        specifier: workspace:*
+        version: link:../observability
+      '@gadgets/workshop-shared':
+        specifier: workspace:*
+        version: link:../workshop-shared
+      '@guanmingchiu/sqlparser-ts':
+        specifier: 0.63.0
+        version: 0.63.0(patch_hash=e11648cd432defaa3c0db9d06dcec90ea5e39d4048d140aed03885eec904afd9)
+      capnweb:
+        specifier: 'catalog:'
+        version: 0.13.1
+      capnweb-validate:
+        specifier: 'catalog:'
+        version: 0.3.2(capnweb@0.13.1)(esbuild@0.28.2)(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
+      csv-parse:
+        specifier: ^7.0.3
+        version: 7.0.3
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+    devDependencies:
+      '@cloudflare/kumo':
+        specifier: ^2.14.0
+        version: 2.17.0(@date-fns/tz@1.5.0)(@phosphor-icons/react@2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(zod@4.6.7)
+      '@cloudflare/vitest-plugin':
+        specifier: 'catalog:'
+        version: 1.8.2(@cloudflare/workers-types@5.20261115.1)(@types/node@26.1.0)(vitest@5.1.0)
+      '@gadgets/scripts':
+        specifier: workspace:*
+        version: link:../../scripts
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@tailwindcss/vite':
+        specifier: ^4.3.3
+        version: 4.3.5(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
+      '@types/node':
+        specifier: 26.1.0
+        version: 26.1.0
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.2.7
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: ^5.2.0
+        version: 5.2.0(supports-color@10.2.2)(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0(supports-color@10.2.2)
+      miniflare:
+        specifier: 'catalog:'
+        version: 5.20261113.0-beta(@types/node@26.1.0)
+      react:
+        specifier: ^19.2.8
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.3.1(react@19.3.1)
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.5
+      terser:
+        specifier: ^5.51.2
+        version: 5.51.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1)
+      vite-plugin-singlefile:
+        specifier: ^2.3.3
+        version: 2.3.4(rollup@4.62.3)(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.5.1(@opentelemetry/api@1.9.1)(@types/node@26.1.0)(@vitest/browser-playwright@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@26.1.0(supports-color@10.2.2))(playwright@1.65.0)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.1)
+      vite-tsconfig-paths:
+        specifier: ^6.1.1
+        version: 6.1.1(supports-color@10.2.2)(typescript@7.0.2)(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.1.0)(@vitest/browser-playwright@5.1.0)(@vitest/browser-preview@5.1.0)(@vitest/ui@5.1.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@7.3.6(@types/node@26.1.0)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
@@ -2412,6 +2515,10 @@ packages:
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
+
+  '@guanmingchiu/sqlparser-ts@0.63.0':
+    resolution: {integrity: sha512-uAIGbSpwjbwiO7qek7bWn6lUTZRstn72jHwt74V8ilfeE9KRVg7+sPf0qWfYRahnqEtIBj2hecFmvdvyyvHbQQ==}
+    engines: {node: '>=16.0.0'}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -4122,6 +4229,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  csv-parse@7.0.3:
+    resolution: {integrity: sha512-YFd3QM/yo17vH91L1IOZuvl09zM0zEEtdfTcOCKWcMdM++MNaQSyp09slXyFCLaPXvHstQFx/xC8myiFHSMUvw==}
 
   d3-array@3.2.4:
     resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
@@ -6590,6 +6700,8 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@guanmingchiu/sqlparser-ts@0.63.0(patch_hash=e11648cd432defaa3c0db9d06dcec90ea5e39d4048d140aed03885eec904afd9)': {}
+
   '@img/colour@1.1.0': {}
 
   '@img/sharp-darwin-arm64@0.35.5':
@@ -7945,6 +8057,8 @@ snapshots:
       rrweb-cssom: 0.8.0
 
   csstype@3.2.3: {}
+
+  csv-parse@7.0.3: {}
 
   d3-array@3.2.4:
     dependencies:

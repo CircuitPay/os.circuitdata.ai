@@ -23,7 +23,11 @@ beforeAll(async () => {
 }, 120_000);
 
 // A test that turns the operator switch off must not leave it off.
-afterEach(async () => { await settings().updateAdminConfig({ tenantBrandingEnabled: true }); });
+afterEach(async () => {
+  await settings().updateAdminConfig({ tenantBrandingEnabled: true }, {
+    admin: "admin", sessionId: "tenant-branding", via: "api", method: "setTenantBrandingEnabled",
+  });
+});
 
 afterAll(() => {
   undoClerk();

@@ -1,0 +1,42 @@
+// Generated from cloudflare.config.ts by scripts/generate-worker-configs.ts -- do not edit.
+// Change cloudflare.config.ts and run `pnpm configs:generate`.
+{
+  "name": "gatekeeper-retail",
+  "main": ".wrangler/validate/src/index.ts",
+  "compatibility_date": "2026-09-04",
+  "compatibility_flags": [
+    "allow_irrevocable_stub_storage",
+    "nodejs_als"
+  ],
+  "limits": {
+    "cpu_ms": 300000
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "invocation_logs": false
+    }
+  },
+  "r2_buckets": [
+    {
+      "binding": "RETAIL_RAW",
+      "bucket_name": "gadgets-retail-raw"
+    }
+  ],
+  "build": {
+    "command": "pnpm exec capnweb-validate build --out .wrangler/validate",
+    "watch_dir": "src"
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "RetailDataset",
+        "RetailGatekeeper",
+        "RetailConnection",
+        "RetailWebhookRoute"
+      ]
+    }
+  ]
+}

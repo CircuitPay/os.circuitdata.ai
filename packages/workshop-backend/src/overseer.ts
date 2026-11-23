@@ -555,6 +555,7 @@ function connectionTypeFromCreationSpec(
     case "aiModel": return "ai_model";
     case "agentSpawner": return "agent_spawner";
     case "ambient": return undefined;   // auto-provided, not a user-initiated connection
+    case "tenantAmbient": return undefined;
     case undefined: return undefined;
   }
 }
@@ -620,6 +621,10 @@ function validateChatAttachmentId(id: string): string {
 // this value; observations never go through the approve/reject paths that would dereference
 // the gatekeeper, so no lookup is ever attempted.
 const BUILTIN_TOOL_GATEKEEPER_ID = -1;
+
+// The observer account choice recorded for a tenant-held ("tenantAmbient") binding, which has no
+// per-member account: it is verified against the tenant's own account (see #tenantVerifier).
+const TENANT_ACCOUNT_CHOICE = -1;
 
 // If live change rows exist whose newest author differs from a new submission's author and the
 // stream has been idle this long, the older author's rows are materialized into their own
@@ -8834,6 +8839,22 @@ class OverseerImpl implements AgentHooks {
     return this.wrapUserDo(this.users.get(this.users.idFromString(this.ownerId)));
   }
 
+  // A fresh stub to the directory of the owner's tenant, which holds its tenant-held accounts; null
+  // for an owner outside any tenant (the legacy directory holds none).
+  async ownerTenantDirectory(): Promise<DurableObjectStub<UserDirectoryDurableObject> | null> {
+    let tenantId = tenantOfProfileId(await this.getOwnerProfileId());
+    return tenantId ? this.ctx.exports.UserDirectoryDurableObject.getByName(tenantId) : null;
+  }
+
+  // The vendor ids of the owner's tenant's accounts that are offered to workspaces now.
+  async #activeTenantVendors(): Promise<Set<string>> {
+    let directory = await this.ownerTenantDirectory();
+    if (!directory) return new Set();
+    return new Set((await directory.listTenantAccounts())
+        .filter(account => account.active && account.description.singleton?.tsType)
+        .map(account => account.vendorId));
+  }
+
   // Ensure every singleton account the gadget owner has (e.g. the Context Library) is provisioned
   // for this gadget as an ambient gatekeeper record, folded into each chat's env (named by the
   // gatekeeper's suggested binding name; see prepareChatBindings) so the agent can read it in
@@ -8848,6 +8869,12 @@ class OverseerImpl implements AgentHooks {
     let ownerId = this.ownerId;
     if (!ownerId) return;
     let ownerDo = this.ownerUserDo();
+    // The tenant's capsules reconcile alongside, isolated so neither source blocks the other.
+    let tenantCapsules = this.#ensureTenantAmbientCapsules(ownerId).catch(err => {
+      this.logger.error("failed to reconcile tenant ambient capsules", {
+        event: "ambient.capsule.provision.failed", error: err,
+      });
+    });
     // listProvidedAccounts ensures the owner's auto-provisioned singleton accounts exist first, so this
     // single round trip both provisions them and reads them back before we wire up capsules.
     let accounts = (await ownerDo.listProvidedAccounts())
@@ -8870,7 +8897,6 @@ class OverseerImpl implements AgentHooks {
       }
     }
     let toAdd = accounts.filter(account => !bound.has(account.vendorId));
-    if (toAdd.length === 0) return;
 
     // Each singleton account provides a normal Gatekeeper class (imbued via ctx.props with whatever
     // it needs — e.g. account id and sharing domain). We install it as a Facet exactly like any other
@@ -8900,6 +8926,58 @@ class OverseerImpl implements AgentHooks {
         });
       }
     }));
+    await tenantCapsules;
+  }
+
+  // The tenant-held counterpart of ensureAmbientCapsules: one unnamed record per account the owner's
+  // tenant has enabled (keyed by vendor id; the account itself stays in the tenant's directory), and
+  // none for one the tenant disabled or the operator turned off. Only the directory's record makes a
+  // capsule; the class is requested through the owner's user DO, which applies the deployment's
+  // gatekeeper policy.
+  async #ensureTenantAmbientCapsules(ownerId: string): Promise<void> {
+    let active = await this.#activeTenantVendors();
+    let bound = new Set<string>();
+    for (let gk of Array.from(this.storage.gatekeepers.list())) {
+      if (gk.creationSpec?.type !== "tenantAmbient") continue;
+      if (active.has(gk.creationSpec.vendorId)) {
+        bound.add(gk.creationSpec.vendorId);
+      } else {
+        this.removeGatekeeper(gk.id);
+      }
+    }
+    let ownerDo = this.ownerUserDo();
+    await Promise.all([...active].filter(vendorId => !bound.has(vendorId)).map(async vendorId => {
+      try {
+        let cls = await ownerDo.getTenantSingletonGatekeeperClass(vendorId);
+        if (!cls) return;
+        await this.addGatekeeper(cls, {type: "tenantAmbient", vendorId}, ownerId);
+      } catch (err) {
+        this.logger.error("failed to provision tenant ambient capsule", {
+          event: "ambient.capsule.provision.failed", vendorId, error: err,
+        });
+      }
+    }));
+  }
+
+  // Which of `targets` are tenant-held capsules whose account the owner's tenant no longer offers
+  // (disabled by the tenant, or turned off by the operator). Asks the directory only when there is
+  // such a capsule, and fails closed: if the directory cannot answer, every one is left out.
+  async #inactiveTenantCapsules(targets: WorkpieceId[]): Promise<Set<WorkpieceId>> {
+    let capsules = targets.flatMap(id => {
+      let spec = this.storage.gatekeepers.get(id)?.creationSpec;
+      return spec?.type === "tenantAmbient" ? [{id, vendorId: spec.vendorId}] : [];
+    });
+    if (capsules.length === 0) return new Set();
+    let active: Set<string>;
+    try {
+      active = await this.#activeTenantVendors();
+    } catch (err) {
+      this.logger.warn("failed to check tenant ambient capsules", {
+        event: "chat.binding.tenant.check.failed", error: err,
+      });
+      active = new Set();
+    }
+    return new Set(capsules.filter(capsule => !active.has(capsule.vendorId)).map(capsule => capsule.id));
   }
 
   // Derive the workspace's default binding list -- the seed binding layer for new (non-spawned)
@@ -9084,7 +9162,7 @@ class OverseerImpl implements AgentHooks {
       // determinism. A since-disconnected one stays in the list but becomes inert; ones the
       // workspace gains later are appended below.
       context.alwaysAvailableCapsuleIds = [...this.storage.gatekeepers.list()]
-          .filter(gk => gk.creationSpec?.type === "ambient")
+          .filter(gk => gk.creationSpec?.type === "ambient" || gk.creationSpec?.type === "tenantAmbient")
           .map(gk => gk.id)
           .toSorted((a, b) => a - b);
       dirty = true;
@@ -9328,8 +9406,12 @@ class OverseerImpl implements AgentHooks {
     // AiChatAgentContext.alwaysAvailableResources for how a change reaches the agent). Not an
     // observation: the catalog reaches every chat automatically, so by contract it holds nothing
     // that needs observer verification.
+    // A tenant-held capsule is offered only while its tenant has it enabled. Disabling removes the
+    // record at the next open, but a chat can take turns before that, so every turn asks again and
+    // leaves out any whose account is no longer offered.
+    let inactive = await this.#inactiveTenantCapsules(Object.values(seedMap));
     let catalogs = new Map(await Promise.all(ambientIds
-        .filter(id => this.gatekeeperUsable(id) && !this.#catalogless.has(id))
+        .filter(id => this.gatekeeperUsable(id) && !this.#catalogless.has(id) && !inactive.has(id))
         .map(async (gatekeeperId): Promise<[number, AgentCatalog | null]> => {
           let record = this.storage.gatekeepers.get(gatekeeperId);
           if (!record) return [gatekeeperId, null];  // disconnected since the chat took it in.
@@ -9380,7 +9462,7 @@ class OverseerImpl implements AgentHooks {
       }
       if (gadget) continue;  // ordinary agent-created worktrees never seed a chat
       let gk = this.storage.gatekeepers.get(target);
-      if (!gk || !this.gatekeeperUsable(gk.id)) continue;
+      if (!gk || !this.gatekeeperUsable(gk.id) || inactive.has(gk.id)) continue;
       let info: SeedBindingInfo =
           {name, target, title: gk.resourceTitle || "(untitled resource)", isGadget: false};
       if (ambientSet.has(target)) info.catalog = catalogs.get(target) ?? null;
@@ -9462,7 +9544,7 @@ class OverseerImpl implements AgentHooks {
       // Singleton gatekeepers (e.g. the Context Library) are auto-provided to every gadget, not
       // user-configured, so they're excluded from blueprints (re-added automatically on open). This
       // also covers an ambient capsule the agent promoted to a named binding via setGadgetBinding.
-      if (gk.creationSpec?.type === "ambient") continue;
+      if (gk.creationSpec?.type === "ambient" || gk.creationSpec?.type === "tenantAmbient") continue;
 
       // Annotation is optional. When absent, the binding is included with an empty
       // description and no resource suggestion. Legacy records may carry an `included:
@@ -11298,6 +11380,16 @@ class OverseerImpl implements AgentHooks {
       while (true) {
         let inScope = scope.gatekeepers;
 
+        // 3a. A tenant-held binding has no account to choose: every member of the owner's tenant is
+        //     verified against the tenant's own account, and nobody outside the tenant can be.
+        let tenantHeld = inScope.filter(gk => gk.creationSpec?.type === "tenantAmbient");
+        if (tenantHeld.length > 0) {
+          if (!sameTenant(profileId, await this.getOwnerProfileId())) {
+            throw new Error("This workspace uses data that belongs to an organization you are not in.");
+          }
+          for (let gk of tenantHeld) accountChoices[gk.id] = TENANT_ACCOUNT_CHOICE;
+        }
+
         // 3. Determine uncovered bindings: in-scope gatekeepers with no account choice yet. Ambient
         //    bindings use the collaborator's matching provided account automatically; unlike an
         //    ordinary connection, there is no meaningful account choice when one already exists.
@@ -11381,7 +11473,9 @@ class OverseerImpl implements AgentHooks {
           }
 
           try {
-            let verifier = await requireVerifier(clientUser, accountId, vendorId);
+            let verifier = gk.creationSpec?.type === "tenantAmbient"
+                ? await this.#tenantVerifier(profileId, vendorId)
+                : await requireVerifier(clientUser, accountId, vendorId);
             // Serialized per (observer, gatekeeper) so this registration can't land while an
             // exclusion teardown's removeObserver for the same pair is still in flight (which
             // would delete it moments later); see #withObserverGatekeeperLock.
@@ -11504,6 +11598,9 @@ class OverseerImpl implements AgentHooks {
     });
 
     let lines = await Promise.all(failed.map(async ({gk, failure}) => {
+      if (gk.creationSpec?.type === "tenantAmbient") {
+        return `${observerBindingTitle(gk)} (your organization's account) — ${oneLineReason(failure.reason)}`;
+      }
       // A disconnected account has no description left, so name it by what became of it.
       let label = "an account you have since disconnected";
       try {
@@ -11523,6 +11620,21 @@ class OverseerImpl implements AgentHooks {
     }));
 
     return lines.join("\n");
+  }
+
+  // The verifier a member of the owner's tenant is checked with for a tenant-held binding: from the
+  // tenant's own account, so it holds for exactly the tenant's members. Refused for anyone else, and
+  // throws with the reason the user sees once the tenant no longer offers the account (like
+  // requireVerifier).
+  async #tenantVerifier(profileId: string, vendorId: string)
+      : Promise<Fetcher<GatekeeperUserVerifier>> {
+    if (!sameTenant(profileId, await this.getOwnerProfileId())) {
+      throw new Error("This workspace uses data that belongs to an organization you are not in.");
+    }
+    let directory = await this.ownerTenantDirectory();
+    let verifier = directory ? await directory.getTenantVerifier(vendorId) : null;
+    if (!verifier) throw new Error("This account is no longer connected.");
+    return verifier;
   }
 
   // Get the owner's profile ID, using the in-memory cache when available. The owner's

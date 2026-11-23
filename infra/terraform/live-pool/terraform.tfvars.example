@@ -1,0 +1,19 @@
+account_id    = "0123456789abcdef0123456789abcdef"
+instance_name = "pool"
+release_dir   = "../../../../release-out"
+
+hostname  = "os.example.com"
+zone_name = "example.com"
+
+clerk_issuer          = "https://example.clerk.accounts.dev"
+clerk_publishable_key = "pk_live_..."
+
+# Clerk user ids of the deployment operators (who can open /admin).
+operators = ["user_2abc..."]
+
+# Optional integrations beyond the context library and the scheduler:
+# gatekeepers = { github = {} }
+
+# Secrets do not belong in this file. Supply them from the environment instead:
+#   export TF_VAR_clerk_webhook_secret='whsec_...'
+#   export TF_VAR_gatekeeper_secrets='{"github":{"CLIENT_ID":"...","CLIENT_SECRET":"..."}}'

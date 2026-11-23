@@ -2,8 +2,18 @@ import {
   MAX_DIRECTORY_TEXT_LENGTH, type AdminUserRecord, type AdminWorkspacePage,
   type AdminWorkspaceRecord, type FileNameConflict, type UserDirectoryRecord,
 } from "@gadgets/workshop-shared/api";
+import type {
+  AccountDescription, AppUiContext, Gatekeeper, GatekeeperUiFrame, GatekeeperUser,
+  GatekeeperUserVerifier, GatekeeperVendor,
+} from "@gadgets/workshop-shared/gatekeeper";
 import { DurableObject } from "cloudflare:workers";
+import { readAdminConfig } from "./admin-config.js";
 import { createWorkshopLogger } from "./observability";
+import { ambientGatekeeperMode } from "./provisioning-policy.js";
+import {
+  makeUserDirectoryStorage, type TenantAccountRecord, type UserDirectoryStorage,
+} from "./storage-schema/user-directory-storage.js";
+import { OPERATOR_ENABLED_BY, tenantScopedVendors } from "./tenant-gatekeepers.js";
 import {
   hasBranding, validateBrandingColor, validateBrandingLogo, validateBrandingName,
   type StoredBranding,
@@ -102,6 +112,21 @@ function collectPage<Row, Item extends { id: string }>(
   return { items };
 }
 
+// The optional account methods a tenant-held account is gated on by its description (singleton /
+// providesUi), viewed as required for the call; see SingletonAccountStub in user.ts.
+type TenantAccountStub = Required<Pick<GatekeeperUser, "getSingletonGatekeeperClass" | "startAppUi">>;
+type AccountCreatorStub = Required<Pick<GatekeeperVendor, "createAccount">>;
+
+/** A tenant-held account as the directory reports it. */
+export type TenantAccountInfo = {
+  vendorId: string;
+  description: AccountDescription;
+  /** The tenant's own switch. */
+  enabled: boolean;
+  /** Enabled, and the operator's mode for the vendor is not "disabled": offered to workspaces. */
+  active: boolean;
+};
+
 /**
  * Deployment-wide directory of users and workspaces: users find collaborators in it
  * (AuthenticatedApi.searchUsers()), and admins list the deployment's users and workspaces
@@ -125,8 +150,11 @@ function collectPage<Row, Item extends { id: string }>(
  * is bounded by its text as well as by its count.
  */
 export class UserDirectoryDurableObject extends DurableObject<Cloudflare.Env> {
+  #storage: UserDirectoryStorage;
+
   constructor(ctx: DurableObjectState, env: Cloudflare.Env) {
     super(ctx, env);
+    this.#storage = makeUserDirectoryStorage(ctx.storage);
     ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -525,8 +553,9 @@ export class UserDirectoryDurableObject extends DurableObject<Cloudflare.Env> {
   }
 
   /**
-   * Erases the tenant this directory belongs to (the Durable Object is named by the tenant id):
-   * every user recorded here is erased (see `UserDurableObject.eraseAccount`), leaving each only a
+   * Erases the tenant this directory belongs to (the Durable Object is named by the tenant id): its
+   * tenant-held gatekeeper accounts are revoked (each erases its data), then every user recorded here
+   * is erased (see `UserDurableObject.eraseAccount`), leaving each only a
    * membership end at `endedAt`, and then the directory is emptied. Members are found here, so one
    * whose sign-in never reached the directory is not. A failure leaves the directory as it was and
    * throws, so a retry finds the same members; every step is idempotent.
@@ -536,6 +565,12 @@ export class UserDirectoryDurableObject extends DurableObject<Cloudflare.Env> {
    */
   async eraseTenant(endedAt: number): Promise<void> {
     if (!this.ctx.id.name) throw new Error("Only a named tenant can be erased.");
+    // The tenant's accounts go first, each erasing what it holds; a failure throws so the caller
+    // (the Clerk webhook) retries, and a record is dropped only once its account is revoked.
+    for (const record of Array.from(this.#storage.tenantAccounts.list())) {
+      await record.account.revoke();
+      this.#storage.tenantAccounts.delete(record.vendorId);
+    }
     await this.#purgeFiles();
     const users = this.ctx.exports.UserDurableObject;
     const ids = this.listUserIds();
@@ -548,6 +583,134 @@ export class UserDirectoryDurableObject extends DurableObject<Cloudflare.Env> {
     this.ctx.storage.sql.exec(`DELETE FROM users`);
     this.ctx.storage.sql.exec(`DELETE FROM user_activity`);
     await this.clearBranding();
+  }
+
+  // --- Tenant-held gatekeeper accounts ---
+
+  // The directory's name, which is the tenant id; only a named tenant holds accounts.
+  #assertTenant(): void {
+    if (!this.ctx.id.name) throw new Error("Only a named tenant can hold gatekeeper accounts.");
+  }
+
+  // Per-vendor dedup of concurrent enables: createAccount() is a cross-Worker call that opens the
+  // input gate, so two overlapping enables could both find no record and mint two accounts (as
+  // UserDurableObject.provisionAmbientAccount guards against).
+  #enabling = new Map<string, Promise<void>>();
+
+  /**
+   * Enables the tenant's account for `vendorId`, minting it with the vendor's createAccount() the
+   * first time. `enabledBy` is the administrator's profile id, or OPERATOR_ENABLED_BY. Refused for a
+   * vendor that is not bound or not tenant-scoped, and while the operator's mode is "disabled".
+   */
+  enableTenantAccount(vendorId: string, enabledBy: string): Promise<void> {
+    this.#assertTenant();
+    vendorId = vendorId.toLowerCase();
+    const inFlight = this.#enabling.get(vendorId);
+    if (inFlight) return inFlight;
+    const promise = this.#enableTenantAccount(vendorId, enabledBy)
+        .finally(() => { this.#enabling.delete(vendorId); });
+    this.#enabling.set(vendorId, promise);
+    return promise;
+  }
+
+  async #enableTenantAccount(vendorId: string, enabledBy: string): Promise<void> {
+    if (ambientGatekeeperMode(await readAdminConfig(this.env), vendorId) === "disabled") {
+      throw new Error(`The "${vendorId}" gatekeeper is disabled on this deployment.`);
+    }
+    const existing = this.#storage.tenantAccounts.get(vendorId);
+    if (existing) {
+      if (!existing.enabled) {
+        this.#storage.tenantAccounts.put(
+            { ...existing, enabled: true, enabledBy, enabledAt: Date.now() });
+      }
+      return;
+    }
+    const [scoped] = await tenantScopedVendors(this.env, id => id === vendorId);
+    if (!scoped) throw new Error(`The "${vendorId}" gatekeeper can't be enabled for an organization.`);
+    const account = await (scoped.vendor as unknown as AccountCreatorStub).createAccount();
+    const description = await account.describe();
+    this.#storage.tenantAccounts.put({
+      vendorId, account, description, enabled: true, enabledBy, enabledAt: Date.now(), disabledAt: null,
+    });
+  }
+
+  /**
+   * Stops offering the tenant's account to workspaces; the account and its data are kept, and
+   * enabling again restores them. Refused while the operator's mode for the vendor is "enabled".
+   * Idempotent.
+   */
+  async disableTenantAccount(vendorId: string): Promise<void> {
+    this.#assertTenant();
+    vendorId = vendorId.toLowerCase();
+    if (ambientGatekeeperMode(await readAdminConfig(this.env), vendorId) === "enabled") {
+      throw new Error("This gatekeeper is provided to every organization and can't be turned off.");
+    }
+    const existing = this.#storage.tenantAccounts.get(vendorId);
+    if (!existing?.enabled) return;
+    this.#storage.tenantAccounts.put({ ...existing, enabled: false, disabledAt: Date.now() });
+  }
+
+  /**
+   * The tenant's accounts. Every tenant-scoped vendor the operator set to "enabled" is enabled here
+   * first (minted on this first use), so the operator's mode reaches every tenant.
+   */
+  async listTenantAccounts(): Promise<TenantAccountInfo[]> {
+    this.#assertTenant();
+    const config = await readAdminConfig(this.env);
+    const forced = await tenantScopedVendors(this.env, vendorId =>
+        ambientGatekeeperMode(config, vendorId) === "enabled" &&
+        !this.#storage.tenantAccounts.get(vendorId)?.enabled);
+    for (const { vendorId } of forced) {
+      try {
+        await this.enableTenantAccount(vendorId, OPERATOR_ENABLED_BY);
+      } catch (error) {
+        logger.error("failed to provision a tenant account", {
+          event: "tenant.account.provision.failed", tenantId: this.ctx.id.name, vendorId, error,
+        });
+      }
+    }
+    return Array.from(this.#storage.tenantAccounts.list(), record => ({
+      vendorId: record.vendorId,
+      description: record.description,
+      enabled: record.enabled,
+      active: record.enabled && ambientGatekeeperMode(config, record.vendorId) !== "disabled",
+    }));
+  }
+
+  // The record for `vendorId` if it is offered to workspaces now, else null.
+  async #activeAccount(vendorId: string): Promise<TenantAccountRecord | null> {
+    this.#assertTenant();
+    const record = this.#storage.tenantAccounts.get(vendorId.toLowerCase());
+    if (!record?.enabled) return null;
+    const mode = ambientGatekeeperMode(await readAdminConfig(this.env), record.vendorId);
+    return mode === "disabled" ? null : record;
+  }
+
+  /**
+   * The gatekeeper class of the tenant's enabled account for `vendorId`, or null when there is none
+   * or it declares no singleton. Reached through UserDurableObject.getTenantSingletonGatekeeperClass,
+   * which applies the deployment's gatekeeper policy first.
+   */
+  async getTenantSingletonClass(vendorId: string): Promise<DurableObjectClass<Gatekeeper<any>> | null> {
+    const record = await this.#activeAccount(vendorId);
+    if (!record?.description.singleton) return null;
+    return (record.account as unknown as TenantAccountStub).getSingletonGatekeeperClass();
+  }
+
+  /** Opens the management UI of the tenant's enabled account for `vendorId`. */
+  async startTenantAppUi(vendorId: string, context: AppUiContext): Promise<GatekeeperUiFrame> {
+    const record = await this.#activeAccount(vendorId);
+    if (!record?.description.providesUi) throw new Error("No such app.");
+    return (record.account as unknown as TenantAccountStub).startAppUi(context);
+  }
+
+  /**
+   * A verifier from the tenant's enabled account for `vendorId`, for a member of this tenant
+   * observing a workspace; null when the tenant has no enabled account for it.
+   */
+  async getTenantVerifier(vendorId: string): Promise<Fetcher<GatekeeperUserVerifier> | null> {
+    const record = await this.#activeAccount(vendorId);
+    return record ? await record.account.getVerifier() : null;
   }
 
   /**

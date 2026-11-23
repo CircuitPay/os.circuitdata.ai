@@ -150,7 +150,10 @@ export class ContextAccount
 
   async startAppUi(context: AppUiContext): Promise<GatekeeperUiFrame> {
     // Hand the iframe its per-user UI capability. isAdmin and the user-selection exchange are
-    // supplied fresh per open.
+    // supplied fresh per open; the exchange is absent only for tenant-held accounts, which this is not.
+    if (!context.userSelectionExchange) {
+      throw new Error("The Context Library opens only from a user's own account.");
+    }
     let ui = new RpcStub(new ContextApiImpl(
       this.env, this.ctx.props.sharingDomain, this.ctx.props.accountId, context.isAdmin,
       this.#collections(), this.#userLibraries(), this.#registries(),

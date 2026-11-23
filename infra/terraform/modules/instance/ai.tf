@@ -12,4 +12,10 @@ resource "cloudflare_ai_gateway" "this" {
   collect_logs               = true
   rate_limiting_interval     = 0
   rate_limiting_limit        = 0
+
+  # DLP is set in the dashboard, not here. The provider (5.29) cannot clear it: it sends a null
+  # `dlp`, which the API rejects (7001 Invalid input), so any drift would fail every apply.
+  lifecycle {
+    ignore_changes = [dlp]
+  }
 }

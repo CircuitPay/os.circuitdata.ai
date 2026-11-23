@@ -122,11 +122,11 @@ await generateWorkerConfigs({ check: false });
 
 const gatekeepers = findGatekeepers(PACKAGES_DIR);
 
-// The Context Library (packages/gatekeeper-context) is discovered by findGatekeepers and bound
-// like any other gatekeeper (GATEKEEPER_CONTEXT -> GatekeeperVendor). Its describe() reports
-// autoProvisionsAccount, so core auto-provisions one Context account per user. The only extra
-// wiring it needs is a sharingDomain in its binding props (see below).
-const CONTEXT_GATEKEEPER_NAME = "gatekeeper-context";
+// The Context Library (packages/gatekeeper-context) and Retail data (packages/gatekeeper-retail)
+// are discovered by findGatekeepers and bound like any other gatekeeper (GATEKEEPER_CONTEXT ->
+// GatekeeperVendor). Both report autoProvisionsAccount, so core auto-provisions their accounts. The
+// only extra wiring they need is a sharingDomain in their binding props (see below).
+const SHARING_DOMAIN_GATEKEEPERS: ReadonlySet<string> = new Set(["gatekeeper-context", "gatekeeper-retail"]);
 
 // What Wrangler picks for itself when no --port is derived, so also what we poll.
 const DEFAULT_WRANGLER_PORT = 8787;
@@ -643,9 +643,9 @@ for (const gk of gatekeepers) {
       service: gk.name,
       entrypoint: "GatekeeperVendor",
     };
-    // The Context gatekeeper namespaces each workshop's data by a "sharingDomain" carried in its
+    // These gatekeepers namespace each workshop's data by a "sharingDomain" carried in their
     // binding props (see packages/gatekeeper-context/src/domain.ts). Dev uses a single domain.
-    if (gk.name === CONTEXT_GATEKEEPER_NAME) {
+    if (SHARING_DOMAIN_GATEKEEPERS.has(gk.name)) {
       binding.props = { sharingDomain: "dev" };
     }
     config.services.push(binding);

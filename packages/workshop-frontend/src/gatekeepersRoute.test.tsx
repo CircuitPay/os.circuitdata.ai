@@ -52,6 +52,8 @@ const renderPage = async () => {
   const api = {
     listAddableGatekeepers: async () => [],
     listGatekeeperVendors: async () => [{ id: 'example', description: { displayName: 'Example', url: 'https://example.com', tagline: 'Example service' }, supportedResources: [] }],
+    // No Clerk on this deployment: the page's organization gatekeepers section renders nothing.
+    getTenantGatekeepersApi: async () => null,
     subscribeConnectedAccounts: (subscriber: Parameters<AuthenticatedApi['subscribeConnectedAccounts']>[0]) => {
       subscriber.ready()
       return Object.assign(Promise.resolve(), { [Symbol.dispose]() {} })

@@ -278,8 +278,9 @@ const HANDLED_CONFIG_KEYS = new Set([
   "$schema", "name", "main", "build", "compatibility_date", "compatibility_flags", "rules",
   "migrations", "observability", "kv_namespaces", "r2_buckets", "worker_loaders", "services",
   "assets", "vars",
-  // What one invocation may use (pdf-renderer's CPU time). Carried verbatim, like observability:
-  // a customer instance's Worker needs what an internal one does.
+  // What one invocation may use (pdf-renderer's CPU time, gatekeeper-retail's imports and
+  // rollups). Carried verbatim, like observability: a customer instance's Worker needs what an
+  // internal one does.
   "limits",
   // Browser Rendering (Gadget PDF exports). Unlike artifacts it is generally available, so it
   // passes through to customer instances as a placeholder-free binding, like the AI binding.
@@ -337,6 +338,7 @@ const PREINSTALL = new Set(["gatekeeper-context", "gatekeeper-scheduler", "gatek
 const SINGLETON = new Set([
   "gatekeeper-context",       // (1) ambient ContextLibrary
   "gatekeeper-scheduler",     // (1) ambient ScheduleSession
+  "gatekeeper-retail",        // (1) ambient RetailData, one per tenant
   "gatekeeper-websearch",     // (1) ambient WebSearchSession
   "gatekeeper-homeassistant", // (2) no inputs; users connect their own URL + token in-app
   "gatekeeper-mcp",           // (2) no inputs; users paste their own endpoints in-app
@@ -544,10 +546,11 @@ export function buildWorkerEntry(
     // GatekeeperVendor entrypoint (same shape run-dev-server.ts generates for dev).
     gatekeeperBindingExpansion = {
       entrypoint: "GatekeeperVendor",
-      // gatekeeper-context namespaces each workshop's shared data by a sharingDomain carried in
-      // binding props; the instance's public origin is the natural stable value.
+      // gatekeeper-context and gatekeeper-retail namespace each workshop's data by a sharingDomain
+      // carried in binding props; the instance's public origin is the natural stable value.
       propsByPackage: {
         "gatekeeper-context": { sharingDomain: "$PUBLIC_BASE_URL" },
+        "gatekeeper-retail": { sharingDomain: "$PUBLIC_BASE_URL" },
       },
     };
   } else if (kind === "router") {

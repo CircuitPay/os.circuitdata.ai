@@ -52,9 +52,15 @@ export const HANDOFF_KEY = 'gadgets.handoff'
 /**
  * The record the Workshop tab writes into a popup's own sessionStorage before navigating it: which
  * kind of flow the popup runs, and the flow's nonce, which the handoff page presents with the
- * ticket (`completeConnectHandoff` for a connect, `confirmLogin` for a sign-in).
+ * ticket (`completeConnectHandoff` for a connect, `confirmLogin` for a sign-in). An `app` flow is a
+ * provider connection a gatekeeper app started (`openConnectPopup`): the page redeems it with the
+ * app's own `ui.redeemConnectHandoff`, over this popup's session.
  */
-export type PopupHandoff = { kind: 'connect' | 'login'; nonce: string }
+export type PopupHandoff =
+  | { kind: 'connect' | 'login'; nonce: string }
+  | { kind: 'app'; appId: string; nonce: string }
+
+const APP_ID_PATTERN = /^[a-z0-9_-]{1,64}$/
 
 /**
  * Opens `url` as a popup that holds `handoff` and nothing else of this tab. The popup is opened
@@ -121,16 +127,65 @@ let lastConnectPopup: AuthPopup | null = null
  * authentication or redemption fails, or the native user cancels. A caller's optional signal
  * closes its pending native popup and cancels redemption/reconnect recovery.
  */
-export async function openConnectWindow(flow: ConnectFlowStart,
+export function openConnectWindow(flow: ConnectFlowStart,
   api: Pick<AuthenticatedApi, 'completeConnectHandoff'>,
+  signal?: AbortSignal): Promise<'opened' | 'connected'> {
+  return replaceConnectPopup(
+    flow.url, { kind: 'connect', nonce: flow.nonce }, nativeConnectCompletion(api, flow.nonce), signal)
+}
+
+/**
+ * Redeems a provider connection a gatekeeper app started (`openConnectPopup`): obtains the app's
+ * frame over `api` and calls its `ui.redeemConnectHandoff(ticket, nonce)`, which checks that the
+ * ticket belongs to a flow of this member's tenant. The frame is disposed after.
+ */
+export async function redeemAppHandoff(
+  api: Pick<AuthenticatedApi, 'getGatekeeperApp'>, appId: string, ticket: string, nonce: string,
+): Promise<void> {
+  const frame = await api.getGatekeeperApp(appId)
+  if (!frame) throw new Error('This app is not available on this deployment.')
+  // The capability's shape is gatekeeper-defined; a gatekeeper without the method rejects the call.
+  const ui = frame.ui as unknown as { redeemConnectHandoff(ticket: string, nonce: string): Promise<unknown>; [Symbol.dispose]?(): void }
+  try {
+    await ui.redeemConnectHandoff(ticket, nonce)
+  } finally {
+    ui[Symbol.dispose]?.()
+  }
+}
+
+/**
+ * Opens a provider connection a gatekeeper app started (its `openConnectPopup` host call) as a
+ * disowned popup, recording `{ kind: 'app', appId, nonce }` for ConnectHandoffPage. The URL and the
+ * nonce come from an untrusted frame: only an `https:` URL and a 64-hex nonce are accepted. A native
+ * app redeems the returned ticket in-app over `api` (`redeemAppHandoff`), as `openConnectWindow` does.
+ */
+export async function openAppConnectWindow(flow: unknown, appId: string,
+  api: Pick<AuthenticatedApi, 'getGatekeeperApp'>,
+  signal?: AbortSignal): Promise<'opened' | 'connected'> {
+  const { url, nonce } = (typeof flow === 'object' && flow !== null ? flow : {}) as { url?: unknown; nonce?: unknown }
+  let parsed: URL
+  try {
+    parsed = new URL(typeof url === 'string' ? url : '')
+  } catch {
+    throw new TypeError('Invalid connect URL.')
+  }
+  if (parsed.protocol !== 'https:') throw new TypeError('Connect URLs must use https.')
+  if (typeof nonce !== 'string' || !HEX_256_PATTERN.test(nonce)) throw new TypeError('Invalid connect nonce.')
+  if (!APP_ID_PATTERN.test(appId)) throw new TypeError('Invalid app id.')
+  return replaceConnectPopup(parsed.href, { kind: 'app', appId, nonce }, (ticket, abort) => {
+    abort.throwIfAborted()
+    return redeemAppHandoff(api, appId, ticket, nonce)
+  }, signal)
+}
+
+async function replaceConnectPopup(url: string, handoff: PopupHandoff,
+  completeNative: (ticket: string, signal: AbortSignal) => Promise<void>,
   signal?: AbortSignal): Promise<'opened' | 'connected'> {
   if (signal?.aborted) throw new AuthPopupCancelledError()
   if (lastConnectPopup) {
     try { lastConnectPopup.close() } catch { /* cross-origin or already gone */ }
   }
-  const popup = openDisownedPopup(
-    flow.url, uniquePopupName('gadgets-connect'), { kind: 'connect', nonce: flow.nonce },
-    nativeConnectCompletion(api, flow.nonce))
+  const popup = openDisownedPopup(url, uniquePopupName('gadgets-connect'), handoff, completeNative)
   lastConnectPopup = popup
   if (!popup.completion) return 'opened'
   const cancel = () => popup.close()
@@ -166,8 +221,11 @@ export function readPopupHandoff(): PopupHandoff | null {
     return null
   }
   if (typeof parsed !== 'object' || parsed === null) return null
-  const { kind, nonce } = parsed as { kind?: unknown; nonce?: unknown }
-  if (kind !== 'connect' && kind !== 'login') return null
+  const { kind, nonce, appId } = parsed as { kind?: unknown; nonce?: unknown; appId?: unknown }
   if (typeof nonce !== 'string' || !HEX_256_PATTERN.test(nonce)) return null
+  if (kind === 'app') {
+    return typeof appId === 'string' && APP_ID_PATTERN.test(appId) ? { kind, appId, nonce } : null
+  }
+  if (kind !== 'connect' && kind !== 'login') return null
   return { kind, nonce }
 }

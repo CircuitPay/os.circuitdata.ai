@@ -63,14 +63,16 @@ test("a tag the history does not contain is refused: the Worker is newer than th
   assert.throws(() => planMigrations(HISTORY, "v9"), /migration "v9", which this release does not contain.*cannot be rolled back/s);
 });
 
-test("metadata carries the bindings, migrations and observability and omits unset parts", () => {
-  const spec = specWith({ observability: { enabled: true } });
+test("metadata carries the bindings, migrations, observability and limits and omits unset parts", () => {
+  const spec = specWith({ observability: { enabled: true }, limits: { cpu_ms: 300_000 } });
   const metadata = buildMetadata(spec, planMigrations(HISTORY, "v1"));
   assert.equal(metadata.main_module, "index.js");
   assert.deepEqual(metadata.compatibility_flags, ["nodejs_compat"]);
   assert.deepEqual(metadata.migrations, { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["C"] }] });
   assert.deepEqual(metadata.observability, { enabled: true });
+  assert.deepEqual(metadata.limits, { cpu_ms: 300_000 });
   assert.equal("migrations" in buildMetadata(spec, undefined), false);
+  assert.equal("limits" in buildMetadata(specWith({ limits: null }), undefined), false);
 });
 
 test("the form has the metadata part and each module with its content type", async () => {

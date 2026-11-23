@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  HANDOFF_KEY, HANDOFF_PATH, openConnectWindow, readPopupHandoff, ticketFromHandoffFragment,
+  HANDOFF_KEY, HANDOFF_PATH, openAppConnectWindow, openConnectWindow, readPopupHandoff, ticketFromHandoffFragment,
   uniquePopupName,
 } from './connectHandoff'
 import { createRouter } from './router'
@@ -115,6 +115,42 @@ describe('openConnectWindow', () => {
   })
 })
 
+describe('openAppConnectWindow', () => {
+  const api = { getGatekeeperApp: vi.fn<(id: string) => Promise<null>>().mockResolvedValue(null) }
+  afterEach(() => {
+    vi.restoreAllMocks()
+    sessionStorage.clear()
+  })
+
+  it('writes an app handoff record into a disowned popup and navigates it', async () => {
+    const popup = fakePopup()
+    vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
+
+    await expect(openAppConnectWindow(
+      { url: 'https://connect.squareup.com/oauth2/authorize?state=x', nonce: NONCE }, 'retail', api,
+    )).resolves.toBe('opened')
+
+    expect(JSON.parse(popup.sessionStorage.store.get(HANDOFF_KEY)!))
+      .toEqual({ kind: 'app', appId: 'retail', nonce: NONCE })
+    expect(popup.openerAtReplace).toBeNull()
+    expect(popup.location.replace).toHaveBeenCalledExactlyOnceWith('https://connect.squareup.com/oauth2/authorize?state=x')
+    expect(sessionStorage.length).toBe(0)
+    expect(api.getGatekeeperApp).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['a javascript: URL', { url: 'javascript:alert(1)', nonce: NONCE }],
+    ['an http URL', { url: 'http://connect.squareup.com/', nonce: NONCE }],
+    ['a relative URL', { url: '/connect/handoff', nonce: NONCE }],
+    ['a malformed nonce', { url: 'https://connect.squareup.com/', nonce: 'x' }],
+    ['no flow', null],
+  ])('refuses %s from the frame without opening anything', async (_label, flow) => {
+    const open = vi.spyOn(window, 'open')
+    await expect(openAppConnectWindow(flow, 'retail', api)).rejects.toThrow(TypeError)
+    expect(open).not.toHaveBeenCalled()
+  })
+})
+
 describe('uniquePopupName', () => {
   it('names each popup with a random suffix, not a counter', () => {
     const first = uniquePopupName('gadgets-connect')
@@ -132,6 +168,8 @@ describe('readPopupHandoff', () => {
     sessionStorage.setItem(HANDOFF_KEY, JSON.stringify({ kind: 'login', nonce: NONCE }))
 
     expect(readPopupHandoff()).toEqual({ kind: 'login', nonce: NONCE })
+    sessionStorage.setItem(HANDOFF_KEY, JSON.stringify({ kind: 'app', appId: 'retail', nonce: NONCE }))
+    expect(readPopupHandoff()).toEqual({ kind: 'app', appId: 'retail', nonce: NONCE })
     expect(sessionStorage.getItem(HANDOFF_KEY)).toBeNull()
     expect(readPopupHandoff()).toBeNull()
   })
@@ -143,6 +181,8 @@ describe('readPopupHandoff', () => {
     ['an uppercase nonce', JSON.stringify({ kind: 'connect', nonce: 'B'.repeat(64) })],
     ['a short nonce', JSON.stringify({ kind: 'connect', nonce: 'b'.repeat(63) })],
     ['a missing nonce', JSON.stringify({ kind: 'connect' })],
+    ['an app record without an app id', JSON.stringify({ kind: 'app', nonce: NONCE })],
+    ['an app record with a malformed app id', JSON.stringify({ kind: 'app', appId: '../x', nonce: NONCE })],
     ['a non-object', JSON.stringify('connect')],
   ])('returns null and removes the key for %s', (_label, stored) => {
     sessionStorage.setItem(HANDOFF_KEY, stored)

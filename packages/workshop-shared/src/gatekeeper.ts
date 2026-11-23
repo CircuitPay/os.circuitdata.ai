@@ -77,6 +77,15 @@ export type VendorDescription = {
    * management UI (see AccountDescription.singleton / .providesUi).
    */
   autoProvisionsAccount?: boolean;
+
+  /**
+   * The vendor's auto-provisioned account belongs to a tenant (an organization or a personal
+   * workspace) rather than to one user: the Workshop mints it once per tenant, keeps it in the
+   * tenant's directory, and offers it to every member's workspaces. This only makes the vendor
+   * eligible. The account becomes ambient for a tenant solely when that tenant's administrator
+   * enables it (or the deployment operator's mode is "enabled"). Requires autoProvisionsAccount.
+   */
+  tenantScoped?: boolean;
 }
 
 /**
@@ -172,16 +181,57 @@ export interface GatekeeperUserSelectionReceiver extends RpcTarget {
  * opened.
  */
 export type AppUiContext = {
-  /** Whether the opening user is currently a deployment admin. */
+  /**
+   * Whether the opening user is currently a deployment admin (a deployment operator, not a tenant
+   * administrator).
+   */
   isAdmin: boolean;
 
   /**
    * Redeems the tickets this account's UI receives from the Workshop user
    * picker (via the host's `selectUsers()`); see
-   * GatekeeperUserSelectionExchange.
+   * GatekeeperUserSelectionExchange. Absent for a tenant-held account (when
+   * `tenant` is set): the picker mints tickets only for a user's own accounts.
    */
-  userSelectionExchange: Fetcher<GatekeeperUserSelectionExchange>;
+  userSelectionExchange?: Fetcher<GatekeeperUserSelectionExchange>;
+
+  /** Present only when the app belongs to a tenant-held account (VendorDescription.tenantScoped). */
+  tenant?: TenantAppContext;
 }
+
+/**
+ * The tenant facts a tenant-held account's management UI receives. The role is never a stored
+ * flag: call `access.current()` before every action that needs it.
+ */
+export type TenantAppContext = {
+  /** Stable opaque id of the signed-in member within this tenant, for attribution only. */
+  memberId: string;
+  /** The member's display name, for attribution only. */
+  memberName: string | null;
+  /** Re-reads the live session on each call. */
+  access: RpcStub<TenantAccess>;
+}
+
+/** A live view of the signed-in member's standing in the tenant that owns the app. */
+export interface TenantAccess extends RpcTarget {
+  /**
+   * The member's current rights. Throws if the session has ended, the member has left, or the
+   * active tenant changed since the app was opened.
+   */
+  current(): Promise<{ canManage: boolean }>;
+}
+
+/** One tenant file handed to a gatekeeper app by the Workshop after the member picked it. */
+export type TenantFileDelivery = {
+  /** The file's name in the tenant file area (display only). */
+  name: string;
+  /** Exact byte length of `stream`. */
+  size: number;
+  /** Sanitized MIME type. */
+  contentType: string;
+  /** The file's bytes. */
+  stream: ReadableStream<Uint8Array>;
+};
 
 // The agent catalog is bounded discovery metadata a gatekeeper exposes via
 // Gatekeeper.getAgentCatalog() so the agent can see *what* is reachable through a session (e.g. the

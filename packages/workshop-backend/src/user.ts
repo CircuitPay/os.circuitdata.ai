@@ -2330,15 +2330,19 @@ export class UserDurableObject extends DurableObject<Cloudflare.Env> {
     return false;
   }
 
-  // Resolve every bound vendor that auto-provisions an account (VendorDescription.autoProvisionsAccount),
-  // describing them in parallel and dropping any whose describe() fails. Shared discovery step for both
-  // listing and auto-provisioning ambient gatekeepers; callers apply their own admin-mode filter.
+  // Resolve every bound vendor that auto-provisions a per-user account (VendorDescription.
+  // autoProvisionsAccount), describing them in parallel and dropping any whose describe() fails. A
+  // tenantScoped vendor's account belongs to the tenant (see user-directory.ts), so it is never
+  // provisioned per user and is left out. Shared discovery step for both listing and
+  // auto-provisioning ambient gatekeepers; callers apply their own admin-mode filter.
   async #ambientVendors():
       Promise<Array<{vendorId: string, vendor: Service<GatekeeperVendor>, description: VendorDescription}>> {
     let described = await Promise.all([...this.vendors].map(async ([vendorId, vendor]) => {
       try {
         let description = await vendor.describe();
-        return description.autoProvisionsAccount ? {vendorId, vendor, description} : null;
+        return description.autoProvisionsAccount && !description.tenantScoped
+            ? {vendorId, vendor, description}
+            : null;
       } catch (err) {
         logger.warn("failed to describe vendor", {
           event: "vendor.describe.failed", vendorId, error: err,
@@ -2390,7 +2394,7 @@ export class UserDurableObject extends DurableObject<Cloudflare.Env> {
     }
 
     let description = await vendor.describe();
-    if (!description.autoProvisionsAccount) {
+    if (!description.autoProvisionsAccount || description.tenantScoped) {
       throw new Error(`The "${vendorId}" gatekeeper can't be added this way.`);
     }
 
@@ -2491,6 +2495,21 @@ export class UserDurableObject extends DurableObject<Cloudflare.Env> {
     // SingletonAccountStub view (see its definition for why the cast is needed).
     if (!record?.description.singleton) return null;
     return (record.account as unknown as SingletonAccountStub).getSingletonGatekeeperClass();
+  }
+
+  /**
+   * The gatekeeper class of this user's tenant's enabled account for a tenant-scoped vendor (see
+   * UserDirectoryDurableObject.getTenantSingletonClass), or null when there is none. The deployment's
+   * gatekeeper policy is applied first, so an operator's "disabled" mode blocks it whatever the
+   * tenant's record says. Refused for an account outside any tenant.
+   */
+  async getTenantSingletonGatekeeperClass(vendorId: string)
+      : Promise<DurableObjectClass<Gatekeeper<any>> | null> {
+    let tenantId = tenantOfProfileId(this.storage.profile.get().id);
+    if (!tenantId) throw new Error("Only a member of a tenant can use its gatekeepers.");
+    await this.#assertResourceEnabled(vendorId);
+    return this.ctx.exports.UserDirectoryDurableObject.getByName(tenantId)
+        .getTenantSingletonClass(vendorId);
   }
 
   /**
@@ -3216,7 +3235,7 @@ export class UserDurableObject extends DurableObject<Cloudflare.Env> {
   // gatekeeper an admin set to "disabled" is blocked here too. Blocking here prevents minting a
   // capability to a disabled resource even if the request bypasses the (separately filtered)
   // picker/agent listings.
-  async #assertResourceEnabled(vendorId: string, resource: SupportedResource) {
+  async #assertResourceEnabled(vendorId: string, resource?: SupportedResource) {
     let config = await readAdminConfig(this.env);
     let normalized = vendorId.toLowerCase();
     if (config.disabledGatekeepers.includes(normalized) ||
@@ -3224,6 +3243,7 @@ export class UserDurableObject extends DurableObject<Cloudflare.Env> {
       throw new Error(
           `The "${vendorId}" gatekeeper is disabled on this deployment by an administrator.`);
     }
+    if (!resource) return;
     // Only legacy restrictions need the vendor catalog to distinguish a removed pattern from a
     // type narrowed out of this account's list. ID-only policy checks need no additional RPC.
     let advertised = config.disabledResources[normalized]?.length

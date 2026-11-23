@@ -429,10 +429,11 @@ test("search reads a command's option names and the callback methods it may be a
   assert.ok(rankOf(realTable, "gadget bindings", / create-gadget </) > 3);
   assert.ok(rankOf(realTable, "binding name", / create-gadget </) >= 1);
   // A stop word in an option's name is not needed to name it: "copy secrets" names `--copy-secrets-from`.
+  // At any rank: a command named by "copy" (retail's copy-template) outranks an option, as designed.
   for (const task of ["copy secrets", "copy secrets from"]) {
-    assert.ok(searchCommands(realTable, task).some((match) => / add-model </.test(match.command)), task);
+    assert.ok(rankOf(realTable, task, / add-model </) >= 1, task);
   }
-  assert.equal(rankOf(realTable, "copy", / add-model </), 0);
+  for (const task of ["copy", "secrets"]) assert.equal(rankOf(realTable, task, / add-model </), 0, task);
   for (const task of ["list chats", "get chat history"]) {
     assert.ok(!searchCommands(realTable, task).some((match) => / get-gadget <id> /.test(match.command)), task);
   }

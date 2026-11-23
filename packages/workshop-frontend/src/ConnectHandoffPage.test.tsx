@@ -165,6 +165,41 @@ describe('ConnectHandoffPage', () => {
     expect(close).not.toHaveBeenCalled()
   })
 
+  it('redeems an app connection through the app\'s own capability over this session, then disposes it', async () => {
+    const redeemConnectHandoff = vi.fn<(ticket: string, nonce: string) => Promise<unknown>>().mockResolvedValue({ sourceId: 1 })
+    const dispose = vi.fn<() => void>()
+    const getGatekeeperApp = vi.fn<(id: string) => Promise<unknown>>().mockResolvedValue({
+      iframeHtml: '', ui: { redeemConnectHandoff, [Symbol.dispose]: dispose },
+    })
+    testState.authenticatedApi = { completeConnectHandoff, getGatekeeperApp } as unknown as RpcStub<AuthenticatedApi>
+    arrive(TICKET, { kind: 'app', appId: 'retail', nonce: NONCE })
+
+    const page = await render({ strict: true })
+    await settle()
+
+    expect(getGatekeeperApp).toHaveBeenCalledExactlyOnceWith('retail')
+    expect(redeemConnectHandoff).toHaveBeenCalledExactlyOnceWith(TICKET, NONCE)
+    expect(dispose).toHaveBeenCalledOnce()
+    expect(completeConnectHandoff).not.toHaveBeenCalled()
+    expect(close).toHaveBeenCalledOnce()
+    expect(page.textContent).toContain('Connected')
+  })
+
+  it('shows the app\'s refusal of a phished app ticket verbatim', async () => {
+    const redeemConnectHandoff = vi.fn<(ticket: string, nonce: string) => Promise<unknown>>()
+      .mockRejectedValue(new Error("This connection was not started from this organization's Data area."))
+    const getGatekeeperApp = vi.fn<(id: string) => Promise<unknown>>().mockResolvedValue({ iframeHtml: '', ui: { redeemConnectHandoff } })
+    testState.authenticatedApi = { getGatekeeperApp } as unknown as RpcStub<AuthenticatedApi>
+    arrive(TICKET, { kind: 'app', appId: 'retail', nonce: NONCE })
+
+    const page = await render()
+    await settle()
+
+    expect(page.textContent).toContain('Could not complete the connection')
+    expect(page.textContent).toContain('not started from this organization')
+    expect(close).not.toHaveBeenCalled()
+  })
+
   it('reports the link invalid and calls nothing without a storage record', async () => {
     signedIn()
     arrive(TICKET, undefined)

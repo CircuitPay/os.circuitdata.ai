@@ -962,6 +962,98 @@
         "BASE_URL": "$PUBLIC_BASE_URL/gatekeeper/pagerduty"
       }
     },
+    "gatekeeper-retail": {
+      "bindings": [
+        {
+          "bucket_name": "$R2_RETAIL_RAW_NAME",
+          "name": "RETAIL_RAW",
+          "type": "r2_bucket"
+        },
+        {
+          "name": "SQUARE_CLIENT_ID",
+          "text": "$SECRET(SQUARE_CLIENT_ID)",
+          "type": "secret_text"
+        },
+        {
+          "name": "SQUARE_CLIENT_SECRET",
+          "text": "$SECRET(SQUARE_CLIENT_SECRET)",
+          "type": "secret_text"
+        },
+        {
+          "name": "SQUARE_WEBHOOK_SIGNATURE_KEY",
+          "text": "$SECRET(SQUARE_WEBHOOK_SIGNATURE_KEY)",
+          "type": "secret_text"
+        }
+      ],
+      "compatibilityDate": "2026-09-04",
+      "compatibilityFlags": [
+        "allow_irrevocable_stub_storage",
+        "nodejs_als"
+      ],
+      "inputs": [
+        {
+          "consoleUrl": "https://developer.squareup.com/apps",
+          "kind": "secret",
+          "label": "Square application ID",
+          "name": "SQUARE_CLIENT_ID",
+          "redirectUriTemplate": "{PUBLIC_BASE_URL}/gatekeeper/retail/oauth/square",
+          "setupSteps": [
+            "In the Square Developer Console, create an application (or open an existing one).",
+            "Under OAuth, add the redirect URL below for the Production environment (use the Sandbox tab and a sandbox- application ID to test against Square's sandbox).",
+            "Under Webhooks > Subscriptions, add a subscription with the notification URL {PUBLIC_BASE_URL}/gatekeeper/retail/webhooks/square for the order, payment, refund, customer, catalog and inventory events.",
+            "Copy the Application ID, the Application secret and the subscription's signature key here."
+          ]
+        },
+        {
+          "kind": "secret",
+          "label": "Square application secret",
+          "name": "SQUARE_CLIENT_SECRET"
+        },
+        {
+          "kind": "secret",
+          "label": "Square webhook signature key",
+          "name": "SQUARE_WEBHOOK_SIGNATURE_KEY"
+        }
+      ],
+      "installable": true,
+      "kind": "gatekeeper",
+      "limits": {
+        "cpu_ms": 300000
+      },
+      "mainModule": "retail.js",
+      "migrations": [
+        {
+          "new_sqlite_classes": [
+            "RetailDataset",
+            "RetailGatekeeper",
+            "RetailConnection",
+            "RetailWebhookRoute"
+          ],
+          "tag": "v1"
+        }
+      ],
+      "modules": [
+        {
+          "name": "retail.js",
+          "r2Key": "blobs/modules/8a4ec084499169bffbdbfef39a03841d73c3dfc30d3d6ed3d7712b942e25036f",
+          "sha256": "8a4ec084499169bffbdbfef39a03841d73c3dfc30d3d6ed3d7712b942e25036f",
+          "size": 59,
+          "type": "esm"
+        }
+      ],
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "invocation_logs": false
+        }
+      },
+      "shortName": "retail",
+      "singleton": true,
+      "vars": {
+        "BASE_URL": "$PUBLIC_BASE_URL/gatekeeper/retail"
+      }
+    },
     "gatekeeper-scheduler": {
       "bindings": [],
       "compatibilityDate": "2026-09-04",
@@ -1536,6 +1628,9 @@
         "entrypoint": "GatekeeperVendor",
         "propsByPackage": {
           "gatekeeper-context": {
+            "sharingDomain": "$PUBLIC_BASE_URL"
+          },
+          "gatekeeper-retail": {
             "sharingDomain": "$PUBLIC_BASE_URL"
           }
         }

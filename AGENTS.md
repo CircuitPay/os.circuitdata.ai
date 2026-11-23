@@ -22,6 +22,7 @@ reviewing or answering questions about code under its directory:
 | `packages/gatekeeper-x/AGENTS.md` | X, whose reads are billed |
 | `packages/gatekeeper-microsoft/AGENTS.md` | Microsoft 365: SharePoint, Outlook, Calendar |
 | `packages/gatekeeper-websearch/AGENTS.md` | Web Search |
+| `packages/gatekeeper-retail/AGENTS.md` | Retail data: the tenant-held dataset and its Data app |
 | `packages/mcp-shared/AGENTS.md` | MCP / MCP Server Portal gatekeepers |
 | `packages/observability/AGENTS.md` | server logging, issue reporting, metrics |
 | `packages/error-reporting/AGENTS.md` | frontend error reporting |
@@ -39,6 +40,7 @@ Reviewing a pull request: follow `REVIEW.md` as well.
 * infra/terraform: The Terraform deployment of an instance to Cloudflare (replaces the Wrangler flow of cloudflare-os-starter); see `infra/terraform/README.md`. `modules/instance` reads a built release's `manifest.json` (the same contract the deploy service consumes), provisions KV/R2 and the public address with the Cloudflare provider, deploys the router natively, and deploys the backend and gatekeepers through `scripts/terraform/deploy-worker.ts` because the provider lacks the `worker_loader` binding, service-binding `props` and migration deltas. Releases must carry the `standard` frontend variant (Clerk), which `scripts/release/build-release.ts` builds beside the `access` one. `instance_name`, account and public origin are locked after creation: changing the public origin hides context data, since the context library scopes by it.
 * packages/ui: Shared runtime React UI used across the Workshop and gatekeeper management apps.
 * packages/gatekeeper-*: Gatekeeper workers for external service integrations. Scheduled Tasks (`gatekeeper-scheduler`) and GitLab (`gatekeeper-gitlab`, design record `plans/gitlab-gatekeeper.md`) are described in their READMEs.
+* packages/gatekeeper-retail: Retail data — a tenant-held account whose `RETAIL_DATA` session lets agents query sales, products, customers and inventory loaded from Square, Stripe and CSV. `docs/retail-data.md` is the operator guide; `specs/006-retail-data-layer/` is the design record.
 * packages/mcp-shared: The library behind the two MCP gatekeepers, `gatekeeper-mcp` and `gatekeeper-mcp-portal`.
 * packages/office-content: Dependency-free readers for Word, PowerPoint and Excel files (ZIP, XML, Markdown conversion, cell values) that run in a Worker or a browser. The Microsoft gatekeeper reads files for agents with it, and the Workshop previews chat attachments with it.
 * packages/observability, packages/error-reporting: Server logging/issue reporting/metrics, and the opt-in frontend error-reporting contract.

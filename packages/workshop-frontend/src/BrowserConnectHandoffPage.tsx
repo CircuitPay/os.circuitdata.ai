@@ -3,7 +3,7 @@ import type { RpcStub } from 'capnweb'
 import type { AuthenticatedApi, PublicApi } from '@gadgets/workshop-shared/api'
 import { useConnectionLost, useRpcStub } from './RpcContext'
 import { useAuth } from './useAuth'
-import { readPopupHandoff, ticketFromHandoffFragment } from './connectHandoff'
+import { readPopupHandoff, redeemAppHandoff, ticketFromHandoffFragment } from './connectHandoff'
 
 /**
  * What the page tells the user once the outcome is known: a heading and one line of detail.
@@ -79,6 +79,12 @@ export default function BrowserConnectHandoffPage() {
       redeem = () => authenticatedApi.completeConnectHandoff(ticket, handoff.nonce)
       done = { title: 'Connected', detail: CLOSE_HINT }
       failed = 'Could not complete the connection'
+    } else if (handoff.kind === 'app') {
+      if (isLoading || authenticatedApi === null) return
+      api = authenticatedApi
+      redeem = () => redeemAppHandoff(authenticatedApi, handoff.appId, ticket, handoff.nonce)
+      done = { title: 'Connected', detail: CLOSE_HINT }
+      failed = 'Could not complete the connection'
     } else {
       api = rpcStub
       redeem = () => rpcStub.confirmLogin(ticket, handoff.nonce)
@@ -110,7 +116,7 @@ export default function BrowserConnectHandoffPage() {
   // A failure while the connection is down is the socket's, not the server's: the redemption is
   // presented again once the session is back, so show the wait rather than a transient error.
   else if (outcome?.failed && connectionLost) outcome = null
-  else if (outcome === null && handoff.kind === 'connect' && !isLoading && authenticatedApi === null) {
+  else if (outcome === null && handoff.kind !== 'login' && !isLoading && authenticatedApi === null) {
     outcome = SIGNED_OUT
   }
 
