@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/vitest-pool-workers/types" />
+/// <reference types="@cloudflare/vitest-plugin/types" />
 
 // Test-only bindings, declared in vitest.config.ts rather than wrangler.jsonc.
 

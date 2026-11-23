@@ -10,7 +10,7 @@ import type {
   GatekeeperUiFrame, GatekeeperUser, GatekeeperUserVerifier, ResourceConfiguratorFrame,
   SupportedResource, VendorDescription,
 } from "@gadgets/workshop-shared/gatekeeper";
-import { RetailAppApi } from "./app-api.js";
+import { RetailAppApi } from "./app-ui.js";
 import type { ProviderKind } from "./app-api-types.js";
 import { baseUrl } from "./connectors/http.js";
 import { datasetObjectName } from "./dataset/dataset-do.js";

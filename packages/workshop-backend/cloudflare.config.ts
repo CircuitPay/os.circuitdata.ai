@@ -46,6 +46,10 @@ export default defineGadgetsWorker({
     // bucket: user-chosen content must not share a namespace with code the platform depends on.
     TENANT_FILES: bindings.r2({ name: "gadgets-tenant-files" }),
     LOADER: bindings.workerLoader(),
+
+    // This version's id, which the frontend compares with the one new requests reach, to notice a
+    // session still connected to an older version after a deploy.
+    CF_VERSION_METADATA: bindings.versionMetadata(),
   },
 
   // When deploying to prod, you may want to bundle the frontend as assets on the backend, like so.
@@ -77,4 +81,6 @@ export const migrations: DurableObjectMigration[] = [
   // login back to the waiting browser.
   { tag: "v2", new_sqlite_classes: ["PendingLogin"] },
   { tag: "v3", new_sqlite_classes: ["UserDirectoryDurableObject"] },
+  // The deployment-wide admin audit log (admin-audit.ts).
+  { tag: "v4", new_sqlite_classes: ["AdminAuditDurableObject"] },
 ];

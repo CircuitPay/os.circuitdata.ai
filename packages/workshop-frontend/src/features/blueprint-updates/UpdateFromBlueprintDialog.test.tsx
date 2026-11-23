@@ -8,11 +8,11 @@ import type { RpcStub } from 'capnweb'
 import type {
   AiChatAuthorInfo,
   ApplyBlueprintResult,
+  AuthenticatedApi,
   BlueprintPublicInfo,
   GadgetClient,
   GadgetUpstream,
   Overseer,
-  AuthenticatedApi,
 } from '@gadgets/workshop-shared/api'
 import { NO_AGENT_OPTION_VALUE } from '../../modelSelection'
 
@@ -171,6 +171,7 @@ function deferred<T>() {
 const applyBlueprint = vi.fn<GadgetClient['applyBlueprint']>()
 const getBlueprint = vi.fn<(id: string) => Promise<BlueprintPublicInfo | null>>()
 const listModels = vi.fn<() => Promise<AiChatAuthorInfo[]>>()
+const setPreferredModel = vi.fn<(id: string | null) => Promise<void>>()
 const onClose = vi.fn<() => void>()
 const onProposed = vi.fn<(chatId: number) => void>()
 
@@ -181,6 +182,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
   listModels.mockResolvedValue([OPUS, SONNET])
+  setPreferredModel.mockResolvedValue(undefined)
   getBlueprint.mockImplementation(async id => BLUEPRINTS.find(blueprint => blueprint.id === id) ?? null)
   container = document.createElement('div')
   document.body.append(container)
@@ -202,7 +204,10 @@ async function open(upstream?: GadgetUpstream) {
           client: { applyBlueprint } as unknown as RpcStub<GadgetClient>,
         }}
         overseer={{ listModels } as unknown as RpcStub<Overseer>}
-        authenticatedApi={{ getBlueprint } as unknown as RpcStub<AuthenticatedApi>}
+        authenticatedApi={
+          { getBlueprint, setPreferredModel } as unknown as RpcStub<AuthenticatedApi>
+        }
+        userId="alice"
         onClose={onClose}
         onProposed={onProposed}
       />,
@@ -262,7 +267,7 @@ const bannerText = () => container.querySelector('[data-testid="banner"]')?.text
 
 describe('UpdateFromBlueprintDialog', () => {
   it('starts on the blueprint the gadget follows and opens its update in a new chat', async () => {
-    localStorage.setItem('lastSelectedModel', 'sonnet')
+    localStorage.setItem('lastSelectedModel:alice', 'sonnet')
     applyBlueprint.mockResolvedValue({ outcome: 'proposed', chatId: 7 })
 
     await open(TRIP_UPSTREAM)
@@ -291,7 +296,7 @@ describe('UpdateFromBlueprintDialog', () => {
   })
 
   it('names no model when the user has chosen to chat with no agent', async () => {
-    localStorage.setItem('lastSelectedModel', NO_AGENT_OPTION_VALUE)
+    localStorage.setItem('lastSelectedModel:alice', NO_AGENT_OPTION_VALUE)
     applyBlueprint.mockResolvedValue({ outcome: 'proposed', chatId: 7 })
 
     await open(TRIP_UPSTREAM)
@@ -301,7 +306,7 @@ describe('UpdateFromBlueprintDialog', () => {
   })
 
   it('starts the reviewer on the model a new chat would, and lets the user pick another', async () => {
-    localStorage.setItem('lastSelectedModel', 'sonnet')
+    localStorage.setItem('lastSelectedModel:alice', 'sonnet')
     applyBlueprint.mockResolvedValue({ outcome: 'proposed', chatId: 7 })
 
     await open(TRIP_UPSTREAM)
@@ -313,8 +318,9 @@ describe('UpdateFromBlueprintDialog', () => {
     await click('Update')
 
     expect(applyBlueprint).toHaveBeenCalledExactlyOnceWith('trip', { modelId: 'opus' })
-    // Like the composer's selector, the pick carries over to the next chat.
-    expect(localStorage.getItem('lastSelectedModel')).toBe('opus')
+    // Like the composer's selector, the pick carries over to the next chat, in any browser.
+    expect(localStorage.getItem('lastSelectedModel:alice')).toBe('opus')
+    expect(setPreferredModel).toHaveBeenLastCalledWith('opus')
   })
 
   it('reviews with no agent when the user picks none', async () => {

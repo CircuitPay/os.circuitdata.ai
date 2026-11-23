@@ -1,7 +1,7 @@
 import { createExecutionContext, runInDurableObject } from "cloudflare:test";
 import { env, exports } from "cloudflare:workers";
 import {
-  AUTH_ERROR_CODES, getAuthErrorCode, getOpenGadgetErrorCode, OPEN_GADGET_ERROR_CODES,
+  AUTH_ERROR_CODES, getAuthErrorCode, getOpenWorkspaceErrorCode, OPEN_WORKSPACE_ERROR_CODES,
 } from "@gadgets/workshop-shared/api";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import server from "../src/server";
@@ -67,7 +67,9 @@ describe("Clerk sign-in", () => {
 
 describe("tenants", () => {
   it("puts an organization's members in one tenant and lets the directory see only them", async () => {
-    await exports.AdminSettings.getByName("").updateAdminConfig({ userSearchEnabled: true });
+    await exports.AdminSettings.getByName("").updateAdminConfig({ userSearchEnabled: true }, {
+      admin: "admin", sessionId: "clerk-rpc", via: "api", method: "setUserSearchEnabled",
+    });
     using publicApi = await connect();
     const org = fresh("org");
     const other = fresh("org");
@@ -93,24 +95,24 @@ describe("tenants", () => {
     const teammateId = (await teammate.whoami()).id;
     const outsiderId = (await outsider.whoami()).id;
 
-    using workspace = await owner.newGadget();
+    using workspace = await owner.newWorkspace();
     const workspaceId = (await workspace.getMetadata()).id;
 
     // The same tenant works...
-    expect(await workspace.addCollaborator(teammateId, "build")).not.toBeNull();
-    using shared = teammate.openGadget(workspaceId);
+    expect(await workspace.addCollaborator(teammateId, "workspace")).not.toBeNull();
+    using shared = teammate.openWorkspace(workspaceId);
     expect((await shared.getMetadata()).id).toBe(workspaceId);
 
     // ...and another tenant is answered as if the person did not exist.
-    expect(await workspace.addCollaborator(outsiderId, "build")).toBeNull();
+    expect(await workspace.addCollaborator(outsiderId, "workspace")).toBeNull();
 
-    const denied = OPEN_GADGET_ERROR_CODES.workspaceAccessDenied;
-    using attempt = outsider.openGadget(workspaceId);
-    expect(getOpenGadgetErrorCode(await failure(attempt.getMetadata()))).toBe(denied);
+    const denied = OPEN_WORKSPACE_ERROR_CODES.workspaceAccessDenied;
+    using attempt = outsider.openWorkspace(workspaceId);
+    expect(getOpenWorkspaceErrorCode(await failure(attempt.getMetadata()))).toBe(denied);
 
-    const link = await workspace.createShareLink("build");
-    using viaLink = outsider.openGadget(workspaceId, link.key);
-    expect(getOpenGadgetErrorCode(await failure(viaLink.getMetadata()))).toBe(denied);
+    const link = await workspace.createShareLink("workspace");
+    using viaLink = outsider.openWorkspace(workspaceId, link.key);
+    expect(getOpenWorkspaceErrorCode(await failure(viaLink.getMetadata()))).toBe(denied);
   });
 
   it("keeps the same person's workspaces in two tenants apart", async () => {
@@ -265,7 +267,7 @@ describe("organization deletion", () => {
     const keyA = makeUserKey(dead, subA);
     const keyB = makeUserKey(dead, subB);
 
-    using workspace = await ann.newGadget();
+    using workspace = await ann.newWorkspace();
     const workspaceId = (await workspace.getMetadata()).id;
 
     // A blueprint Ann published: its record, its link, and its stored content.

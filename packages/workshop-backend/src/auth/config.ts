@@ -6,6 +6,8 @@
 // "Continue with ..." button alongside the normal username/password form (unless password auth is
 // disabled). All OFF by default.
 
+import { userIdOfProfileId } from "../tenant.js";
+
 /**
  * Parse the AUTH_GATEKEEPERS allowlist into a list of gatekeeper vendor ids (lowercased). These are
  * the gatekeepers permitted to drive sign-in; a vendor must also actually advertise `providesAuth`
@@ -32,6 +34,36 @@ export function isClerkEnabled(env: Cloudflare.Env): boolean {
 export function hasAuthGatekeepers(env: Cloudflare.Env): boolean {
   return getAuthGatekeeperAllowlist(env).length > 0;
 }
+
+/**
+ * Whether the user `name` is one of the deployment admins the ADMINS binding lists. Names match
+ * regardless of the case of ASCII letters, as Cloudflare Access matches its email rules: the
+ * list is typed by hand, while a sign-in names its user by the email as the identity provider
+ * spells it, or by a password username, which is stored lowercased. False for an empty or absent
+ * name. A Clerk account's name is its tenant-qualified profile id, and ADMINS lists its Clerk user
+ * id, so an operator is an operator in every tenant.
+ */
+export function isDeploymentAdmin(env: Cloudflare.Env, name: string | undefined): boolean {
+  let admins: unknown = env.ADMINS;
+  if (!name || !admins) return false;
+
+  if (typeof admins === "string") {
+    // Admins should be a JSON binding of array type, but `.env` doesn't actually let you
+    // specify JSON bindings, so we also support a string that parses as JSON array.
+    admins = JSON.parse(admins);
+  }
+
+  if (!Array.isArray(admins)) {
+    throw new TypeError("ADMINS must be configured as an array of usernames.");
+  }
+
+  let lowered = asciiLowerCase(userIdOfProfileId(name));
+  return admins.some(admin => typeof admin === "string" && asciiLowerCase(admin) === lowered);
+}
+
+// Only ASCII letters are folded: toLowerCase() also folds some other characters onto ASCII ones,
+// such as the Kelvin sign onto "k", which would let a look-alike name match an admin's.
+const asciiLowerCase = (text: string) => text.replace(/[A-Z]/g, letter => letter.toLowerCase());
 
 /**
  * Whether username/password login + signup is available. Enabled by default. An installation can

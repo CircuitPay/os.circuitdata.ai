@@ -5,7 +5,7 @@
 import { RpcStub, RpcTarget } from "cloudflare:workers";
 import { SELF, env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { RetailAppApi } from "../src/app-api.js";
+import { RetailAppApi } from "../src/app-ui.js";
 import type { WorkItem } from "../src/connectors/planner.js";
 import { SQUARE_SCOPES } from "../src/connectors/square.js";
 import { createSource, ingestRun, inspect, line, location, newDataset, order } from "./helpers.js";

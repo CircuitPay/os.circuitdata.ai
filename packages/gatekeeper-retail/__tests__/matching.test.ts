@@ -5,7 +5,7 @@
 import { RpcStub, RpcTarget } from "cloudflare:workers";
 import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { describe, expect, it, vi } from "vitest";
-import { RetailAppApi } from "../src/app-api.js";
+import { RetailAppApi } from "../src/app-ui.js";
 import { ERASE_CONFIRMATION } from "../src/app-api-types.js";
 import type { RetailDataset } from "../src/dataset/dataset-do.js";
 import { createSource, ingestRun, inspect, location, newDataset, order } from "./helpers.js";

@@ -4,6 +4,11 @@ import { PublicApi, AuthenticatedApi, AUTH_ERROR_CODES, getAuthErrorCode } from 
 import { setReportedUserId } from './errorReporting'
 import { useClerkBridge } from './clerk/clerkBridge'
 import { restoreOrRememberWorkspace, startSessionRenewal } from './clerk/clerkSession'
+import { nativeApp } from './features/native-app/nativeApp'
+import { NativeConnectSession } from './features/native-app/connectSession'
+import { browserPushSupport, disableBrowserPush } from './features/notifications/browserPush'
+import { forgetModelSelection } from './modelSelection'
+import { disconnectNativeNotificationEnrollment } from './features/notifications/nativeNotificationEnrollment'
 
 const CF_ACCESS_MODE = import.meta.env.VITE_CF_ACCESS_MODE === 'true'
 
@@ -17,6 +22,7 @@ interface AuthState {
 export { CF_ACCESS_MODE }
 
 export function useAuth(publicApi: RpcStub<PublicApi>) {
+  const [nativeConnectSession] = useState(() => new NativeConnectSession())
   const [authState, setAuthState] = useState<AuthState>({
     token: null,
     authenticatedApi: null,
@@ -62,12 +68,14 @@ export function useAuth(publicApi: RpcStub<PublicApi>) {
     const authenticatedApi = authState.authenticatedApi
     if (!authenticatedApi) return
     let cancelled = false
-    authenticatedApi.whoami().then((info) => {
+    const identity = authenticatedApi.whoami()
+    const untrack = nativeConnectSession.track(authenticatedApi, identity)
+    identity.then((info) => {
       // Only a real user account names a person: for a gadget author `id` is its owner's id.
       if (!cancelled && info.type === 'user') setReportedUserId(info.id)
     }).catch(() => {})
-    return () => { cancelled = true }
-  }, [authState.authenticatedApi])
+    return () => { cancelled = true; untrack() }
+  }, [authState.authenticatedApi, nativeConnectSession])
 
   useEffect(() => {
     if (clerkRef.current) {
@@ -199,27 +207,21 @@ export function useAuth(publicApi: RpcStub<PublicApi>) {
   }
 
   const logout = () => {
+    try {
+      disconnectNativeNotificationEnrollment()
+      nativeApp()?.sessionEnded?.()
+    } catch (error) {
+      console.error('Failed to disconnect native notifications:', error)
+    }
     setReportedUserId(undefined)
+    // On a shared computer, signing out is how the user stops this browser showing their chats.
+    const releasePush = browserPushSupport() === 'supported'
+      ? disableBrowserPush().catch(error =>
+          console.error('Failed to stop browser notifications:', error))
+      : Promise.resolve()
 
-    if (clerkRef.current) {
-      setAuthState(prev => {
-        prev.authenticatedApi?.[Symbol.dispose]()
-        return { token: null, authenticatedApi: null, isLoading: false, error: null }
-      })
-      void clerkRef.current.signOut()
-      return
-    }
-
-    if (CF_ACCESS_MODE) {
-      window.location.assign('/cdn-cgi/access/logout')
-      return
-    }
-
-    // Use functional updater to read current state (avoids stale closure).
     setAuthState(prev => {
-      if (prev.authenticatedApi) {
-        prev.authenticatedApi[Symbol.dispose]()
-      }
+      prev.authenticatedApi?.[Symbol.dispose]()
       return {
         token: null,
         authenticatedApi: null,
@@ -227,8 +229,19 @@ export function useAuth(publicApi: RpcStub<PublicApi>) {
         error: null
       }
     })
-
     localStorage.removeItem('authToken')
+    forgetModelSelection()
+
+    const clerk = clerkRef.current
+    if (clerk) {
+      void releasePush.then(() => clerk.signOut())
+      return
+    }
+
+    if (CF_ACCESS_MODE) {
+      void releasePush.then(() => window.location.assign('/cdn-cgi/access/logout'))
+      return
+    }
   }
 
   return {

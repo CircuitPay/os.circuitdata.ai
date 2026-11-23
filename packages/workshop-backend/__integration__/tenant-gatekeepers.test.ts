@@ -11,13 +11,11 @@ import type {
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { connect, failure, fresh, installClerkIssuer, mint, signIn, useClerkInDurableObjects } from "./clerkFixture";
 import { applyClerkEvent } from "../src/auth/clerk-webhook";
-import { DEFAULT_ADMIN_CONFIG } from "../src/storage-schema/admin-settings-storage";
-import { ADMIN_CONFIG_KEY } from "../src/storage-schema/blueprints-kv";
 import { makeUserKey, personalTenantId } from "../src/tenant";
 import server from "../src/server";
 
 const VENDOR = "tenanttest";
-const bindings = env as unknown as Record<string, unknown> & { BLUEPRINTS: KVNamespace };
+const bindings = env as unknown as Record<string, unknown>;
 
 type Ledger = { type: "created" | "revoked" | "observer"; datasetId: string; observerId?: string };
 const control = () => bindings.TENANT_TEST_CONTROL as {
@@ -26,7 +24,6 @@ const control = () => bindings.TENANT_TEST_CONTROL as {
 };
 
 let undoClerk: () => void;
-let savedConfig: string | null;
 
 // The pool's Durable Object wrapper hides the overseer's `[restore]()`, which `ctx.restore()` (how the
 // overseer reaches a capsule's facet) needs. As in __tests__/test-worker.ts, a `[restore]()` on
@@ -43,14 +40,12 @@ const restoreTargets = new WeakMap<DurableObjectState, { [restore]?(params: unkn
 beforeAll(async () => {
   await installClerkIssuer();
   undoClerk = useClerkInDurableObjects();
-  savedConfig = await bindings.BLUEPRINTS.get(ADMIN_CONFIG_KEY);
   // Installed for this suite only (see the fixture's header).
   bindings.GATEKEEPER_TENANTTEST = bindings.TENANT_TEST_VENDOR;
 }, 120_000);
 
 afterEach(async () => {
-  if (savedConfig === null) await bindings.BLUEPRINTS.delete(ADMIN_CONFIG_KEY);
-  else await bindings.BLUEPRINTS.put(ADMIN_CONFIG_KEY, savedConfig);
+  await setMode("optional");
 });
 
 afterAll(() => {
@@ -59,10 +54,13 @@ afterAll(() => {
   vi.restoreAllMocks();
 });
 
-// The operator's mode for the fixture vendor, as the AdminSettings mirror holds it.
+// The operator's mode for the fixture vendor, set as the admin UI sets it. Through the AdminSettings
+// object, whose config is the authority: a write to its KV mirror alone is undone by its next write
+// (such as promoting the bundled formats once the first connection triggers their install).
 async function setMode(mode: AmbientGatekeeperMode): Promise<void> {
-  await bindings.BLUEPRINTS.put(ADMIN_CONFIG_KEY, JSON.stringify(
-      { ...DEFAULT_ADMIN_CONFIG, ambientGatekeeperModes: { [VENDOR]: mode } }));
+  await exports.AdminSettings.getByName("").setGatekeeperMode(VENDOR, mode, {
+    admin: "admin", sessionId: "tenant-gatekeepers", via: "api", method: "setGatekeeperMode",
+  });
 }
 
 type Member = {
@@ -120,7 +118,7 @@ async function nextTurnBindings(workspaceId: string, chatId: number): Promise<st
 }
 
 async function newWorkspace(who: Member): Promise<string> {
-  using workspace = await who.api.newGadget();
+  using workspace = await who.api.newWorkspace();
   return (await workspace.getMetadata()).id;
 }
 
@@ -200,12 +198,12 @@ describe("2. no method takes a tenant, and tenants never see each other's accoun
     await ann.gatekeepers.enable(VENDOR);
     const { datasetId } = (await app(ann))!;
 
-    using workspace = await ann.api.newGadget();
+    using workspace = await ann.api.newWorkspace();
     const workspaceId = (await workspace.getMetadata()).id;
     expect(await tenantCapsules(workspaceId)).toHaveLength(1);
     const tomId = (await tom.api.whoami()).id;
-    expect(await workspace.addCollaborator(tomId, "build")).not.toBeNull();
-    using shared = tom.api.openGadget(workspaceId);
+    expect(await workspace.addCollaborator(tomId, "workspace")).not.toBeNull();
+    using shared = tom.api.openWorkspace(workspaceId);
     expect((await shared.getMetadata()).id).toBe(workspaceId);
     expect(await control().events()).toContainEqual(
         expect.objectContaining({ type: "observer", datasetId }));
@@ -248,7 +246,7 @@ describe("4. disabling stops offering it and keeps its data", () => {
     await ann.gatekeepers.enable(VENDOR);
     const { datasetId } = (await app(ann))!;
 
-    using workspace = await ann.api.newGadget();
+    using workspace = await ann.api.newWorkspace();
     const workspaceId = (await workspace.getMetadata()).id;
     expect(await tenantCapsules(workspaceId)).toHaveLength(1);
     const chatId = await workspace.newChat("hello", null);

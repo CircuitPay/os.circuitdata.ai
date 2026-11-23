@@ -43,6 +43,8 @@ export interface TenantAccess extends RpcTarget {
 
 export interface AppUiContext {
   isAdmin: boolean; // unchanged: deployment operator
+  /** Upstream's user picker exchange; absent for tenant-held apps (no per-user account to scope it). */
+  userSelectionExchange?: RpcStub<GatekeeperUserSelectionExchange>;
   /** Present only when the app belongs to a tenant-held account. */
   tenant?: TenantAppContext;
 }
