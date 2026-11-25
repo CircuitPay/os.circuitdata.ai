@@ -8,6 +8,7 @@ import type { RpcStub } from 'capnweb'
 import type {
   AiChatAuthorInfo,
   AuthenticatedApi,
+  BlueprintBindingAssignment,
   BlueprintPublicInfo,
   ConnectedAccountsSubscriber,
   ConnectFlowStart,
@@ -703,6 +704,76 @@ describe('BlueprintLandingPage gatekeeper configuration', () => {
     })
 
     await act(async () => resolveGrant!(null))
+  })
+
+  const RETAIL_BINDING = {
+    type: 'ambient',
+    title: 'Retail data',
+    description: 'Sales, stores and products from your organization.',
+    vendorId: 'retail',
+  } as const
+
+  // Adds workspace creation to the harness. The workspace never finishes loading, which keeps the
+  // page from navigating away.
+  function withCreation(harness: GatekeeperApiHarness) {
+    const newWorkspaceFromBlueprint = vi.fn<
+      (id: string, bindings: Record<string, BlueprintBindingAssignment>) => { getMetadata(): Promise<never> }
+    >(() => ({ getMetadata: () => new Promise<never>(() => {}) }))
+    return {
+      newWorkspaceFromBlueprint,
+      harness: {
+        ...harness,
+        api: { ...(harness.api as object), newWorkspaceFromBlueprint } as unknown as RpcStub<AuthenticatedApi>,
+      },
+    }
+  }
+
+  it('creates at once from a blueprint whose only connection is made automatically', async () => {
+    const { harness, newWorkspaceFromBlueprint } = withCreation(gatekeeperApi(null))
+    await render(harness, {
+      ...BLUEPRINT,
+      metadata: { ...BLUEPRINT.metadata, bindings: { RETAIL_DATA: RETAIL_BINDING } },
+    })
+
+    expect(document.body.textContent).toContain('Retail data')
+    expect(document.body.textContent).toContain('Sales, stores and products from your organization.')
+    expect(document.body.textContent).toContain('Connected automatically')
+    expect(findButton('Configure')).toBeUndefined()
+    expect(findButton('Change')).toBeUndefined()
+
+    const create = findButton('Create Gadget')!
+    expect(create.disabled).toBe(false)
+    await act(async () => create.click())
+
+    expect(newWorkspaceFromBlueprint).toHaveBeenCalledExactlyOnceWith('blueprint-one', {})
+    expect(findButton('Save connection')).toBeUndefined()
+  })
+
+  it('asks only for the connections a person makes, and sends only those', async () => {
+    const { harness, newWorkspaceFromBlueprint } = withCreation(gatekeeperApi([CALENDAR_PATTERN]))
+    await render(harness, {
+      ...CALENDAR_BLUEPRINT,
+      metadata: {
+        ...CALENDAR_BLUEPRINT.metadata,
+        bindings: { RETAIL_DATA: RETAIL_BINDING, ...CALENDAR_BLUEPRINT.metadata.bindings },
+      },
+    })
+
+    expect(findButton('Create Gadget')).toBeUndefined()
+    // The automatic connection is listed first, and is not the one the page asks for.
+    await act(async () => findButton('Configure 1 remaining connection')!.click())
+    expect(document.body.textContent).toContain('Configure Google Calendar')
+    await vi.waitFor(() => expect(findButton('Save connection')!.disabled).toBe(false))
+    await act(async () => findButton('Save connection')!.click())
+    await vi.waitFor(() => expect(findButton('Create Gadget')).toBeDefined())
+
+    await act(async () => findButton('Create Gadget')!.click())
+
+    expect(newWorkspaceFromBlueprint).toHaveBeenCalledOnce()
+    const [blueprintId, assignments] = newWorkspaceFromBlueprint.mock.calls[0]
+    expect(blueprintId).toBe('blueprint-one')
+    expect(Object.keys(assignments)).toEqual(['CALENDAR'])
+    expect(assignments.CALENDAR).toMatchObject({ type: 'gatekeeper', accountId: 7 })
   })
 })
 

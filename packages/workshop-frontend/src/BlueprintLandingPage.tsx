@@ -5,7 +5,7 @@ import { RpcStub } from 'capnweb'
 import { PublicApi, AuthenticatedApi, AdminApi, BlueprintPublicInfo, BlueprintBinding, BlueprintBindingAssignment, BlueprintUserSummary, AiChatAuthorInfo } from '@gadgets/workshop-shared/api'
 import { SupportedResource, VendorDescription, ResourceConfiguratorFrame, matchesResourceUrlPattern, findResourceType, getResourceTypeId, getGrantedResourceTypeIds } from '@gadgets/workshop-shared/gatekeeper'
 import { Banner, Button, Dialog, DropdownMenu, Select, Tooltip, useKumoToastManager } from '@cloudflare/kumo'
-import { ArrowsOutSimple, ArrowLeft, ArrowSquareOut, DotsThree, DownloadSimple, Lightning, Plus, Robot, Sparkle, Star, Trash, X } from '@phosphor-icons/react'
+import { ArrowsOutSimple, ArrowLeft, ArrowSquareOut, DotsThree, DownloadSimple, Lightning, Plus, PlugsConnected, Robot, Sparkle, Star, Trash, X } from '@phosphor-icons/react'
 
 import { useAuth } from './useAuth'
 import LoginPage from './LoginPage'
@@ -35,6 +35,9 @@ interface Props {
 
 // Using `any` for form state to avoid complex discriminated union issues with spread.
 type BindingFormState = Record<string, any>
+// A binding a person fills. An ambient one is connected by the Workshop, so it has no
+// configurator, no assignment and no say in whether the gadget can be created.
+type FillableBinding = Exclude<BlueprintBinding, { type: 'ambient' }>
 const NO_AGENT_MODEL_ID = 'gadgets:sentinel:no-agent-model'
 
 function findSuggestedModelId(models: AiChatAuthorInfo[], suggested: {provider: string, modelName: string}) {
@@ -466,8 +469,8 @@ export default function BlueprintLandingPage({ rpcStub }: Props) {
 
   const getFirstUnresolvedBindingName = useCallback((assignments = usableDraftAssignments) => {
     if (!blueprint) return null
-    for (let name of Object.keys(blueprint.metadata.bindings)) {
-      if (!assignments[name]) return name
+    for (let [name, binding] of Object.entries(blueprint.metadata.bindings)) {
+      if (binding.type !== 'ambient' && !assignments[name]) return name
     }
     return null
   }, [blueprint, usableDraftAssignments])
@@ -475,7 +478,7 @@ export default function BlueprintLandingPage({ rpcStub }: Props) {
   const openBindingConfigurator = useCallback((name: string) => {
     if (!blueprint) return
     const binding = blueprint.metadata.bindings[name]
-    if (!binding) return
+    if (!binding || binding.type === 'ambient') return
 
     setGatekeeperReady(prev => ({ ...prev, [name]: false }))
     collectorsRef.current.delete(name)
@@ -588,7 +591,7 @@ export default function BlueprintLandingPage({ rpcStub }: Props) {
     if (!activeBindingName || !blueprint) return
     const binding = blueprint.metadata.bindings[activeBindingName]
     const form = bindingForm[activeBindingName]
-    if (!binding || !form) return
+    if (!binding || !form || binding.type === 'ambient') return
 
     try {
       let assignment: BlueprintBindingAssignment
@@ -833,10 +836,14 @@ export default function BlueprintLandingPage({ rpcStub }: Props) {
 
   let meta = blueprint.metadata
   let bindingEntries = Object.entries(meta.bindings)
-  let activeBinding = activeBindingName ? meta.bindings[activeBindingName] : undefined
-  let readyCount = bindingEntries.filter(([name]) => usableDraftAssignments[name]).length
+  let fillableBindingNames = bindingEntries
+    .filter(([, binding]) => binding.type !== 'ambient')
+    .map(([name]) => name)
+  let namedBinding = activeBindingName ? meta.bindings[activeBindingName] : undefined
+  let activeBinding = namedBinding?.type === 'ambient' ? undefined : namedBinding
+  let readyCount = fillableBindingNames.filter(name => usableDraftAssignments[name]).length
   let unresolvedBindingName = getFirstUnresolvedBindingName()
-  let remainingCount = bindingEntries.length - readyCount
+  let remainingCount = fillableBindingNames.length - readyCount
   let primaryActionLabel: string
   if (!isAuthenticated) {
     primaryActionLabel = 'Log in to create a gadget'
@@ -1040,12 +1047,21 @@ export default function BlueprintLandingPage({ rpcStub }: Props) {
                 </span>
               </div>
               <div className="mb-3 px-1 text-[13px] leading-[18px] font-normal tracking-[-0.25px] text-kumo-subtle">
-                {readyCount === bindingEntries.length
-                  ? 'Everything is ready. You can change any connection before creating the Gadget.'
-                  : `${readyCount} of ${bindingEntries.length} ready. Each connection shows the blueprint's recommended resource when you configure it.`}
+                {fillableBindingNames.length === 0
+                  ? 'These are connected automatically. There is nothing to set up.'
+                  : readyCount === fillableBindingNames.length
+                    ? 'Everything is ready. You can change any connection before creating the Gadget.'
+                    : `${readyCount} of ${fillableBindingNames.length} ready. Each connection shows the blueprint's recommended resource when you configure it.`}
               </div>
               <div className="overflow-hidden rounded-2xl border border-kumo-line bg-kumo-base">
-                {bindingEntries.map(([name, binding]) => (
+                {bindingEntries.map(([name, binding]) => binding.type === 'ambient' ? (
+                  <AmbientBindingRow
+                    key={name}
+                    name={name}
+                    binding={binding}
+                    vendor={vendorById.get(binding.vendorId.toLowerCase())}
+                  />
+                ) : (
                   <BlueprintBindingSummaryCard
                     key={name}
                     name={name}
@@ -1302,13 +1318,52 @@ function BindingIconTile({
     )
   } else if (binding.type === 'aiModel') {
     icon = <Robot size={16} className="text-kumo-subtle" />
-  } else {
+  } else if (binding.type === 'agentSpawner') {
     icon = <Lightning size={16} className="text-kumo-subtle" />
+  } else {
+    icon = vendor?.description.logo?.url ? (
+      <img src={vendor.description.logo.url} alt="" className="h-5 w-5 object-contain" />
+    ) : (
+      <PlugsConnected size={16} className="text-kumo-subtle" />
+    )
   }
 
   return (
     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-kumo-fill text-kumo-subtle">
       {icon}
+    </div>
+  )
+}
+
+// An ambient binding is listed so the reader knows the gadget uses it, and offers nothing to
+// configure: the Workshop connects it when the gadget is created.
+function AmbientBindingRow({
+  name,
+  binding,
+  vendor,
+}: {
+  name: string
+  binding: Extract<BlueprintBinding, { type: 'ambient' }>
+  vendor?: { id: string, description: VendorDescription, supportedResources: SupportedResource[] }
+}) {
+  return (
+    <div className="grid min-h-[72px] min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3 border-b border-kumo-line px-4 py-3 text-left last:border-b-0">
+      <BindingIconTile binding={binding} vendor={vendor} />
+      <div className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <h3 className="m-0 truncate text-[14px] leading-5 font-medium tracking-[-0.25px] text-kumo-default">
+            {binding.title || name}
+          </h3>
+          <span className="rounded-full bg-kumo-tint px-2 py-0.5 text-[11px] leading-4 font-medium tracking-[-0.1px] text-kumo-subtle">
+            Connected automatically
+          </span>
+        </div>
+        {binding.description && (
+          <p className="mt-0.5 text-[12px] leading-4 font-normal tracking-[-0.2px] text-kumo-subtle">
+            {binding.description}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
@@ -1322,7 +1377,7 @@ function BlueprintBindingSummaryCard({
   onConfigure,
 }: {
   name: string
-  binding: BlueprintBinding
+  binding: FillableBinding
   assignment?: BlueprintBindingAssignment
   vendor?: { id: string, description: VendorDescription, supportedResources: SupportedResource[] }
   models: AiChatAuthorInfo[]
@@ -1429,7 +1484,7 @@ function BindingField({
   selectPortalContainer,
 }: {
   name: string
-  binding: BlueprintBinding
+  binding: FillableBinding
   value: Partial<BlueprintBindingAssignment>
   models: AiChatAuthorInfo[]
   authenticatedApi: RpcStub<AuthenticatedApi>

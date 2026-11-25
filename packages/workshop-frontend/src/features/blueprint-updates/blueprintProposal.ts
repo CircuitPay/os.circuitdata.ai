@@ -33,9 +33,12 @@ export type BlueprintProposalDescription = {
   warning?: { title: string; description: string }
   /** What the user is expected to do about it, while it is still proposed. */
   nextStep?: string
-  /** The connections the version needs that the gadget had none set up for. */
-  missingBindings: { name: string; title: string; description: string }[]
-  /** What to do about those connections, where nobody is doing it already and it is not too late. */
+  /**
+   * The connections the version needs that the gadget had none set up for. An `automatic` one is
+   * made by the Workshop when the workspace has the resource, so nobody is asked to add it.
+   */
+  missingBindings: { name: string; title: string; description: string; automatic: boolean }[]
+  /** What to do about the connections a person sets up, where nobody is doing it already and it is not too late. */
   missingBindingsHint?: string
   details: BlueprintProposalDetails
 }
@@ -93,8 +96,11 @@ export const describeBlueprintProposal = (
     : 'This gadget hasn’t been changed since it was last updated, so it simply becomes this version.'
 
   const missingBindings = Object.entries(merge.missingBindings ?? {})
-    .map(([name, { title, description }]) => ({ name, title: title || name, description }))
+    .map(([name, { title, description, type }]) => ({
+      name, title: title || name, description, automatic: type === 'ambient',
+    }))
     .toSorted((a, b) => a.name.localeCompare(b.name))
+  const needsSetup = missingBindings.some(binding => !binding.automatic)
 
   const notes = [
     ...(conflicted ? [CONFLICTS_NOTE] : []),
@@ -133,7 +139,7 @@ export const describeBlueprintProposal = (
     }),
     missingBindings,
     // The agent that reviews a merge is asked to set these up. No other proposal starts one.
-    ...(missingBindings.length > 0 && !(combined && reviewed) && !decided
+    ...(needsSetup && !(combined && reviewed) && !decided
       ? { missingBindingsHint: 'Ask in this chat to have them set up.' }
       : {}),
     details: {

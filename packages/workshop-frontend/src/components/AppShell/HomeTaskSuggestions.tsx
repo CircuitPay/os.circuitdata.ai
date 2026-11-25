@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import {
   AppWindow,
+  ChartBar,
   ChartLineUp,
   FileText,
   Lightning,
-  Presentation,
   type Icon,
 } from '@phosphor-icons/react'
 
@@ -19,24 +19,24 @@ type TaskSuggestion = {
   icon: Icon
 }
 
-// Formats are advertised by example rather than by a row of "Start with Docs" buttons, so the
-// first move isn't "pick a file type". The formats themselves are in the composer's `+` menu.
+// Formats are advertised by example rather than by a row of "Start with Dashboard" buttons, so
+// the first move isn't "pick a file type". The formats themselves are in the composer's `+` menu.
 const SUGGESTIONS: TaskSuggestion[] = [
   {
-    id: 'one-on-one',
-    label: 'Write a 1:1 pre-read',
-    description: 'A doc with a snapshot, things to inspect, and one ask',
-    icon: FileText,
+    id: 'sales-dashboard',
+    label: 'Build a sales dashboard',
+    description: 'Charts of sales by store, product and period, with filters',
+    icon: ChartBar,
     prompt:
-      'Create a document to prepare for my next 1:1 with a direct report: a current snapshot, a coaching frame, things to inspect, carryover items from last time, and one clear ask.',
+      'Create a dashboard of our sales: totals for the current period against the previous one, the trend over time, and breakdowns by store and by product, with filters for period and region.',
   },
   {
-    id: 'team-meeting',
-    label: 'Build a team meeting deck',
-    description: 'Slides with progress, risks, and what needs a decision',
-    icon: Presentation,
+    id: 'monthly-sales-report',
+    label: 'Write a monthly sales report',
+    description: 'A report with the month’s figures, what changed, and why',
+    icon: FileText,
     prompt:
-      'Create a slide deck for my next team meeting: where things stand, what shipped, risks and blockers, and the decisions I need from the room. Ask me what the team is working on first.',
+      'Create a report on last month’s sales: the headline figures, how they compare with the month before, the stores and products that drove the change, and what to watch next month.',
   },
   {
     id: 'insights',
