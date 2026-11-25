@@ -123,8 +123,8 @@ test("`call` refuses a name the local stub answers itself, before anything is se
     usage(["--dry-run", "get-frame", "ui", "call", "echo", "call", name, "1"], refused);
   }
   // Any other name is the server's to judge.
-  assert.deepEqual(parseInvocation(table, ["open-notebook", "n", "connect", "call", "getDocument"]).hops.at(-1),
-    { kind: "call", method: "getDocument", args: [] });
+  assert.deepEqual(parseInvocation(table, ["open-notebook", "n", "connect", "call", "getReport"]).hops.at(-1),
+    { kind: "call", method: "getReport", args: [] });
 });
 
 test("--out is refused before connecting unless the chain ends on bytes: a stream, or a byte value", () => {
@@ -736,9 +736,9 @@ test("a positional that names a command of the capability returned is said to ha
     '"outline" was taken for open-notebook\'s <id>, not as a command of Notebook, so the chain goes on: nothing was sent. ' +
     "open-notebook needs <id> first, as in `cf-os api open-notebook <id> outline`; " +
     "`cf-os api open-notebook --help` lists Notebook's commands.");
-  const blueprint = incompleteChain(realTable, parseInvocation(realTable, ["new-workspace-from-blueprint", "format.document", "get-metadata"]));
+  const blueprint = incompleteChain(realTable, parseInvocation(realTable, ["new-workspace-from-blueprint", "format.report", "get-metadata"]));
   assert.match(blueprint, /^"get-metadata" was taken for new-workspace-from-blueprint's <bindings>, not as a command of Overseer/);
-  assert.match(blueprint, /as in `cf-os api new-workspace-from-blueprint format\.document <bindings> get-metadata`;/);
+  assert.match(blueprint, /as in `cf-os api new-workspace-from-blueprint format\.report <bindings> get-metadata`;/);
   assert.doesNotMatch(blueprint, /get-metadata get-metadata/);
 });
 
@@ -769,7 +769,7 @@ test("a positional taken for a command of the capability returned is refused whe
   // <bindings>, JSON that admits no string, where `--` would only fail again.
   assert.throws(() => parseInvocation(realTable, ["open-workspace", "1", "get-gadget", "export", "export", "md"]), (error: Error) =>
     error instanceof UsageError && error.message.startsWith('"export" was taken for get-gadget\'s <id>') && !error.message.includes("put `--`"));
-  assert.throws(() => parseInvocation(realTable, ["new-workspace-from-blueprint", "format.document", "get-metadata", "get-metadata"]), (error: Error) =>
+  assert.throws(() => parseInvocation(realTable, ["new-workspace-from-blueprint", "format.report", "get-metadata", "get-metadata"]), (error: Error) =>
     error instanceof UsageError && error.message.startsWith('"get-metadata" was taken for new-workspace-from-blueprint\'s <bindings>') &&
     !error.message.includes("put `--`"));
   // After a `--` it is meant as typed.

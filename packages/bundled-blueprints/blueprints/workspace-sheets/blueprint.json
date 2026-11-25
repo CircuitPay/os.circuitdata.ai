@@ -2,6 +2,7 @@
   "blueprintId": "format.spreadsheet",
   "title": "Workspace Sheets",
   "description": "Use to write, format, and edit spreadsheets interactively or with natural language.",
+  "agentHint": "Use for tables a person fills in by hand. Not for charts or summaries of the organization's data: use a Dashboard or a Report.",
   "output": {
     "id": "spreadsheet",
     "noun": "Sheet",

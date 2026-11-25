@@ -60,13 +60,16 @@ interface CalendarApi {
   earliestAvailable(input: SlotQuery): Promise<z.infer<typeof SlotSchema>>;
 }
 
-const DocumentSchema = z.object({
-  title: z.string(),
-  blocks: z.array(z.object({ html: z.string() }).loose()).nullable(),
+// The part of a Report's getReport() the plan is read from: its sections in order. A heading
+// section holds one heading, a text section holds Markdown-lite, and a data section (a chart or
+// table over retail data) holds nothing a maintenance plan is written in.
+const ReportSchema = z.object({
+  meta: z.object({ title: z.string() }).loose(),
+  sections: z.array(z.object({ kind: z.string(), text: z.string().optional() }).loose()),
 }).loose();
 
-interface DocsApi {
-  getDocument(): Promise<z.infer<typeof DocumentSchema>>;
+interface ReportApi {
+  getReport(): Promise<z.infer<typeof ReportSchema>>;
 }
 
 const CALENDAR = "Change Calendar";
@@ -120,8 +123,9 @@ function sameIds(actual: readonly string[], expected: readonly string[]): boolea
   return actual.length === expected.length && actual.every((id, index) => id === expected[index]);
 }
 
-function plainText(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+/** A line of Markdown-lite without its emphasis and code marks. */
+function plainText(markdown: string): string {
+  return markdown.replace(/\*\*|[*`]/g, "").replace(/\s+/g, " ").trim();
 }
 
 async function week41(api: CalendarApi): Promise<Window[]> {
@@ -407,19 +411,31 @@ nothing scheduled that week.`,
             })),
           };
         }
-        using api = await verifier.connect<DocsApi>(PLAN);
-        const document = DocumentSchema.parse(await api.getDocument());
-        const html = (document.blocks ?? []).map(block => block.html).join("\n");
-        // Walk headings and bullets in source order; a bullet belongs to the latest heading.
+        using api = await verifier.connect<ReportApi>(PLAN);
+        const report = ReportSchema.parse(await api.getReport());
+        // Walk headings and bullets in source order; a bullet belongs to the latest heading. A
+        // heading is a heading section or a `#` line of a text section, and a bullet is a `-`
+        // line of a text section.
         const sections: { heading: string; bullets: string[] }[] = [];
         const bullets: string[] = [];
-        for (const match of html.matchAll(/<(h[1-6]|li)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi)) {
-          const text = plainText(match[2] ?? "");
-          if (match[1]?.toLowerCase().startsWith("h")) {
-            if (text.toLowerCase() !== PLAN.toLowerCase()) sections.push({ heading: text, bullets: [] });
-          } else {
-            bullets.push(text);
-            sections.at(-1)?.bullets.push(text);
+        const addHeading = (text: string) => {
+          if (text.toLowerCase() !== PLAN.toLowerCase()) sections.push({ heading: text, bullets: [] });
+        };
+        for (const section of report.sections) {
+          if (section.kind === "heading") {
+            addHeading(plainText(section.text ?? ""));
+          } else if (section.kind === "text") {
+            for (const line of (section.text ?? "").split("\n")) {
+              const heading = /^\s*#{1,3}\s+(.+)$/.exec(line);
+              const bullet = /^\s*[-*]\s+(.+)$/.exec(line);
+              if (heading?.[1] !== undefined) {
+                addHeading(plainText(heading[1]));
+              } else if (bullet?.[1] !== undefined) {
+                const text = plainText(bullet[1]);
+                bullets.push(text);
+                sections.at(-1)?.bullets.push(text);
+              }
+            }
           }
         }
         const expected = [...new Set(WEEK_41.map(window => window.service))].toSorted();
@@ -430,13 +446,13 @@ nothing scheduled that week.`,
         const otherWeeks = SEEDED.filter(window => !WEEK_41.includes(window));
         const listsOtherWeeks = bullets.some(bullet => otherWeeks.some(window =>
           bullet.toLowerCase().includes(window.reason.toLowerCase())));
-        // The gadget's title (checked above) names the plan; the document's own stored title is
-        // not shown anywhere, so it isn't required to match.
+        // The gadget's title (checked above) is the name the user asked for; the report's own
+        // page title isn't required to repeat it.
         return {
           pass: headings.length === expected.length &&
             expected.every((service, index) => headings[index]?.includes(service)) && bulletsMatch &&
             !listsOtherWeeks,
-          evidence: { title: document.title, sections, expected },
+          evidence: { title: report.meta.title, sections, expected },
         };
       });
     },

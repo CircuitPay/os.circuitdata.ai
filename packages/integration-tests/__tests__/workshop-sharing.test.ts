@@ -179,9 +179,9 @@ it.concurrent("a collaborator's Outputs page follows their access", async () => 
     const offers = await owner.listOutputFormats();
     return offers.length > 0 ? offers : null;
   });
-  const document = formats.find(format => format.output.id === "document");
-  if (document === undefined) throw new Error("Document output format is not installed");
-  const workspace = setup.use(await owner.newWorkspaceFromBlueprint(document.blueprintId, {}));
+  const sheet = formats.find(format => format.output.id === "spreadsheet");
+  if (sheet === undefined) throw new Error("Sheets output format is not installed");
+  const workspace = setup.use(await owner.newWorkspaceFromBlueprint(sheet.blueprintId, {}));
   const { id: workspaceId, defaultGadgetId } = await workspace.getMetadata();
   if (defaultGadgetId === undefined) throw new Error("Output workspace has no default Gadget");
 
@@ -189,15 +189,15 @@ it.concurrent("a collaborator's Outputs page follows their access", async () => 
   if (added === null) throw new Error("Collaborator was not added");
   setup.use(await collaborator.openWorkspace(workspaceId));
 
-  const shared = await waitFor("the shared document in the collaborator's outputs", async () =>
+  const shared = await waitFor("the shared sheet in the collaborator's outputs", async () =>
     (await collaborator.listOutputs()).outputs.find(output =>
       output.workspaceId === workspaceId && output.workpieceId === defaultGadgetId) ?? null);
-  expect(shared.output).toMatchObject({ id: "document" });
+  expect(shared.output).toMatchObject({ id: "spreadsheet" });
 
   await workspace.removeCollaborator(added.profile.id, []);
   setup.dispose();
 
-  await waitFor("the revoked document to leave the collaborator's outputs", async () => {
+  await waitFor("the revoked sheet to leave the collaborator's outputs", async () => {
     try {
       const { outputs } = await withAuthenticated(collaboratorName, authenticated =>
         authenticated.listOutputs());
@@ -223,9 +223,9 @@ it.concurrent("revoking one gadget removes only it from the collaborator's Outpu
     const offers = await owner.listOutputFormats();
     return offers.length > 0 ? offers : null;
   });
-  const document = formats.find(format => format.output.id === "document");
-  if (document === undefined) throw new Error("Document output format is not installed");
-  const workspace = setup.use(await owner.newWorkspaceFromBlueprint(document.blueprintId, {}));
+  const sheet = formats.find(format => format.output.id === "spreadsheet");
+  if (sheet === undefined) throw new Error("Sheets output format is not installed");
+  const workspace = setup.use(await owner.newWorkspaceFromBlueprint(sheet.blueprintId, {}));
   const { id: workspaceId, defaultGadgetId } = await workspace.getMetadata();
   if (defaultGadgetId === undefined) throw new Error("Output workspace has no default Gadget");
   const otherId = await setup.use(await workspace.createGadget("Other", undefined, "OTHER")).getId();
@@ -241,13 +241,13 @@ it.concurrent("revoking one gadget removes only it from the collaborator's Outpu
       .filter(output => output.workspaceId === workspaceId)
       .map(output => output.workpieceId)
       .toSorted((a, b) => a - b);
-  const shared = await waitFor("the shared document in the collaborator's outputs", async () => {
+  const shared = await waitFor("the shared sheet in the collaborator's outputs", async () => {
     const { outputs } = await collaborator.listOutputs();
     return listed(outputs).length === 2 ? outputs : null;
   });
   expect(listed(shared)).toEqual([defaultGadgetId, otherId].toSorted((a, b) => a - b));
   expect(shared.find(output => output.workpieceId === defaultGadgetId)?.output)
-      .toMatchObject({ id: "document" });
+      .toMatchObject({ id: "spreadsheet" });
 
   const affected = await workspace.removeCollaborator(added.profile.id, [], defaultGadgetId);
   expect(affectedAccess(affected)).toEqual([{
@@ -257,7 +257,7 @@ it.concurrent("revoking one gadget removes only it from the collaborator's Outpu
   }]);
   setup.dispose();
 
-  const remaining = await waitFor("the revoked document to leave the collaborator's outputs",
+  const remaining = await waitFor("the revoked sheet to leave the collaborator's outputs",
       async () => {
     try {
       const { outputs } = await withAuthenticated(collaboratorName, authenticated =>

@@ -51,8 +51,9 @@ instantiation. A client may not import a library's server side (it would drag a 
 the iframe), and a library, reached by that subpath, is the one thing an import may reach outside
 `files/` for. The importer has to be TypeScript: a JavaScript module ships as written, with nothing
 at runtime to resolve the package name against, so it cannot import a library, and the build rejects
-the attempt. The Docs, Sheets and Slides blueprints are built on the `ui` and `sync` libraries, with
-their own domain code in `files/`.
+the attempt. The bundled set is Dashboard, Report and Sheets. All three are built on the `ui` and
+`sync` libraries, and Dashboard and Report on the `data` library as well, each with its own domain
+code in `files/`.
 
 ### TypeScript sources
 
@@ -61,9 +62,9 @@ their own domain code in `files/`.
 each entry with its imports into the `client.js` / `server.js` the blueprint ships -- readable
 rather than minified -- so the installed gadget, and the agent that later edits it, see exactly one
 JavaScript file per side, the same as for a blueprint written in plain JavaScript. Those `lib/`
-modules are build input only and are not stored, and `.d.ts` files are dropped. The bundled Docs,
-Sheets and Slides blueprints are written this way, each with a `lib/protocol.ts` holding the types
-its client and server share (imported type-only, so nothing of it ships).
+modules are build input only and are not stored, and `.d.ts` files are dropped. The bundled
+Dashboard, Report and Sheets blueprints are written this way, each with a `lib/protocol.ts` holding
+the types its client and server share (imported type-only, so nothing of it ships).
 
 Everything else under `files/` (the README, assets) passes through unchanged, and may be imported
 for its contents where the bundler can inline it: JSON is; a stylesheet is not, and
@@ -156,25 +157,40 @@ storage. The blueprints the build produces are still installed and inspected ins
 Workshop backend's suite. Only `blueprint.json` and `files/` are read by the build, so `__tests__/`
 (and anything else beside them) is repo-only and never part of the blueprint.
 
-`blueprintId` is the install key. Never change it after deployment: the new ID would install a
-second blueprint while the old one remained. (TODO: the bundled IDs keep the historical `format.`
-prefix -- `format.document`, `format.spreadsheet`, `format.slides` -- for that reason; renaming them
-needs an install-time migration keyed on the old id.) `version` is the blueprint's published content
-version, a counter for display: the content itself is stored under the commit of its files. The
-build fingerprints the files and the rest of the manifest, so direct edits under `files/` reinstall
-automatically. `revision` remains an explicit reinstall trigger and is bumped by the importer.
+`blueprintId` is the install key. Never change it after deployment: the new ID installs a second
+blueprint, and the old one is treated as dropped from the bundle. For an ID the bundle no longer
+ships, the installer withdraws the promotion and the featured entry and keeps the blueprint's
+record, so gadgets made from it keep working but nothing offers it any more. `version` is the
+blueprint's published content version, a counter for display: the content itself is stored under
+the commit of its files. The build fingerprints the files and the rest of the manifest, so direct
+edits under `files/` reinstall automatically. `revision` remains an explicit reinstall trigger and
+is bumped by the importer.
+
+## Data formats
+
+Dashboard and Report read the organization's retail dataset through `env.RETAIL_DATA`. Each
+declares it in `blueprint.json` as an `ambient` binding (`"type": "ambient", "vendorId": "retail"`):
+the Workshop binds it when the gadget is created and whenever the organization's data connection
+appears, nobody picks an account for it, and while the organization has Data turned off the name is
+absent from `env`, which both gadgets show as a plain "not turned on" state. Their saved queries,
+named parameters, formatting and SVG charts come from the [`data` library](libraries/data/README.md).
+The design record is `specs/007-data-output-formats/`.
 
 ## Editing presentation
 
-Edit `blueprint.json` and rebuild. Changes to title, description, output, or author are included in
-the install fingerprint and do not need a `revision` bump.
+Edit `blueprint.json` and rebuild. Changes to title, description, agent hint, output, or author are
+included in the install fingerprint and do not need a `revision` bump. `agentHint` (optional) says
+when the agent should pick the format; it seeds the format's curation hint the first time a
+deployment promotes the blueprint, and an admin's later hint is never replaced. The manifest accepts
+up to 500 characters, but the Workshop keeps only the first 400 of a hint, so write no more than
+that.
 
 ## Updating code
 
 Build the blueprint in a Workshop, export it, then import the export, from `packages/workshop-backend`:
 
 ```
-pnpm import:bundled-blueprint ~/Downloads/Gadgets-Doc-v4.gadget format.document
+pnpm import:bundled-blueprint ~/Downloads/Gadgets-Sheet-v12.gadget format.spreadsheet
 ```
 
 The importer replaces `files/` and leaves anything beside `blueprint.json` and `files/` alone,

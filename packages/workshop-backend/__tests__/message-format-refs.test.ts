@@ -7,17 +7,17 @@ vi.mock("capnweb-validate", () => ({ validateRpc: () => () => undefined, skipRpc
 
 const { sanitizeCommandPosition, sanitizeMessageFormatRefs } = await import("../src/overseer.js");
 
-// "create a Doc for homework and Slides for the presentation"
+// "create a Report for the board and a Dashboard for the team"
 //  0123456789...
-const MESSAGE = "create a Doc for homework and Slides for the presentation";
-const DOC_AT = MESSAGE.indexOf("Doc");
-const SLIDES_AT = MESSAGE.indexOf("Slides");
+const MESSAGE = "create a Report for the board and a Dashboard for the team";
+const REPORT_AT = MESSAGE.indexOf("Report");
+const DASHBOARD_AT = MESSAGE.indexOf("Dashboard");
 
 function ref(overrides: Partial<MessageFormatRef> = {}): MessageFormatRef {
   return {
-    position: DOC_AT,
-    length: 3,
-    noun: "Doc",
+    position: REPORT_AT,
+    length: 6,
+    noun: "Report",
     icon: "fileText",
     ...overrides,
   };
@@ -26,10 +26,10 @@ function ref(overrides: Partial<MessageFormatRef> = {}): MessageFormatRef {
 describe("sanitizeMessageFormatRefs", () => {
   it("keeps well-formed refs, sorted by position", () => {
     let result = sanitizeMessageFormatRefs([
-      ref({position: SLIDES_AT, length: 6, noun: "Slides", icon: "presentation"}),
+      ref({position: DASHBOARD_AT, length: 9, noun: "Dashboard", icon: "chartBar"}),
       ref(),
     ], MESSAGE);
-    expect(result?.map(r => r.noun)).toEqual(["Doc", "Slides"]);
+    expect(result?.map(r => r.noun)).toEqual(["Report", "Dashboard"]);
   });
 
   it("drops a ref whose span doesn't hold its own noun", () => {
@@ -56,24 +56,24 @@ describe("sanitizeMessageFormatRefs", () => {
     // Two chips over the same text would paint it twice.
     let result = sanitizeMessageFormatRefs([
       ref(),
-      ref({position: DOC_AT + 1, length: 2, noun: "oc"}),
+      ref({position: REPORT_AT + 1, length: 5, noun: "eport"}),
     ], MESSAGE);
     expect(result).toHaveLength(1);
-    expect(result?.[0].position).toBe(DOC_AT);
+    expect(result?.[0].position).toBe(REPORT_AT);
   });
 
   it("keeps a repeated format that appears twice in the text", () => {
-    let message = "a Doc and another Doc";
+    let message = "a Report and another Report";
     let result = sanitizeMessageFormatRefs([
       ref({position: 2}),
-      ref({position: message.lastIndexOf("Doc")}),
+      ref({position: message.lastIndexOf("Report")}),
     ], message);
     expect(result).toHaveLength(2);
   });
 
   it("tolerates a malformed ref alongside a good one", () => {
     let result = sanitizeMessageFormatRefs([ref({position: 0}), ref()], MESSAGE);
-    expect(result?.map(r => r.position)).toEqual([DOC_AT]);
+    expect(result?.map(r => r.position)).toEqual([REPORT_AT]);
   });
 
   it("returns undefined for an empty list or a message-less record", () => {
@@ -83,8 +83,8 @@ describe("sanitizeMessageFormatRefs", () => {
   });
 
   it("bounds how many refs one message can carry", () => {
-    let message = "Doc ".repeat(64).trim();
-    let many = Array.from({length: 64}, (_, i) => ref({position: i * 4}));
+    let message = "Report ".repeat(64).trim();
+    let many = Array.from({length: 64}, (_, i) => ref({position: i * 7}));
     expect(sanitizeMessageFormatRefs(many, message)!.length).toBeLessThanOrEqual(32);
   });
 

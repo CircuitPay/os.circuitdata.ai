@@ -1,6 +1,6 @@
 # `ui` — DOM helpers for document-style gadgets
 
-The Docs, Sheets and Slides blueprints share the same few helpers: an element builder, an SVG icon
+The Dashboard, Report and Sheets blueprints share the same few helpers: an element builder, an SVG icon
 factory, toolbar buttons and a dropdown, an in-page prompt (the sandboxed iframe blocks
 `window.prompt`), a save-status dot, relative timestamps, and the reading and downscaling of a
 pasted image. This library is those helpers once, imported as
@@ -45,9 +45,8 @@ ships no CSS but `PROMPT_STYLES`.
 - **`promptInline`**'s message is text, not markup.
 - **`prepareImage`** tries four encoding qualities before it shrinks the image, and keeps a GIF
   animated only while its data URL fits `maxGifDataUrlLength`. A gadget with its own conversion
-  uses `readFileAsDataURL` and `loadImage` and does the rest itself: Slides passes SVG through,
-  keeps PNG as PNG and falls back to the original on any failure; Docs encodes PNG or JPEG under
-  the same `DEFAULT_IMAGE_LIMITS`, never WebP, which Word cannot show.
+  uses `readFileAsDataURL` and `loadImage` and does the rest itself; Report reads a letterhead
+  logo with `readFileAsDataURL` and stores it as given, after checking its type and size.
 - **`relativeTime`** has no caller among the bundled blueprints yet.
 
 ## Tests

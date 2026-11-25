@@ -1690,7 +1690,7 @@ describe("applying a blueprint to a gadget", () => {
     // These take whole files from one side, so nothing in them is diffed. Recorded as a change
     // to the chat's files, the client.js of one diffed against the other's took a minute and a
     // half.
-    let [from, to] = ["format.document", "format.spreadsheet"].map(id => {
+    let [from, to] = ["format.report", "format.spreadsheet"].map(id => {
       let entry = BUNDLED_BLUEPRINTS.find(blueprint => blueprint.blueprintId === id)!;
       return { id, files: new Map(entry.files) };
     });

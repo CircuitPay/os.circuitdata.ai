@@ -270,29 +270,80 @@ describe("bundled blueprints", () => {
     }
   });
 
-  it("renders document HTML and PDF exports without the editor chrome", () => {
-    let entry = BUNDLED_BLUEPRINTS.find(blueprint => blueprint.blueprintId === "format.document")!;
-    let client = readBlueprintFile(entry, "client.js");
+  it("bundles exactly Dashboard, Report and Sheets", () => {
+    let bundled = BUNDLED_BLUEPRINTS
+        .map(({ blueprintId, title, output }) => ({ blueprintId, title, output }))
+        .toSorted((a, b) => a.blueprintId.localeCompare(b.blueprintId));
+    expect(bundled).toEqual([
+      {
+        blueprintId: "format.dashboard",
+        title: "Workspace Dashboards",
+        output: { id: "dashboard", noun: "Dashboard", plural: "Dashboards", icon: "chartBar" },
+      },
+      {
+        blueprintId: "format.report",
+        title: "Workspace Reports",
+        // Reports file under "document" on the Outputs page, beside documents made before this
+        // format existed.
+        output: { id: "document", noun: "Report", plural: "Reports", icon: "fileText" },
+      },
+      {
+        blueprintId: "format.spreadsheet",
+        title: "Workspace Sheets",
+        output: { id: "spreadsheet", noun: "Sheet", plural: "Sheets", icon: "table" },
+      },
+    ]);
+  });
 
-    // The TypeScript build rewrites the source; what survives is the export-mode check itself.
-    expect(client).toContain('["html", "pdf"].includes(');
-    expect(client).toContain("gadgetExportFormatId");
-    expect(client).toContain('document.documentElement.classList.add("document-export")');
-    expect(client).toContain("bar.remove();");
+  // The two data formats reach the organization's retail dataset with no connection step, which
+  // only an ambient binding gives them; Sheets reaches nothing.
+  it("declares retail data as an ambient binding of the data formats alone", () => {
+    let bindings = Object.fromEntries(
+        BUNDLED_BLUEPRINTS.map(entry => [entry.blueprintId, entry.bindings]));
+    for (let blueprintId of ["format.dashboard", "format.report"]) {
+      expect(Object.keys(bindings[blueprintId]), blueprintId).toEqual(["RETAIL_DATA"]);
+      expect(bindings[blueprintId].RETAIL_DATA, blueprintId)
+        .toMatchObject({ type: "ambient", vendorId: "retail" });
+    }
+    expect(bindings["format.spreadsheet"]).toEqual({});
+  });
+
+  // The hint is what tells the agent which of the three to pick, so none may ship without one,
+  // and none may be longer than the 400 characters the system prompt keeps of a hint.
+  it("gives every standard output format a hint for the agent", () => {
+    for (let entry of BUNDLED_BLUEPRINTS) {
+      expect(entry.agentHint?.trim(), entry.blueprintId).toBeTruthy();
+      expect(entry.agentHint!.length, entry.blueprintId).toBeLessThanOrEqual(400);
+    }
   });
 
   it("declares the intended export formats for every standard output format", () => {
+    // Fragments of each format's declaration as the TypeScript build emits it. The text
+    // content types are prefixes, so a charset parameter may follow.
     let expectedFormats: Record<string, string[]> = {
-      "format.document": [
-        'id: "markdown", label: "Markdown", mode: "server", contentType: "text/markdown"',
-        'id: "html", label: "HTML", mode: "browser", contentType: "text/html"',
-        'id: "pdf", label: "PDF", mode: "browser", contentType: "application/pdf"',
-        'id: "docx", label: "Word", mode: "server", contentType: DOCX_CONTENT_TYPE',
+      "format.dashboard": [
+        'id: "pdf"',
+        'label: "PDF"',
+        'mode: "browser"',
+        'contentType: "application/pdf"',
+        'fileExtension: ".pdf"',
+        'id: "csv"',
+        'label: "CSV"',
+        'mode: "server"',
+        'contentType: "text/csv',
+        'fileExtension: ".csv"',
       ],
-      "format.slides": [
-        'id: "html", label: "HTML", mode: "browser", contentType: "text/html"',
-        'id: "pdf", label: "PDF", mode: "browser", contentType: "application/pdf"',
-        'id: "pptx", label: "PowerPoint", mode: "server", contentType: "application/vnd.openxmlformats-officedocument.presentationml.presentation"',
+      "format.report": [
+        'id: "pdf"',
+        'label: "PDF"',
+        'mode: "browser"',
+        'contentType: "application/pdf"',
+        'fileExtension: ".pdf"',
+        'id: "markdown"',
+        'label: "Markdown"',
+        'mode: "server"',
+        'contentType: "text/markdown',
+        'fileExtension: ".md"',
       ],
       "format.spreadsheet": [
         // `const` in the source; the TypeScript build emits `var`.
@@ -304,6 +355,8 @@ describe("bundled blueprints", () => {
         'contentType: "text/csv"',
       ],
     };
+    expect(BUNDLED_BLUEPRINTS.map(entry => entry.blueprintId).toSorted())
+      .toEqual(Object.keys(expectedFormats).toSorted());
 
     for (let entry of BUNDLED_BLUEPRINTS) {
       let serverCode = readBlueprintFile(entry, "server.js");

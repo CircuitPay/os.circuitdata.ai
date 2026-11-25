@@ -153,19 +153,19 @@ it("records every setting change, before it takes effect", async () => {
   last = await expectRecord(last, "setSiteLogo",
       [{ setting: "siteLogo", before: logo, after: "default" }]);
 
-  const document = settings.formats.find(format => format.output?.id === "document");
-  if (document === undefined) throw new Error("The bundled document format is not offered");
+  const sheet = settings.formats.find(format => format.output?.id === "spreadsheet");
+  if (sheet === undefined) throw new Error("The bundled Sheets format is not offered");
   const hint = `Prefer it for audit ${crypto.randomUUID()}.`;
   try {
-    await admin.updateFormat(document.blueprintId, { agentHint: hint });
+    await admin.updateFormat(sheet.blueprintId, { agentHint: hint });
     last = await newSetting(last);
     expect(last.method).toBe("updateFormat");
     expect(last.changes).toHaveLength(1);
     const [change] = last.changes;
-    expect(change).toMatchObject({ setting: "formats", key: document.blueprintId });
+    expect(change).toMatchObject({ setting: "formats", key: sheet.blueprintId });
     expect(JSON.parse(change!.after!)).toEqual({ ...JSON.parse(change!.before!), agentHint: hint });
   } finally {
-    await admin.updateFormat(document.blueprintId, { agentHint: document.agentHint });
+    await admin.updateFormat(sheet.blueprintId, { agentHint: sheet.agentHint });
   }
   last = await newSetting(last);
 
