@@ -121,7 +121,7 @@ export function sanitizeOutputOverrides(overrides: unknown): Partial<BlueprintOu
 /**
  * The presentation a gadget instantiated from `blueprintId` should inherit: the blueprint's own
  * declaration with this deployment's override applied. Called on every instantiation path, so an
- * admin who renames "Slides" to "Briefing" gets Briefings from then on.
+ * admin who renames "Reports" to "Briefings" gets Briefings from then on.
  *
  * Overrides apply even when the format is disabled: disabling stops it being *offered*, but a
  * gadget built from that blueprint still carries the deployment's naming.
@@ -207,7 +207,8 @@ export async function listFormatOffers(env: BlueprintKvEnv, config: AdminConfig)
       blueprintId: entry.blueprintId,
       output,
       description: metadata.description,
-      requiresSetup: Object.keys(metadata.bindings).length > 0,
+      // An "ambient" binding is the Workshop's to connect, so it asks nothing of the person.
+      requiresSetup: Object.values(metadata.bindings).some(binding => binding.type !== "ambient"),
       bindings: metadata.bindings,
       ...(entry.agentHint ? {agentHint: entry.agentHint} : {}),
     });

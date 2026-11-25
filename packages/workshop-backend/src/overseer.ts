@@ -575,8 +575,17 @@ function describeBindingKind(binding: BlueprintBinding): string {
     case "gatekeeper": return `external resource: ${binding.gatekeeperName}`;
     case "aiModel": return binding.modelKind === "decision" ? `AI decision model` : `AI model`;
     case "agentSpawner": return `agent spawner`;
+    case "ambient": return `always-available resource: ${binding.vendorId}`;
     default: return binding satisfies never;
   }
+}
+
+// The always-available resources a blueprint declares (see BlueprintBinding "ambient"), as a gadget
+// made from it records them: binding name -> vendor id (see GadgetRecord.ambientBindings).
+function ambientDeclarations(bindings: Record<string, BlueprintBinding>): Record<string, string> {
+  return Object.fromEntries(Object.entries(bindings).flatMap(
+      ([name, binding]): [string, string][] =>
+          binding.type === "ambient" ? [[name, binding.vendorId]] : []));
 }
 
 const MAX_BLUEPRINT_SCREENSHOT_BYTES = 1024 * 1024;
@@ -2151,14 +2160,16 @@ class OverseerImpl implements AgentHooks {
   // (see addChatMessages()). Otherwise the gadget is permanent and `initialCommitId` -- its
   // empty-tree initial commit, written by the caller beforehand -- is required: every permanent
   // gadget is born with a head (see GadgetRecord.commitId). `blueprint` is the blueprint being
-  // instantiated, if any, and `output` the format it declares. A gadget created from none is
+  // instantiated, if any: `output` is the format it declares, and `ambientBindings` the
+  // always-available resources it declares, which are recorded on the gadget and bound at once
+  // where the workspace has them (see bindAmbientDeclarations). A gadget created from none is
   // recorded as made from scratch (see GadgetRecord.upstream); one created from a blueprint
   // comes to follow it when its creation is accepted. `actorUserId` (hex user DO ID) feeds
   // analytics only; a permanent creation's caller records its own workpiece_created, naming its
   // source.
   createGadget(title: string, bindingName: string, chatId?: number,
-               blueprint?: {output?: BlueprintOutput}, initialCommitId?: string,
-               actorUserId?: string): GadgetRecord {
+               blueprint?: {output?: BlueprintOutput, ambientBindings?: Record<string, string>},
+               initialCommitId?: string, actorUserId?: string): GadgetRecord {
     title = title.trim();
     if (!title) {
       throw new Error("A gadget requires a non-empty title.");
@@ -2186,6 +2197,9 @@ class OverseerImpl implements AgentHooks {
     if (blueprint?.output) {
       record.output = blueprint.output;
     }
+    if (blueprint?.ambientBindings && Object.keys(blueprint.ambientBindings).length > 0) {
+      record.ambientBindings = blueprint.ambientBindings;
+    }
     if (!blueprint) {
       record.upstream = {};
     }
@@ -2198,6 +2212,15 @@ class OverseerImpl implements AgentHooks {
       record.commitId = initialCommitId;
     }
     this.storage.gadgets.put(record);
+    if (record.ambientBindings) {
+      // Bound with the creation rather than at the next open, so a chat's preview of a gadget it
+      // is still proposing has the resource. The edge is permanent even on a pending record,
+      // which is safe: a pending gadget reaches nothing (see #gadgetReach), so binding it restarts
+      // no session, and the edge is deleted with the record if the creation is reverted or
+      // orphaned.
+      this.bindAmbientDeclarations(record.id);
+      record = this.getGadgetRecord(record.id);
+    }
     if (chatId !== undefined) {
       this.recordGadgetAnalytics({
         event_name: "workpiece_proposed",
@@ -2492,6 +2515,9 @@ class OverseerImpl implements AgentHooks {
       throw new Error(`No such binding: ${name}`);
     }
     delete gadget.bindings[name];
+    // A person's removal is final: without the declaration, bindAmbientDeclarations() leaves the
+    // name alone.
+    delete gadget.ambientBindings?.[name];
     this.storage.gadgets.put(gadget);
     this.bumpVersion([gadgetId]);
   }
@@ -2514,6 +2540,11 @@ class OverseerImpl implements AgentHooks {
 
     delete gadget.bindings[oldName];
     gadget.bindings[newName] = edge;
+    // A declared always-available resource stays declared under its new name.
+    if (gadget.ambientBindings && Object.hasOwn(gadget.ambientBindings, oldName)) {
+      gadget.ambientBindings[newName] = gadget.ambientBindings[oldName];
+      delete gadget.ambientBindings[oldName];
+    }
     this.storage.gadgets.put(gadget);
     this.bumpVersion([gadgetId]);
   }
@@ -4596,17 +4627,28 @@ class OverseerImpl implements AgentHooks {
 
   // The bindings a blueprint declares that the gadget has none named for, in the form a
   // BlueprintMerge records them. `gadget` is absent for a gadget about to be created, which
-  // has no bindings at all. A spawner-only binding has no name in the gadget, so it is listed
+  // has no bindings yet but is born with each always-available resource the workspace has (see
+  // #fillableAmbientBindings). A spawner-only binding has no name in the gadget, so it is listed
   // only when a missing agent spawner's agents get it.
   #missingBlueprintBindings(metadata: BlueprintMetadata, gadget?: GadgetRecord)
       : Pick<BlueprintMerge, "missingBindings"> {
-    let bound = new Set(gadget && this.visibleBindings(gadget).map(([name]) => name));
+    let bound = gadget
+        ? new Set(this.visibleBindings(gadget).map(([name]) => name))
+        : this.#fillableAmbientBindings(metadata.bindings);
     let missing = Object.entries(metadata.bindings).filter(([name]) => !bound.has(name));
     let spawnerFed = new Set(missing.flatMap(([, binding]) => binding.type === "agentSpawner"
         ? Object.values(binding.env).flatMap(target => target.type === "binding" ? [target.name] : [])
         : []));
     missing = missing.filter(([name, binding]) => !binding.spawnerOnly || spawnerFed.has(name));
     return missing.length > 0 ? {missingBindings: Object.fromEntries(missing)} : {};
+  }
+
+  // The names under which `bindings` declares always-available resources that the workspace has
+  // now, and which a gadget created from the blueprint is therefore born bound to (see
+  // createGadget).
+  #fillableAmbientBindings(bindings: Record<string, BlueprintBinding>): Set<string> {
+    return new Set(Object.entries(bindings).flatMap(([name, binding]) =>
+        binding.type === "ambient" && this.#ambientCapsule(binding.vendorId) ? [name] : []));
   }
 
 
@@ -8860,7 +8902,8 @@ class OverseerImpl implements AgentHooks {
   // gatekeeper's suggested binding name; see prepareChatBindings) so the agent can read it in
   // executeCode — search/list/read recorded as observations — and optionally wire into a gadget
   // via setGadgetBinding if the gadget's persistent code needs it. (Most gadgets never call the
-  // library programmatically, so a gadget binding would just be noise.) Idempotent:
+  // library programmatically, so a gadget binding would just be noise. A gadget whose blueprint
+  // declares one of these resources is bound to it here; see bindAmbientDeclarations.) Idempotent:
   // provisioned once per gadget and re-added if missing. Called on open(), before any agent turn.
   //
   // The session is reached through the owner's stored connected account, not by asserting the owner's
@@ -8927,6 +8970,8 @@ class OverseerImpl implements AgentHooks {
       }
     }));
     await tenantCapsules;
+    // With the capsules current, bind the ones that gadgets' blueprints declared.
+    this.bindAmbientDeclarations();
   }
 
   // The tenant-held counterpart of ensureAmbientCapsules: one unnamed record per account the owner's
@@ -8957,6 +9002,47 @@ class OverseerImpl implements AgentHooks {
         });
       }
     }));
+  }
+
+  // The workspace's always-available resource of a vendor: its "ambient" or "tenantAmbient"
+  // capsule (see ensureAmbientCapsules), if it has one now.
+  #ambientCapsule(vendorId: string): GatekeeperRecord | undefined {
+    return Array.from(this.storage.gatekeepers.list()).find(gk =>
+        (gk.creationSpec?.type === "ambient" || gk.creationSpec?.type === "tenantAmbient") &&
+        gk.creationSpec.vendorId === vendorId);
+  }
+
+  // Bind the always-available resources that gadgets' blueprints declared (see
+  // GadgetRecord.ambientBindings), for the given gadget or for every one: each declared name with
+  // no edge, pending or not, is bound to the workspace's capsule of its vendor when there is one.
+  // A declaration grants nothing. A capsule exists only because the owner, their organization's
+  // administrator or the operator enabled it, and in a workspace without one the gadget's env
+  // simply lacks the name. The result is an ordinary permanent edge (see bindWorkpiece): it widens
+  // verification scopes, and is unbound and renamed, like any other. It is deleted with its
+  // capsule (see removeGatekeeper) and made again here once the vendor has one, under a new id.
+  //
+  // Called when a gadget is created from a blueprint, and after every capsule reconcile, where a
+  // workspace that declares nothing pays for one listing of its gadgets and writes nothing. A
+  // name that cannot be bound, such as an invalid one a blueprint declared, is skipped.
+  bindAmbientDeclarations(gadgetId?: WorkpieceId): void {
+    // Listed in full up front: binding writes the collection being read.
+    let gadgets = gadgetId === undefined
+        ? Array.from(this.storage.gadgets.list()) : [this.getGadgetRecord(gadgetId)];
+    for (let gadget of gadgets) {
+      if (gadget.type !== "gadget" || !gadget.ambientBindings) continue;
+      for (let [name, vendorId] of Object.entries(gadget.ambientBindings)) {
+        if (Object.hasOwn(gadget.bindings, name)) continue;
+        let capsule = this.#ambientCapsule(vendorId);
+        if (!capsule) continue;
+        try {
+          this.bindWorkpiece(gadget.id, name, capsule.id);
+        } catch (err) {
+          this.logger.warn("failed to bind a declared always-available resource", {
+            event: "ambient.binding.failed", gatekeeperId: capsule.id, vendorId, error: err,
+          });
+        }
+      }
+    }
   }
 
   // Which of `targets` are tenant-held capsules whose account the owner's tenant no longer offers
@@ -9541,11 +9627,6 @@ class OverseerImpl implements AgentHooks {
       let gk = this.storage.gatekeepers.get(edge.target);
       if (!gk) continue;  // dangling edge (gatekeeper destroyed)
 
-      // Singleton gatekeepers (e.g. the Context Library) are auto-provided to every gadget, not
-      // user-configured, so they're excluded from blueprints (re-added automatically on open). This
-      // also covers an ambient capsule the agent promoted to a named binding via setGadgetBinding.
-      if (gk.creationSpec?.type === "ambient" || gk.creationSpec?.type === "tenantAmbient") continue;
-
       // Annotation is optional. When absent, the binding is included with an empty
       // description and no resource suggestion. Legacy records may carry an `included:
       // false` flag; honor it for backwards compatibility, but the current UI no longer
@@ -9561,9 +9642,26 @@ class OverseerImpl implements AgentHooks {
         );
       }
 
+      // An always-available resource (e.g. the Context Library, or an account the organization
+      // holds) is not user-configured, so the blueprint names only its vendor: a gadget made from
+      // it is bound to its own workspace's resource of that vendor, if it has one (see
+      // bindAmbientDeclarations). No account, dataset or capsule id leaves the workspace. This also
+      // covers a capsule the agent promoted to a named binding via setGadgetBinding.
+      if (spec.type === "ambient" || spec.type === "tenantAmbient") {
+        bindings[bindingName] = {
+          title: defaultBlueprintBindingTitle(gk, bindingName),
+          description: annotation?.description ?? "",
+          type: "ambient",
+          vendorId: spec.vendorId,
+        };
+        continue;
+      }
+
       // This edge is exported, so it can serve as the blueprint binding for its target in spawner
       // env references. Registered here rather than in a pass over all edges, so that a dropped
-      // edge (dangling, ambient, or legacy `included: false`) never lends its name to an env entry.
+      // edge (dangling, or legacy `included: false`) never lends its name to an env entry. An
+      // always-available resource, exported above, lends none either: instantiation creates
+      // nothing for it that a spawner's env could be resolved to.
       if (!edgeNameByTarget.has(edge.target)) edgeNameByTarget.set(edge.target, bindingName);
 
       let base = {
@@ -10865,7 +10963,7 @@ class OverseerImpl implements AgentHooks {
   }
 
   // A short standing note about the deployment's standard formats, for the system prompt. Carried
-  // on every turn because "make me a quick doc" doesn't prompt an agent to call `listBlueprints`.
+  // on every turn because "make me a report" doesn't prompt an agent to call `listBlueprints`.
   async describeStandardFormats(): Promise<string> {
     let formats = await this.#listStandardFormats();
     if (formats.length === 0) return "";
@@ -10900,12 +10998,14 @@ class OverseerImpl implements AgentHooks {
   // Fetch a blueprint's decoded files, plus formatted notes describing what was copied and which
   // bindings the blueprint's code expects the agent to wire up, for instantiation as a new gadget
   // by the agent's createGadget tool, and the record of that for the creation's "changes"
-  // message (see AiChatMessageBody.blueprintMerges). Blueprint ids are bearer capabilities (like
-  // blueprint share links), so possession of the id is sufficient to read it. Throws
-  // agent-readable errors.
+  // message (see AiChatMessageBody.blueprintMerges). `ambientBindings` are the always-available
+  // resources the blueprint declares, for createGadget to record and bind; one the workspace has
+  // now is left out of the notes and the record, since the agent has nothing to wire for it.
+  // Blueprint ids are bearer capabilities (like blueprint share links), so possession of the id
+  // is sufficient to read it. Throws agent-readable errors.
   async fetchBlueprint(blueprintId: string): Promise<{
     files: Record<string, string>, notes: string, output?: BlueprintOutput,
-    merge: Omit<BlueprintMerge, "gadgetId">,
+    ambientBindings: Record<string, string>, merge: Omit<BlueprintMerge, "gadgetId">,
   }> {
     let kvRecord = await readBlueprintFor(this.env, blueprintId, await this.blueprintCaller());
     if (!kvRecord) {
@@ -10939,9 +11039,16 @@ class OverseerImpl implements AgentHooks {
         : `The blueprint contained no files, so the new gadget is empty.`);
 
     let {bindings} = kvRecord.metadata;
+    // An always-available resource the workspace has is bound as the gadget is created (see
+    // createGadget), which leaves the agent nothing to wire for it.
+    let filled = this.#fillableAmbientBindings(bindings);
+    let unfilled = Object.fromEntries(
+        Object.entries(bindings).filter(([name]) => !filled.has(name)));
     lines.push("", Object.keys(bindings).length === 0
         ? `The blueprint requires no bindings.`
-        : formatMissingBlueprintBindings(bindings, `the new gadget`));
+        : Object.keys(unfilled).length === 0
+            ? `The blueprint's bindings were connected automatically.`
+            : formatMissingBlueprintBindings(unfilled, `the new gadget`));
 
     // What the creation is recorded as. The new gadget's files are the release's exactly, with
     // nothing to merge them against.
@@ -10951,7 +11058,10 @@ class OverseerImpl implements AgentHooks {
       ...this.#missingBlueprintBindings(kvRecord.metadata),
     };
 
-    return {files, notes: lines.join("\n"), output, merge};
+    return {
+      files, notes: lines.join("\n"), output, merge,
+      ambientBindings: ambientDeclarations(bindings),
+    };
   }
 
   #tailSubscribers: Set<RpcStub<ConsoleLogSubscriber>> = new Set();
@@ -12314,14 +12424,22 @@ export class OverseerDurableObject extends DurableObject<Cloudflare.Env> {
     });
 
     // The gadget follows the blueprint, from the release it was built from. It also inherits the
-    // blueprint's declared format, so it is named and drawn as a Document (or whatever it
-    // produces) rather than a generic app.
+    // blueprint's declared format, so it is named and drawn as a Report (or whatever it
+    // produces) rather than a generic app, and the always-available resources the blueprint
+    // declares, bound here where the workspace has them: the open() before this call reconciled
+    // its capsules, and one that was missing then is bound when a later open's reconcile adds it
+    // (see bindAmbientDeclarations).
     let record = this.impl.getGadgetRecord(gadgetId);
     record.upstream = { blueprintId, commitId: release };
     if (output) {
       record.output = output;
     }
+    let ambientBindings = ambientDeclarations(metadata.bindings);
+    if (Object.keys(ambientBindings).length > 0) {
+      record.ambientBindings = ambientBindings;
+    }
     this.impl.storage.gadgets.put(record);
+    this.impl.bindAmbientDeclarations(gadgetId);
 
     // Mark gadget as non-provisional (it has code, so it should appear in the gadget list).
     // (A write, so deliberately not retried -- a reset can't distinguish "never applied" from

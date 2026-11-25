@@ -711,6 +711,12 @@ class AuthenticatedApiImpl extends RpcTarget implements AuthenticatedApi {
       if (!blueprintBinding) {
         throw new Error(`Unknown binding name: ${bindingName}`);
       }
+      // An "ambient" binding is the workspace's own resource, bound as the gadget was initialized
+      // above where the workspace has it. No account a person picks may stand in for it.
+      if (blueprintBinding.type === "ambient") {
+        throw new Error(
+            `Binding "${bindingName}" is connected automatically and cannot be assigned.`);
+      }
 
       gkPromises.push((async () => {
         let gk;

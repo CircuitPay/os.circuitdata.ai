@@ -61,9 +61,16 @@ orthogonal — an account can declare either, both, or neither.
   **ambient gatekeeper record**, folded into each chat's env as a **named chat binding** (named by
   the gatekeeper's `suggestedBindingName`; see `prepareChatBindings` in overseer.ts) that the agent reads in
   `executeCode` (`getSession`/`getAgentCatalog`), each read recorded as an observation. It is not
-  bound to any gadget by default — most gadgets never call it programmatically — but the agent may
-  wire it into a gadget's binding list with `setGadgetBinding` when the gadget's persistent code
-  needs it.
+  bound to a gadget unless something asks: the agent may wire it into a gadget's binding list with
+  `setGadgetBinding`, and a gadget whose blueprint declares a `BlueprintBinding` of type `"ambient"`
+  for that vendor is bound to the workspace's capsule when it is created and again whenever the
+  capsule returns (`bindAmbientDeclarations` in overseer.ts, driven by `GadgetRecord.ambientBindings`).
+  The declaration grants nothing: with no capsule the gadget's env lacks the name. The bundled
+  Dashboard and Report declare `RETAIL_DATA` this way (`specs/007-data-output-formats/contracts/kernel-seam.md`).
+- A bundled blueprint the bundle no longer ships is withdrawn by the installer: its
+  `AdminConfig.formats` entry and featured entry go, its blueprint record stays
+  (`#retireDroppedFormats` in admin-settings.ts). A bundled format's `agentHint` in `blueprint.json`
+  seeds its curation hint the first time it is promoted and is the admin's from then on.
 - The UI is hosted at `/gatekeepers/$appId` (the gatekeeper's vendor id, e.g.
   `/gatekeepers/context`) via `startAppUi({ isAdmin })`. Anything after that prefix is the app's
   own path, so apps can be deep-linked: the Workshop owns the URL and syncs it with the iframe over
