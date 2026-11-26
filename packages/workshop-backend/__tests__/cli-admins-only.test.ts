@@ -127,8 +127,8 @@ describe("cf-os api on a deployment", () => {
     await expect(api.createAccount(username, username, new Uint8Array([1]))).rejects.toThrow(REFUSED);
     await expect(api.getServerConfig()).rejects.toThrow(REFUSED);
     await expect(api.ping()).rejects.toThrow(REFUSED);
-    await expect(api.getBlueprint("format.document")).rejects.toThrow(REFUSED);
-    await expect(api.downloadBlueprint("format.document")).rejects.toThrow(REFUSED);
+    await expect(api.getBlueprint("format.report")).rejects.toThrow(REFUSED);
+    await expect(api.downloadBlueprint("format.report")).rejects.toThrow(REFUSED);
     // Refused before anything was made: the name is still free.
     expect(await env.TEST_USER.getByName(username).createAccount(username, username, new Uint8Array([1])))
         .not.toBeNull();

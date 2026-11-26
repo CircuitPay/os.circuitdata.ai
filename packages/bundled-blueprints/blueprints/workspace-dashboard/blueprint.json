@@ -1,0 +1,20 @@
+{
+  "blueprintId": "format.dashboard",
+  "title": "Workspace Dashboards",
+  "description": "Use for live figures, charts and tables computed from the organization's retail data (sales, orders, products, customers, inventory) that should stay current. Each tile runs a saved query; viewers filter by date and location.",
+  "agentHint": "Use for figures, charts or summaries of the organization's retail data that should stay current. Not for hand-entered tables (use a Sheet) or dated deliverables (use a Report).",
+  "output": { "id": "dashboard", "noun": "Dashboard", "plural": "Dashboards", "icon": "chartBar" },
+  "author": { "type": "user", "name": "Circuit", "id": "formats@circuitdata.ai" },
+  "revision": 1,
+  "created": "2026-11-25T00:00:00.000Z",
+  "version": 1,
+  "lastUpdated": "2026-11-25T00:00:00.000Z",
+  "bindings": {
+    "RETAIL_DATA": {
+      "title": "Retail data",
+      "description": "Your organization's sales, products, customers and inventory. Connected automatically when your organization has turned Data on.",
+      "type": "ambient",
+      "vendorId": "retail"
+    }
+  }
+}

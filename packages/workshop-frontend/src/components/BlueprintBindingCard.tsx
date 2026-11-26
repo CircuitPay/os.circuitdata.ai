@@ -23,7 +23,7 @@ export function suggestValueLabel(spec: GatekeeperCreationSpec, title?: string):
       return displayTitle ? `Suggest "${displayTitle}" by default` : 'Suggest this agent setup by default'
     case 'ambient':
     case 'tenantAmbient':
-      // Ambient resources are auto-provided and excluded from blueprints, so this never renders.
+      // The card offers no suggestion for a connection the Workshop makes itself, so this never renders.
       return 'Suggest this by default'
   }
 }
@@ -43,7 +43,12 @@ export function BlueprintBindingCard({
   const { bindingName, resourceTitle, vendorId, creationSpec, annotation } = data
   const titleId = `blueprint-binding-title-${bindingName}`
   const descriptionId = `blueprint-binding-desc-${bindingName}`
-  const displayTitle = annotation.title || resourceTitle || bindingName
+  // A blueprint publishes an ambient connection under its resource's own title, with only the
+  // help text taken from here, and nobody installing it picks a value to suggest.
+  const automatic = creationSpec.type === 'ambient' || creationSpec.type === 'tenantAmbient'
+  const displayTitle = automatic
+    ? resourceTitle || bindingName
+    : annotation.title || resourceTitle || bindingName
 
   const containerClass = flat
     ? 'space-y-3'
@@ -51,7 +56,8 @@ export function BlueprintBindingCard({
   const headerClass = flat
     ? 'flex items-start gap-3'
     : 'flex items-start gap-3 px-3 pt-3'
-  const descriptionWrapperClass = flat ? '' : 'px-3 pt-2'
+  // The footer closes the card's bottom edge; without one the help text pads it.
+  const descriptionWrapperClass = flat ? '' : automatic ? 'px-3 pt-2 pb-3' : 'px-3 pt-2'
   const footerClass = flat
     ? 'flex items-center [&_label]:!text-[12px] [&_label]:!leading-4 [&_label]:!tracking-[-0.2px] [&_label]:!font-normal [&_label]:!text-kumo-subtle'
     : 'mt-2 flex items-center border-t border-kumo-line/70 px-3 py-2 [&_label]:!text-[12px] [&_label]:!leading-4 [&_label]:!tracking-[-0.2px] [&_label]:!font-normal [&_label]:!text-kumo-subtle'
@@ -59,17 +65,32 @@ export function BlueprintBindingCard({
   return (
     <div className={containerClass}>
       <div className={headerClass}>
-        <GatekeeperIcon vendorId={vendorId} fallbackText={resourceTitle || bindingName} />
+        <GatekeeperIcon
+          // The binding list names a vendor only for a connected account's resource.
+          vendorId={creationSpec.type === 'ambient' || creationSpec.type === 'tenantAmbient' ? creationSpec.vendorId : vendorId}
+          fallbackText={resourceTitle || bindingName}
+        />
         <div className="min-w-0 flex-1">
-          <label htmlFor={titleId} className="sr-only">Connection name</label>
-          <WorkshopInput
-            id={titleId}
-            aria-label={`Name for ${bindingName}`}
-            value={annotation.title}
-            onChange={(e) => onChange({ ...annotation, title: e.target.value })}
-            placeholder="Connection name"
-            className="!h-8 w-full bg-kumo-base text-[13px] leading-5 font-medium tracking-[-0.25px]"
-          />
+          {automatic ? (
+            <p className="m-0 flex min-h-8 flex-wrap items-center gap-x-2 text-[13px] leading-5 font-medium tracking-[-0.25px] text-kumo-default">
+              {displayTitle}
+              <span className="text-[11px] leading-4 font-normal tracking-[-0.1px] text-kumo-subtle">
+                Connected automatically
+              </span>
+            </p>
+          ) : (
+            <>
+              <label htmlFor={titleId} className="sr-only">Connection name</label>
+              <WorkshopInput
+                id={titleId}
+                aria-label={`Name for ${bindingName}`}
+                value={annotation.title}
+                onChange={(e) => onChange({ ...annotation, title: e.target.value })}
+                placeholder="Connection name"
+                className="!h-8 w-full bg-kumo-base text-[13px] leading-5 font-medium tracking-[-0.25px]"
+              />
+            </>
+          )}
           <p className="mt-1 text-[11px] leading-4 tracking-[-0.1px] text-kumo-inactive">
             Referenced in code as: <span className="font-mono text-kumo-subtle">{bindingName}</span>
           </p>
@@ -82,22 +103,24 @@ export function BlueprintBindingCard({
           aria-label={`Help text for ${displayTitle}`}
           value={annotation.description}
           onChange={(e) => onChange({ ...annotation, description: e.target.value })}
-          placeholder="What should people connect here?"
+          placeholder={automatic ? 'What does this gadget use it for?' : 'What should people connect here?'}
           rows={2}
           autoFocus={autoFocusDescription}
           className="w-full resize-none"
         />
       </div>
 
-      <div className={footerClass}>
-        <Checkbox
-          label={suggestValueLabel(creationSpec, resourceTitle)}
-          checked={annotation.suggestValue ?? false}
-          onCheckedChange={(checked) =>
-            onChange({ ...annotation, suggestValue: checked === true })
-          }
-        />
-      </div>
+      {!automatic && (
+        <div className={footerClass}>
+          <Checkbox
+            label={suggestValueLabel(creationSpec, resourceTitle)}
+            checked={annotation.suggestValue ?? false}
+            onCheckedChange={(checked) =>
+              onChange({ ...annotation, suggestValue: checked === true })
+            }
+          />
+        </div>
+      )}
     </div>
   )
 }

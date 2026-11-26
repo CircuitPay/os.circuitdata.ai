@@ -41,3 +41,10 @@ export class RpcStub<T> {
     this.target = target;
   }
 }
+
+/**
+ * The name of a gadget's restore method (see "Persistent Stubs" in the agent's instructions). The
+ * runtime's is a symbol of its own; any unique symbol lets a gadget define `[restore]()` and a
+ * test call it.
+ */
+export const restore: unique symbol = Symbol("restore");

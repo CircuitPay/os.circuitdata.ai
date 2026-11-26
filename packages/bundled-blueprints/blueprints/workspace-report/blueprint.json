@@ -1,0 +1,21 @@
+{
+  "$comment": "output.id is \"document\" on purpose: it is the grouping key on the Outputs page, where reports file alongside documents made before this format existed.",
+  "blueprintId": "format.report",
+  "title": "Workspace Reports",
+  "description": "Use for a written, dated deliverable built from the organization's retail data: headings, narrative, and tables and charts frozen as of the day it was generated. Regenerate for fresh numbers; earlier editions stay readable. Exports to PDF.",
+  "agentHint": "Use for a written or dated deliverable (for example a monthly sales report) and for any request for a document. This deployment has no slide or presentation format: offer a Report instead.",
+  "output": { "id": "document", "noun": "Report", "plural": "Reports", "icon": "fileText" },
+  "author": { "type": "user", "name": "Circuit", "id": "formats@circuitdata.ai" },
+  "revision": 1,
+  "created": "2026-11-25T00:00:00.000Z",
+  "version": 1,
+  "lastUpdated": "2026-11-25T00:00:00.000Z",
+  "bindings": {
+    "RETAIL_DATA": {
+      "title": "Retail data",
+      "description": "Your organization's sales, products, customers and inventory. Connected automatically when your organization has turned Data on.",
+      "type": "ambient",
+      "vendorId": "retail"
+    }
+  }
+}

@@ -468,11 +468,14 @@ export interface AgentHooks {
    * the "changes" message that records the creation (GadgetRecord.pending in overseer-storage.ts).
    * Throws if the binding name is invalid or already claimed by another gadget (including one
    * still pending in another chat). Returns the id and the (trimmed) title as created.
-   * `blueprint` is the blueprint being instantiated, if any, and `output` the format it declares
-   * (see fetchBlueprint). A gadget created from none is recorded as made from scratch.
+   * `blueprint` is the blueprint being instantiated, if any: `output` is the format it declares
+   * and `ambientBindings` the always-available resources it declares (see fetchBlueprint), which
+   * the gadget is bound to at once where the workspace has them. A gadget created from none is
+   * recorded as made from scratch.
    */
   createGadget(title: string, bindingName: string, chatId: number,
-               blueprint?: {output?: BlueprintOutput}): {id: WorkpieceId, title: string};
+               blueprint?: {output?: BlueprintOutput, ambientBindings?: Record<string, string>})
+      : {id: WorkpieceId, title: string};
 
   /**
    * Create a new worktree workpiece, empty when commitId is omitted, otherwise rooted at the
@@ -694,7 +697,7 @@ export interface AgentHooks {
   /**
    * A short standing note naming the deployment's standard output formats, or "" if it has none.
    * Carried in the system prompt rather than left to `listBlueprints`, because a request phrased as
-   * "make me a doc" may not prompt an agent to go looking for blueprints at all.
+   * "make me a report" may not prompt an agent to go looking for blueprints at all.
    */
   describeStandardFormats(): Promise<string>;
 
@@ -702,14 +705,16 @@ export interface AgentHooks {
    * Fetch a blueprint's decoded files, plus formatted notes describing the copied files and the
    * bindings the blueprint's code expects the agent to wire up. Used by the createGadget tool to
    * instantiate the blueprint as a new gadget, along with the output format the blueprint declares
-   * (if any), which the created gadget inherits. `merge` is the record of the release the files
-   * are, for the creation's "changes" message once the gadget has an id (see
+   * (if any), which the created gadget inherits. `ambientBindings` are the always-available
+   * resources the blueprint declares (binding name -> vendor id), which createGadget records and
+   * binds; the notes leave out each one the workspace has now. `merge` is the record of the
+   * release the files are, for the creation's "changes" message once the gadget has an id (see
    * AiChatMessageBody.blueprintMerges). Throws an agent-readable error if the blueprint doesn't
    * exist.
    */
   fetchBlueprint(blueprintId: string): Promise<{
     files: Record<string, string>, notes: string, output?: BlueprintOutput,
-    merge: Omit<BlueprintMerge, "gadgetId">,
+    ambientBindings: Record<string, string>, merge: Omit<BlueprintMerge, "gadgetId">,
   }>;
 }
 
@@ -737,7 +742,7 @@ A new workspace contains no Gadgets. You can answer questions, read connected re
 
 Draft requested text directly in chat; do not look up blueprints or create a Gadget unless the request or established context calls for a separate saved output or application. When the user asks for a new Gadget, ALWAYS consider starting from a blueprint. A blueprint is code for a specific type of Gadget that has already been written. The \`listBlueprints\` tool returns a list of available blueprints. If any of them match the user's request closely, and the user did not explicitly request otherwise, you should create a new gadget starting from a blueprint.
 
-Note that users rarely ask for "a Gadget" in those words. They ask for a thing: a doc, a deck, a tracker, a tool that does X. "Summarize this doc", "draft an email", or "check these figures" usually asks for an answer or one-off task, not a new Gadget. Work on an existing Gadget when the request refers to it. If a useful answer completes the task, give that answer. Ask a brief clarification when it's unclear whether the user wants something created; otherwise, proceed. When the goal is unclear, ask what the user wants to accomplish before suggesting an application.
+Note that users rarely ask for "a Gadget" in those words. They ask for a thing: a report, a dashboard, a tracker, a tool that does X. "Summarize this doc", "draft an email", or "check these figures" usually asks for an answer or one-off task, not a new Gadget. Work on an existing Gadget when the request refers to it. If a useful answer completes the task, give that answer. Ask a brief clarification when it's unclear whether the user wants something created; otherwise, proceed. When the goal is unclear, ask what the user wants to accomplish before suggesting an application.
 
 Tools refer to Gadgets by their binding name in your env: the file tools (\`readFile\`, \`writeFile\`, \`editFile\`, \`grep\`) take a \`workpiece\` parameter naming the Gadget that owns the file, and \`setGadgetBinding\` takes a \`gadget\` parameter naming the Gadget whose bindings to modify. Some older workspaces have a "default" Gadget (noted in the gadget list) which the file tools fall back to when \`workpiece\` is omitted; even so, prefer passing the name explicitly.
 
@@ -1094,7 +1099,8 @@ ${types.trim()}
  * Tells the agent which bindings a blueprint's code expects that a gadget lacks, and how to wire
  * each one up. `gadget` is what the text calls the gadget, as in "the new gadget". Shared by
  * the createGadget tool's result for a gadget made from a blueprint (see
- * AgentHooks.fetchBlueprint) and the summary of a blueprint merged into an existing gadget.
+ * AgentHooks.fetchBlueprint) and the summary of a blueprint merged into an existing gadget. An
+ * "ambient" binding is the Workshop's to connect, so it is listed as nothing to wire.
  */
 export function formatMissingBlueprintBindings(
     bindings: Record<string, BlueprintBinding>, gadget: string): string {
@@ -1130,6 +1136,11 @@ export function formatMissingBlueprintBindings(
         details = `an agent-spawner binding whose agents get ${env.join(", ") || "no bindings"}`;
         break;
       }
+      case "ambient":
+        details = `the workspace's always-available "${binding.vendorId}" resource; this ` +
+            `workspace does not have it, so the gadget runs without it until it is enabled ` +
+            `(nothing for you to wire)`;
+        break;
       default:
         binding satisfies never;
         details = `unknown`;
@@ -3392,7 +3403,7 @@ async function runAgentPass(
       hooks.setChatWorkspacePrompt(chatId, systemPromptWorkspace);
     }
 
-    // Named in the prompt because the request that should trigger them ("make me a doc") may
+    // Named in the prompt because the request that should trigger them ("make me a report") may
     // not look trigger the agent to browse blueprints.
     let standardFormats = await hooks.describeStandardFormats();
 
@@ -3934,6 +3945,8 @@ async function runAgentPass(
             emitStreamEvent({type: "toolCallOutputFormat", toolCallId, output: blueprint.output});
           }
 
+          // With the blueprint's format and the always-available resources it declares, which
+          // the gadget is bound to here (`blueprint.ambientBindings`).
           let created = hooks.createGadget(title, bindingName, chatId, blueprint);
           pendingCreatedGadgets.push({gadgetId: created.id, title: created.title, bindingName});
           chatBindings.set(bindingName, {type: "workpiece", id: created.id});

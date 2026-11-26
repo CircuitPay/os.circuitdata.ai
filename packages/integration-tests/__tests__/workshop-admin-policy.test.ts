@@ -129,8 +129,8 @@ it("deployment instructions and format hints reach the agent but not the user", 
   const marker = `instructions-${crypto.randomUUID()}`;
   const hint = `hint-${crypto.randomUUID()}`;
   const { instanceInstructions, formats } = await admin.getSettings();
-  const document = formats.find(format => format.output?.id === "document" && format.enabled);
-  if (document === undefined) throw new Error("The bundled document format is not offered");
+  const sheet = formats.find(format => format.output?.id === "spreadsheet" && format.enabled);
+  if (sheet === undefined) throw new Error("The bundled Sheets format is not offered");
 
   const model = models.script([{ text: "Noted." }, { text: "Noted again." }]);
   await using session = await openAgentSession(harness.url, {
@@ -143,18 +143,18 @@ it("deployment instructions and format hints reach the agent but not the user", 
 
   try {
     await admin.setInstanceInstructions(`Mention ${marker} in every reply.`);
-    await admin.updateFormat(document.blueprintId, { agentHint: `Prefer it for ${hint}.` });
+    await admin.updateFormat(sheet.blueprintId, { agentHint: `Prefer it for ${hint}.` });
 
     expect((await session.runTurn("Hello.")).outcome).toEqual({ status: "completed" });
     const configured = systemPromptOf(model.requests[0]);
     expect(configured).toContain(marker);
     expect(configured).toContain(hint);
     const offers = await user.listOutputFormats();
-    expect(offers.map(offer => offer.blueprintId)).toContain(document.blueprintId);
+    expect(offers.map(offer => offer.blueprintId)).toContain(sheet.blueprintId);
     expect(JSON.stringify(offers)).not.toContain(hint);
 
     await admin.setInstanceInstructions("");
-    await admin.updateFormat(document.blueprintId, { agentHint: "" });
+    await admin.updateFormat(sheet.blueprintId, { agentHint: "" });
 
     expect((await session.runTurn("Hello again.")).outcome).toEqual({ status: "completed" });
     const cleared = systemPromptOf(model.requests[1]);
@@ -162,7 +162,7 @@ it("deployment instructions and format hints reach the agent but not the user", 
     expect(cleared).not.toContain(hint);
   } finally {
     await admin.setInstanceInstructions(instanceInstructions);
-    await admin.updateFormat(document.blueprintId, { agentHint: document.agentHint });
+    await admin.updateFormat(sheet.blueprintId, { agentHint: sheet.agentHint });
   }
   expect(model.remainingSteps()).toBe(0);
 });

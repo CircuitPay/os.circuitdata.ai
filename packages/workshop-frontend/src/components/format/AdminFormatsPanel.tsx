@@ -1,6 +1,6 @@
 // Admin panel for the deployment's standard output formats.
 //
-// A format is an ordinary blueprint the deployment has *promoted*: offered as "New Slides" and
+// A format is an ordinary blueprint the deployment has *promoted*: offered as "New Report" and
 // listed first for the agent. Promoting changes four surfaces the admin can't see from here, so
 // the panel previews the buttons users will get and the literal line the model will read.
 //
@@ -106,7 +106,7 @@ export default function AdminFormatsPanel({
     <div className="rounded-xl border border-kumo-line bg-kumo-elevated p-6">
       <h2 className="mb-1 text-lg font-semibold text-kumo-strong">Standard formats</h2>
       <p className="mb-5 text-sm text-kumo-subtle">
-        A promoted blueprint is offered by name (“New Doc”, “New Slides”) wherever people start
+        A promoted blueprint is offered by name (“New Dashboard”, “New Report”) wherever people start
         something, and the agent is told to prefer it over building the same thing from scratch.
       </p>
 

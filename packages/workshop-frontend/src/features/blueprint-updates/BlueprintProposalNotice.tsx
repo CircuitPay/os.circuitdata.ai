@@ -119,6 +119,7 @@ export const BlueprintProposalNotice = ({
             {description.missingBindings.map(binding => (
               <li key={binding.name} className={BODY_TEXT}>
                 <span className="font-medium text-kumo-default">{binding.title}</span>
+                {binding.automatic && ' (connected automatically when available)'}
                 {binding.description && `: ${binding.description}`}
               </li>
             ))}

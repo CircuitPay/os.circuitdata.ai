@@ -18,9 +18,9 @@ describe('parseBlueprintReference', () => {
 
   // A bundled blueprint's id is a name rather than random hex.
   it('reads an id that is not hex', () => {
-    expect(parseBlueprintReference('http://localhost:8787/blueprint/format.document'))
-      .toBe('format.document')
-    expect(parseBlueprintReference('format.document')).toBe('format.document')
+    expect(parseBlueprintReference('http://localhost:8787/blueprint/format.report'))
+      .toBe('format.report')
+    expect(parseBlueprintReference('format.dashboard')).toBe('format.dashboard')
   })
 
   it('rejects a link to something other than a blueprint', () => {

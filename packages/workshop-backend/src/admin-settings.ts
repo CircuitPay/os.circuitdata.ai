@@ -172,8 +172,10 @@ export class AdminSettings extends DurableObject<Cloudflare.Env> {
     }
 
     // Promotion is checked on every run, not just after an install, so a deployment that installed
-    // before curation existed still ends up offering its bundled formats.
+    // before curation existed still ends up offering its bundled formats. Retirement likewise, so
+    // one that was interrupted is finished by the next run.
     await this.#promoteBundledFormats();
+    await this.#retireDroppedFormats();
     return complete;
   }
 
@@ -182,10 +184,8 @@ export class AdminSettings extends DurableObject<Cloudflare.Env> {
   // startup, and reinstalling an updated archive must refresh the blueprint without resetting how
   // the deployment has chosen to offer it.
   //
-  // The converse isn't handled: a blueprint dropped from the bundle, or given a new blueprintId,
-  // leaves its record and its promotion behind for an admin to remove by hand. Withdrawing them
-  // would mean tracking which promotions this installer made, which is worth doing before the
-  // bundled set ever changes.
+  // The converse is #retireDroppedFormats(), which withdraws the promotion of a blueprint that has
+  // left the bundle.
   async #promoteBundledFormats(): Promise<void> {
     let promoted = new Set(this.storage.promotedFormatBlueprints.get());
     let pending = BUNDLED_BLUEPRINTS.filter(entry => !promoted.has(entry.blueprintId));
@@ -200,12 +200,43 @@ export class AdminSettings extends DurableObject<Cloudflare.Env> {
       let known = new Set(current.formats.map(f => f.blueprintId));
       let added = pending
           .filter(entry => !known.has(entry.blueprintId))
-          .map(entry => ({blueprintId: entry.blueprintId, enabled: true}));
+          // The manifest's note on when to choose the format seeds the agent's hint. A format
+          // already curated is skipped above, so it keeps the hint it has.
+          .map(entry => ({
+            blueprintId: entry.blueprintId, enabled: true,
+            ...(entry.agentHint ? {agentHint: entry.agentHint} : {}),
+          }));
       return {...current, formats: [...current.formats, ...added]};
     });
 
     for (let entry of pending) promoted.add(entry.blueprintId);
     this.storage.promotedFormatBlueprints.put([...promoted]);
+  }
+
+  // Withdraw the formats this installer promoted whose blueprint the deployment no longer bundles
+  // (dropped, or given a new blueprintId): each leaves the curated formats and the featured mirror,
+  // so it is in neither the New menu, the agent's format note nor the featured list.
+  // `promotedFormatBlueprints` records exactly the promotions made here, so a format an admin
+  // promoted by hand is never touched. The blueprint's record and its release stay where they are:
+  // gadgets made from it keep working and can still take it by id, and an admin may promote it
+  // again. Like promotion this is the deployment's own write, not an admin's, so it is not
+  // recorded. The stamp is written last and every write before it is idempotent, so a failure
+  // partway repeats the whole step on the next run.
+  async #retireDroppedFormats(): Promise<void> {
+    let bundled = new Set(BUNDLED_BLUEPRINTS.map(entry => entry.blueprintId));
+    let promoted = this.storage.promotedFormatBlueprints.get();
+    let dropped = new Set(promoted.filter(id => !bundled.has(id)));
+    if (dropped.size === 0) return;
+
+    await this.#mutateAdminConfig(null, current => ({
+      ...current, formats: current.formats.filter(f => !dropped.has(f.blueprintId)),
+    }));
+    for (let id of dropped) this.storage.featuredBlueprints.delete(id);
+    await this.#writeFeaturedSnapshot();
+    this.storage.promotedFormatBlueprints.put(promoted.filter(id => !dropped.has(id)));
+    logger.info("retired dropped bundled formats", {
+      event: "formats.retire.complete", size: dropped.size,
+    });
   }
 
   async #writeFeaturedSnapshot(): Promise<void> {

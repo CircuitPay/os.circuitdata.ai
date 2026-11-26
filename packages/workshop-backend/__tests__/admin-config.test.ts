@@ -104,21 +104,21 @@ describe("reorderFormats", () => {
 });
 
 describe("format presentation", () => {
-  let declared = { id: "presentation", noun: "Slides", plural: "Slides", icon: "presentation" } as const;
+  let declared = { id: "dashboard", noun: "Dashboard", plural: "Dashboards", icon: "chartBar" } as const;
 
   it("applies overrides over the blueprint's own declaration", () => {
-    expect(resolveFormatOutput(declared, { noun: "Briefing", plural: "Briefings" }))
-        .toEqual({ ...declared, noun: "Briefing", plural: "Briefings" });
+    expect(resolveFormatOutput(declared, { noun: "Scorecard", plural: "Scorecards" }))
+        .toEqual({ ...declared, noun: "Scorecard", plural: "Scorecards" });
   });
 
   it("has no format to offer when neither side supplies a complete one", () => {
-    expect(resolveFormatOutput(undefined, { noun: "Briefing" })).toBeUndefined();
+    expect(resolveFormatOutput(undefined, { noun: "Scorecard" })).toBeUndefined();
     expect(resolveFormatOutput(undefined, undefined)).toBeUndefined();
   });
 
   it("keeps only well-formed override fields", () => {
-    expect(sanitizeOutputOverrides({ noun: "  Deck  ", icon: "notAnIcon", plural: "" }))
-        .toEqual({ noun: "Deck" });
+    expect(sanitizeOutputOverrides({ noun: "  Board  ", icon: "notAnIcon", plural: "" }))
+        .toEqual({ noun: "Board" });
     expect(sanitizeOutputOverrides({ icon: "notAnIcon" })).toBeUndefined();
     expect(sanitizeOutputOverrides({ noun: "x".repeat(41) })).toBeUndefined();
   });

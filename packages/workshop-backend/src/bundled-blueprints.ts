@@ -39,7 +39,7 @@ type InstallEnv = Pick<Cloudflare.Env, "BLUEPRINTS" | "BLUEPRINT_CONTENT">;
 export function bundledBlueprintsManifestVersion(): string {
   return BUNDLED_BLUEPRINTS
       .map(e => `${e.blueprintId}@${e.revision}+${e.contentHash}+` +
-          fingerprint(JSON.stringify([e.title, e.description, e.author, e.output])))
+          fingerprint(JSON.stringify([e.title, e.description, e.author, e.output, e.agentHint])))
       .toSorted()
       .join(",");
 }

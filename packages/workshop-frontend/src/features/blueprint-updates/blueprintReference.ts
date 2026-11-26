@@ -1,6 +1,6 @@
 const BLUEPRINT_PATH = /^\/blueprint\/([^/]+)\/?$/
 
-// Published ids are random hex and bundled ones are names such as `format.document`. A leading
+// Published ids are random hex and bundled ones are names such as `format.report`. A leading
 // dot is refused because the blueprint namespace's reserved keys (`.featured`, ...) start with one.
 const BARE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 

@@ -419,7 +419,11 @@ describe("AdminSettings promotes bundled formats", () => {
     });
     expect((await config()).formats).toStrictEqual([
       { blueprintId: "bp-a", enabled: false },
-      { blueprintId: pending!.blueprintId, enabled: true },
+      // A first promotion carries the hint the blueprint ships with.
+      {
+        blueprintId: pending!.blueprintId, enabled: true,
+        ...(pending!.agentHint ? { agentHint: pending!.agentHint } : {}),
+      },
     ]);
     expect(records().map(record => record.changes)).toStrictEqual([[{
       setting: "formats", key: "bp-a",

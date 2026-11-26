@@ -33,9 +33,13 @@ Alternatively, you can [deploy to your Cloudflare account](https://os.cloudflare
 
 ### What to try
 
+Cloudflare OS ships three built-in formats, each a blueprint the agent starts from instead of writing an app from scratch: **Dashboards** (live figures, charts and tables over your organization's retail data), **Reports** (written, dated deliverables whose numbers are frozen as of the day they were generated) and **Sheets** (spreadsheets you fill in by hand).
+
 Try prompts like:
 
-* "Make slides for my upcoming meeting with a customer." (This will use the built-in slides blueprint.)
+* "Make a dashboard of our sales by day, top products and sales by location." (This will use the built-in Dashboard blueprint; the figures need your organization's retail data turned on under Connectors → Data.)
+* "Write the monthly sales report for last month." (This will use the built-in Report blueprint, with the same retail data.)
+* "Make a sheet to track my team's open hiring roles." (This will use the built-in Sheets blueprint.)
 * "Make a collaborative whiteboard app." (This will create a new app from scratch.)
 * "Make a tic tac toe game." followed by "I'll be X and you be O. I've made my first move. Your turn."
 * "Make an issue dashboard for this GitHub repo." (Attach a repo; requires that the GitHub integration is configured.)
@@ -53,11 +57,11 @@ As of the August 2026 release, Cloudflare OS v2 is very capable, but still has m
 
 Cloudflare OS is more than just another chatbox with connectors. The system revolves around a new approach to software, where every user runs their own copy of the productivity apps they use.
 
-When you create a slide deck in Cloudflare OS, you are not calling out to some SaaS software running in the cloud. The system creates a *private instance* of the slide deck software *just for you*. We call this a "gadget". This instance runs in a separate sandbox from everyone else's slide decks.
+When you create a sales dashboard in Cloudflare OS, you are not calling out to some SaaS software running in the cloud. The system creates a *private instance* of the dashboard software *just for you*. We call this a "gadget". This instance runs in a separate sandbox from everyone else's dashboards.
 
 This has two profound effects:
-1. It's impossible for the slide deck app to have a security bug that leaks your slides to an attacker. The Cloudflare OS sandbox controls all access to your private instance of the app.
-2. If you want, you can freely modify the code. If the slide deck app is missing a feature you need, you can just ask your agent to add it. And because of point 1, it's totally safe to do so.
+1. It's impossible for the dashboard app to have a security bug that leaks your figures to an attacker. The Cloudflare OS sandbox controls all access to your private instance of the app.
+2. If you want, you can freely modify the code. If the dashboard app is missing a feature you need, you can just ask your agent to add it. And because of point 1, it's totally safe to do so.
 
 This is a big departure from the last 25 years of cloud architecture and "Software as a Service", but we think AI has changed the equation. When any user is capable of prompting an agent to add the features they need, the centralized model of software stops making sense.
 

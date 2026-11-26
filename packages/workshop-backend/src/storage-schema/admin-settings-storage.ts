@@ -80,10 +80,10 @@ export type AdminConfig = {
 
   /**
    * The blueprints offered as this deployment's standard output formats. What a user gets from
-   * "New Slides", and what the agent is told to prefer. Order is menu order.
+   * "New Report", and what the agent is told to prefer. Order is menu order.
    *
    * Separate from the blueprint's own declaration of what it produces (BlueprintMetadata.output):
-   * any user can publish a blueprint calling itself a Document, but only this list decides what
+   * any user can publish a blueprint calling itself a Report, but only this list decides what
    * the deployment offers.
    */
   formats: FormatCuration[];
@@ -184,12 +184,16 @@ export type FormatCuration = {
    */
   enabled: boolean;
 
-  /** One line telling the agent when to choose this format, e.g. "prefer for contracts and memos". */
+  /**
+   * One line telling the agent when to choose this format, e.g. "prefer for monthly figures". A
+   * bundled format's is seeded from its manifest when the installer first promotes it, and is the
+   * admin's to change from then on.
+   */
   agentHint?: string;
 
   /**
    * Presentation the deployment substitutes for the blueprint's own, e.g. an org that calls its
-   * decks "Briefings". Absent fields fall back to the blueprint's declaration.
+   * reports "Briefings". Absent fields fall back to the blueprint's declaration.
    */
   overrides?: Partial<BlueprintOutput>;
 };

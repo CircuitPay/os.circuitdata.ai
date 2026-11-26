@@ -1075,12 +1075,13 @@ export interface AuthenticatedApi extends RpcTarget {
 
   /**
    * The deployment's standard output formats, the built-in blueprints this instance ships with and
-   * any others an admin promotes, for a "New Document / New Slides / ..." menu, in the order to
+   * any others an admin promotes, for a "New Dashboard / New Report / ..." menu, in the order to
    * offer them.
    * Empty when the deployment promotes none.
    *
    * These are ordinary blueprints an admin has promoted. Each blueprint bundled with the
-   * deployment is promoted once, when it is first installed, and an admin may turn it off.
+   * deployment is promoted once, when it is first installed, and an admin may turn it off. One
+   * the deployment stops bundling is withdrawn from the formats; its blueprint stays published.
    */
   listOutputFormats(): Promise<OutputFormatOffer[]>;
 
@@ -1275,8 +1276,9 @@ export interface AuthenticatedApi extends RpcTarget {
    * R2, creates a new Overseer DO, initializes it with the blueprint's code, and creates
    * gatekeepers from the provided binding assignments.
    *
-   * Every required binding in the blueprint must have a corresponding entry in `bindings`,
-   * keyed by binding name. Throws if any are missing or if accountId/modelId are invalid.
+   * Every binding in the blueprint that a person fills must have a corresponding entry in
+   * `bindings`, keyed by binding name. An "ambient" binding is connected by the Workshop and must
+   * not be named there. Throws if one is, or if accountId/modelId are invalid.
    *
    * The returned Overseer can be used immediately (pipelining-friendly).
    *
@@ -4350,12 +4352,12 @@ export function isOutputIcon(value: unknown): value is OutputIcon {
 }
 
 /**
- * What instantiating a blueprint produces: a Document, a Spreadsheet, a Workflow, etc. Declared
+ * What instantiating a blueprint produces: a Report, a Spreadsheet, a Workflow, etc. Declared
  * by the blueprint's author (see `BlueprintMetadata.output`), inherited by every gadget instantiated
  * from it, and used wherever that gadget is shown in place of generic gadget.
  *
  * Declaring this is presentation only. Any user can publish a blueprint calling itself a
- * Document; that must be harmless. Being offered as one of the deployment's standard formats (in
+ * Report; that must be harmless. Being offered as one of the deployment's standard formats (in
  * the New menu, or the agent's preferred list) is a separate, admin-curated decision.
  */
 export type BlueprintOutput = {
@@ -4388,7 +4390,10 @@ export type OutputFormatOffer = {
   /** The blueprint's description. */
   description: string;
 
-  /** The blueprint needs bindings wired up before it can run. */
+  /**
+   * The blueprint declares a binding a person must fill before it can run. "ambient" bindings,
+   * which the Workshop connects itself, never count.
+   */
   requiresSetup: boolean;
 };
 
@@ -6122,8 +6127,8 @@ export type AiChatMessageBody = {
   capsules?: CapsuleSpecifier[];
 
   /**
-   * Standard output formats the message names, e.g. "create a Doc for homework and Slides for the
-   * presentation". See `MessageFormatRef`.
+   * Standard output formats the message names, e.g. "create a Report for the board and a
+   * Dashboard for the team". See `MessageFormatRef`.
    */
   formats?: MessageFormatRef[];
 
@@ -7646,8 +7651,8 @@ export type GatekeeperCreationSpec = {
 } | {
   /**
    * A singleton gatekeeper account (e.g. the Context Library) auto-provided to every gadget as an
-   * unnamed capsule so the agent can read/search it in code. Not user-configured, so excluded from
-   * blueprints; re-added automatically if missing.
+   * unnamed capsule so the agent can read/search it in code. Not user-configured, so a blueprint
+   * names it only by vendor (BlueprintBinding "ambient"); re-added automatically if missing.
    */
   type: "ambient";
   vendorId: string;        // the singleton gatekeeper's id (GATEKEEPER_<ID> suffix, lowercased)
@@ -7657,7 +7662,8 @@ export type GatekeeperCreationSpec = {
 /**
  * Creation spec of a capsule installed from a tenant-held account (VendorDescription.tenantScoped):
  * one per vendor per tenant, kept in the tenant's directory rather than in the owner's user DO.
- * Like "ambient", not user-configured, so excluded from blueprints and reconciled automatically.
+ * Like "ambient", not user-configured, so a blueprint names it only by vendor, and reconciled
+ * automatically.
  */
 export type TenantAmbientCreationSpec = {
   type: "tenantAmbient";
@@ -7797,6 +7803,20 @@ export type BlueprintBinding = {
    * IDs at instantiation time (see SpawnerEnvTarget).
    */
   env: Record<string, SpawnerEnvTarget>;
+} | {
+  /**
+   * Filled by the workspace's own always-available resource of this vendor (an "ambient" or
+   * "tenantAmbient" capsule, see GatekeeperCreationSpec), never by a person: nobody picks an
+   * account for it and no assignment may name it. The Workshop binds it when the gadget is created
+   * and whenever the resource (re)appears; while the workspace has no such resource the gadget's
+   * env simply lacks the name, which the gadget's code must tolerate. Declaring it grants nothing:
+   * the resource is in the workspace only because its owner, their organization's administrator or
+   * the deployment's operator enabled it.
+   */
+  type: "ambient";
+
+  /** The vendor's id (GATEKEEPER_<ID> suffix, lowercased), e.g. "retail". */
+  vendorId: string;
 });
 
 /** A screenshot image uploaded with a blueprint, which stores it apart from its metadata. */

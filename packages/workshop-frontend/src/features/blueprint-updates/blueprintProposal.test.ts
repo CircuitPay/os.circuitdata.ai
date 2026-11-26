@@ -165,8 +165,8 @@ describe('describeBlueprintProposal', () => {
     }
     const notice = describeBlueprintProposal(merge({ kind: 'fastForward', missingBindings }), UNREVIEWED)
     expect(notice.missingBindings).toEqual([
-      { name: 'CALENDAR', title: 'CALENDAR', description: '' },
-      { name: 'WEATHER', title: 'Weather service', description: 'Forecasts for the trip.' },
+      { name: 'CALENDAR', title: 'CALENDAR', description: '', automatic: false },
+      { name: 'WEATHER', title: 'Weather service', description: 'Forecasts for the trip.', automatic: false },
     ])
     // Nothing starts an agent for a fast-forward, so setting them up is left to be asked for.
     expect(notice.missingBindingsHint).toBe('Ask in this chat to have them set up.')
@@ -178,6 +178,34 @@ describe('describeBlueprintProposal', () => {
     expect(describeBlueprintProposal(merge({ missingBindings }), UNREVIEWED).missingBindingsHint)
       .toBe('Ask in this chat to have them set up.')
     expect(describeBlueprintProposal(merge(), REVIEWED).missingBindings).toEqual([])
+  })
+
+  it('asks nobody to set up a connection that is made automatically', () => {
+    const retail: NonNullable<BlueprintMerge['missingBindings']> = {
+      RETAIL_DATA: {
+        type: 'ambient', title: 'Retail data', description: 'Sales by store.', vendorId: 'retail',
+      },
+    }
+    const automaticOnly =
+      describeBlueprintProposal(merge({ kind: 'fastForward', missingBindings: retail }), UNREVIEWED)
+    expect(automaticOnly.missingBindings).toEqual([
+      { name: 'RETAIL_DATA', title: 'Retail data', description: 'Sales by store.', automatic: true },
+    ])
+    expect(automaticOnly.missingBindingsHint).toBeUndefined()
+
+    // One that a person sets up is still asked for.
+    const mixed = describeBlueprintProposal(merge({
+      kind: 'fastForward',
+      missingBindings: {
+        ...retail,
+        WEATHER: {
+          type: 'gatekeeper', title: 'Weather', description: '', gatekeeperName: 'weather',
+          typeUrlPattern: 'https://weather.example/*',
+        },
+      },
+    }), UNREVIEWED)
+    expect(mixed.missingBindings.map(binding => binding.automatic)).toEqual([true, false])
+    expect(mixed.missingBindingsHint).toBe('Ask in this chat to have them set up.')
   })
 })
 

@@ -3,10 +3,10 @@
 Every collaborative gadget here has the same skeleton: one Durable Object owns the authoritative
 state and many browsers edit it live -- a mutation queue in the object, a set of subscriber stubs
 it broadcasts to, presence seeded on join and dropped on leave (in a gadget that shows who is
-there; Docs doesn't), per-item optimistic concurrency,
+there; Dashboard and Report don't), per-item optimistic concurrency,
 and in the browser a debounced save loop with retry, a throttled presence heartbeat and an
 `RpcTarget` for the callbacks. This library is that skeleton once, with none of the flesh: it knows
-nothing about blocks, cells or slides, and a gadget keeps its own model, protocol, DOM and export
+nothing about tiles, cells or sections, and a gadget keeps its own model, protocol, DOM and export
 formats on top of it.
 
 ## Server (`@gadgets/bundled-blueprints/libraries/sync/server`)
@@ -30,8 +30,8 @@ formats on top of it.
   item, one for a deleted item is rejected as `missing` (the client may re-create it with
   `baseVersion` 0), an identical upsert is no change, deletions are version-checked, and accepted
   items take the next version -- a created one `createdVersion`, 1 by default; a gadget where a
-  deleted id can come back passes one above every version the id has had (Docs passes the
-  revision the batch makes), so an id and a version always name one content. Returns the new item
+  deleted id can come back passes one above every version the id has had (the revision the batch
+  makes, say), so an id and a version always name one content. Returns the new item
   map, `accepted`, `deletedIds`, `conflicts`, `changed` and a `status`;
   `operationStatus(changed, conflicts)` recomputes the status for a gadget whose batch also
   carries ordering or a title. `normalizeBaseVersion` reads a base version
@@ -77,10 +77,11 @@ server, every mutation runs through `queue.run`, one registry with hooks that bu
 upsert/delete rule with the gadget's sanitizer in front and its ordering after. In the browser, a
 `SaveScheduler` whose `save()` is the gadget's payload builder drives saving, a roster holds the
 collaborators, a reporter sends presence and the heartbeat, and `createSubscriber` builds the
-callbacks class. Each part stands alone; a gadget may use any subset. Docs and Slides use only
-the server side, their browsers keeping save loops and subscribers of their own. Sheets uses both:
-in the browser the scheduler, the reporter (it draws no roster) and `createSubscriber`, and on the
-server it reads each subscriber's info in `broadcast` to tell editors from before paged loading apart.
+callbacks class. Each part stands alone; a gadget may use any subset. Dashboard and Report run
+their mutations through the queue and broadcast through a registry with no presence hooks. Sheets
+uses both sides: in the browser the scheduler, the reporter (it draws no roster) and
+`createSubscriber`, and on the server it reads each subscriber's info in `broadcast` to tell
+editors from before paged loading apart.
 
 ## Tests
 

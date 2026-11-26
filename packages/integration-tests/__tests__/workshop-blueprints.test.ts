@@ -294,9 +294,9 @@ it.concurrent("publishes, instantiates, and deletes an owned blueprint", async (
     const offers = await authenticated.listOutputFormats();
     return offers.length > 0 ? offers : null;
   });
-  const document = formats.find(format => format.output.id === "document");
-  if (document === undefined) throw new Error("Document output format is not installed");
-  using sourceWorkspace = await authenticated.newWorkspaceFromBlueprint(document.blueprintId, {});
+  const sheet = formats.find(format => format.output.id === "spreadsheet");
+  if (sheet === undefined) throw new Error("Sheets output format is not installed");
+  using sourceWorkspace = await authenticated.newWorkspaceFromBlueprint(sheet.blueprintId, {});
   const sourceMetadata = await sourceWorkspace.getMetadata();
   const sourceGadgetId = sourceMetadata.defaultGadgetId;
   if (sourceGadgetId === undefined) throw new Error("Source workspace has no default Gadget");
@@ -344,16 +344,16 @@ it.concurrent("creates and removes an indexed standard output", async () => {
     const offers = await authenticated.listOutputFormats();
     return offers.length > 0 ? offers : null;
   });
-  const document = formats.find(format => format.output.id === "document");
-  if (document === undefined) throw new Error("Document output format is not installed");
-  expect(document.requiresSetup).toBe(false);
+  const sheet = formats.find(format => format.output.id === "spreadsheet");
+  if (sheet === undefined) throw new Error("Sheets output format is not installed");
+  expect(sheet.requiresSetup).toBe(false);
 
-  using workspace = await authenticated.newWorkspaceFromBlueprint(document.blueprintId, {});
+  using workspace = await authenticated.newWorkspaceFromBlueprint(sheet.blueprintId, {});
   const metadata = await workspace.getMetadata();
   const gadgetId = metadata.defaultGadgetId;
   if (gadgetId === undefined) throw new Error("Output workspace has no default Gadget");
 
-  const indexed = await waitFor("the document to appear in the output index", async () => {
+  const indexed = await waitFor("the sheet to appear in the output index", async () => {
     const result = await authenticated.listOutputs();
     return result.outputs.some(output =>
       output.workspaceId === metadata.id && output.workpieceId === gadgetId)
@@ -363,12 +363,12 @@ it.concurrent("creates and removes an indexed standard output", async () => {
   expect(indexed).toContainEqual(expect.objectContaining({
     workspaceId: metadata.id,
     workpieceId: gadgetId,
-    output: expect.objectContaining({ id: "document" }),
+    output: expect.objectContaining({ id: "spreadsheet" }),
   }));
 
   using gadget = await workspace.getGadget(gadgetId);
   await gadget.remove();
-  await waitFor("the removed document to leave the output index", async () =>
+  await waitFor("the removed sheet to leave the output index", async () =>
     (await authenticated.listOutputs()).outputs.some(output =>
       output.workspaceId === metadata.id && output.workpieceId === gadgetId)
       ? null
@@ -437,9 +437,9 @@ it.concurrent("a blueprint archive keeps DATA's annotation, and installs bind th
     const offers = await publisherApi.listOutputFormats();
     return offers.length > 0 ? offers : null;
   });
-  const document = formats.find(format => format.output.id === "document");
-  if (!document) throw new Error("Document output format is not installed");
-  using sourceWorkspace = await publisherApi.newWorkspaceFromBlueprint(document.blueprintId, {});
+  const sheet = formats.find(format => format.output.id === "spreadsheet");
+  if (!sheet) throw new Error("Sheets output format is not installed");
+  using sourceWorkspace = await publisherApi.newWorkspaceFromBlueprint(sheet.blueprintId, {});
   const sourceWorkpieces = new WorkpieceRecorder();
   using sourceWorkpiecesStub = stubFor(sourceWorkpieces);
   using _sourceWorkpieces = await sourceWorkspace.subscribeToWorkpieces(sourceWorkpiecesStub);

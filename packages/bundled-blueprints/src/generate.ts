@@ -191,6 +191,8 @@ export type BundledBlueprint = {
   blueprintId: string;
   title: string;
   description: string;
+  // When the agent should pick this format; seeds the curation hint on first promotion.
+  agentHint?: string;
   output: BlueprintOutput;
   author: AiChatAuthorInfo;
 

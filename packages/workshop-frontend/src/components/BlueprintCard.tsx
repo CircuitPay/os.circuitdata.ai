@@ -34,13 +34,15 @@ export type BindingBadgeInfo = {
 };
 
 /** Deduplicate binding types for display. Returns one badge per unique gatekeeper vendor
- *  and one per aiModel / agentSpawner type. */
+ *  and one per aiModel / agentSpawner type. An ambient binding gets none: a badge says what the
+ *  person must bring, and the Workshop connects that one itself. */
 export function uniqueBindingBadges(
   bindings: Record<string, BlueprintBinding>,
 ): BindingBadgeInfo[] {
   const seen = new Set<string>();
   const badges: BindingBadgeInfo[] = [];
   for (const b of Object.values(bindings)) {
+    if (b.type === "ambient") continue;
     let key: string;
     let label: string;
     let vendorKey: string | undefined;

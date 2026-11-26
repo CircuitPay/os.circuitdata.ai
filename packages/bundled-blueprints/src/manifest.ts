@@ -13,6 +13,11 @@ export type BundledBlueprintManifest = {
   blueprintId: string;
   title: string;
   description: string;
+  /**
+   * When the agent should pick this format, in a sentence or two. Seeds the format's curation hint
+   * the first time a deployment offers it; an operator may change it afterwards.
+   */
+  agentHint?: string;
   output: {id: string; noun: string; plural: string; icon: string};
   author: {type: "user"; name: string; id: string};
   revision: number;
@@ -88,7 +93,7 @@ function parsePresentation(
 ): BundledBlueprintPresentation {
   let bad = (message: string): never => { throw new Error(`${label}: ${message}`); };
   let {
-    blueprintId, title, description, output, author, revision, $comment, ...rest
+    blueprintId, title, description, agentHint, output, author, revision, $comment, ...rest
   } = parsed;
   let unknown = Object.keys(rest).filter(key => !allowedExtra.includes(key));
   if (unknown.length > 0) bad(`unknown keys: ${unknown.join(", ")}`);
@@ -122,12 +127,17 @@ function parsePresentation(
   if (Object.keys(authorRest).length > 0) {
     bad(`unknown author keys: ${Object.keys(authorRest).join(", ")}`);
   }
+  if (agentHint !== undefined &&
+      (typeof agentHint !== "string" || agentHint.trim() === "" || agentHint.length > 400)) {
+    bad("agentHint must be a non-empty string of at most 400 characters");
+  }
   if (authorType !== undefined && authorType !== "user") bad(`author.type must be "user"`);
 
   return {
     blueprintId: blueprintId as string,
     title: string(title, "title"),
     description: string(description, "description"),
+    ...(agentHint !== undefined ? {agentHint: agentHint as string} : {}),
     output: {
       id: string(id, "output.id"),
       noun: string(noun, "output.noun"),

@@ -239,6 +239,15 @@ export type GadgetRecord = {
   bindings: Record<string, BindingRecord>;
 
   /**
+   * The always-available resources the gadget's blueprint declared (see BlueprintBinding
+   * "ambient"): binding name -> vendor id. Kept so the binding can be made again when the
+   * workspace's resource of that vendor returns, since removing a resource deletes every edge to
+   * it and a returning one has a new id (see OverseerImpl.bindAmbientDeclarations). A name leaves
+   * when a person unbinds it and moves when they rename it. Names no account, dataset or capsule.
+   */
+  ambientBindings?: Record<string, string>;
+
+  /**
    * Present while the gadget is provisional: it was created within the given chat and follows
    * that chat's accept/reject lifecycle exactly like code changes (see mergeChanges() /
    * revertChanges()). `sequence` is the chat-log sequence of the "changes" message whose
