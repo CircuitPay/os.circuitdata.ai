@@ -26,10 +26,13 @@ const PreviewReport = ({
   importId,
   files,
   preview,
+  onShowSampleRow,
 }: {
   importId: number;
   files: StagedImportFile[];
   preview: ImportPreview;
+  /** Reveals the file sample row with this element id and moves focus to it. */
+  onShowSampleRow: (rowId: string) => void;
 }) => {
   const warnings = warningMessages(preview.warnings);
   return (
@@ -80,9 +83,7 @@ const PreviewReport = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              document.getElementById(rowId)?.focus();
-                            }}
+                            onClick={() => onShowSampleRow(rowId)}
                           >
                             {text}
                           </Button>

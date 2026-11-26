@@ -1,4 +1,4 @@
-// DOM helpers for the Data app's jsdom component tests (react-dom + act, as OverviewPage.test.tsx).
+// DOM helpers for the Data app's jsdom component tests (react-dom + act).
 
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";

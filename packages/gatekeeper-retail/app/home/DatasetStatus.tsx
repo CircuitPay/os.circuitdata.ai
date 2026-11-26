@@ -1,50 +1,14 @@
-import { Banner, Empty, LayerCard, Loader, Meter, Table, Text } from "@cloudflare/kumo";
+import { Banner, Empty, LayerCard, Meter, Table, Text } from "@cloudflare/kumo";
 import { ChartBar, WarningCircle } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
-import type { RetailAppClient, RetailOverview } from "../../src/app-api-types";
-import { errorMessage, formatBytes } from "../format";
+import type { RetailOverview } from "../../src/app-api-types";
+import { formatBytes } from "../format";
 import { SOURCE_KIND_LABELS, SOURCE_STATUS_LABELS } from "../sourceLabels";
 
-type Load =
-  | { state: "loading" }
-  | { state: "failed"; message: string }
-  | { state: "loaded"; overview: RetailOverview };
-
-const OverviewPage = ({ api }: { api: Pick<RetailAppClient, "getOverview"> }) => {
-  const [load, setLoad] = useState<Load>({ state: "loading" });
-
-  useEffect(() => {
-    let current = true;
-    api.getOverview().then(
-      (overview) => current && setLoad({ state: "loaded", overview }),
-      (error: unknown) => current && setLoad({ state: "failed", message: errorMessage(error) }),
-    );
-    return () => {
-      current = false;
-    };
-  }, [api]);
-
-  return (
-    <div className="flex flex-col gap-6">
-      {load.state === "loading" && (
-        <div className="flex justify-center p-12" role="status" aria-label="Loading the data overview">
-          <Loader size="lg" />
-        </div>
-      )}
-      {load.state === "failed" && (
-        <Banner
-          variant="error"
-          icon={<WarningCircle />}
-          title="The data overview could not be loaded"
-          description={load.message}
-        />
-      )}
-      {load.state === "loaded" && <Overview overview={load.overview} />}
-    </div>
-  );
-};
-
-const Overview = ({ overview }: { overview: RetailOverview }) => {
+/**
+ * The dataset's state below Home's summary: storage and its warning, sources an administrator must
+ * reconnect, and every source with its business dates.
+ */
+const DatasetStatus = ({ overview }: { overview: RetailOverview }) => {
   const { storage, sources, failuresNeedingAdmin, canManage } = overview;
   return (
     <>
@@ -132,4 +96,4 @@ const Overview = ({ overview }: { overview: RetailOverview }) => {
   );
 };
 
-export default OverviewPage;
+export default DatasetStatus;

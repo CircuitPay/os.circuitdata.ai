@@ -16,6 +16,9 @@ export type RetailObservabilityFields = {
   metric: string;
   rowCount: number;
   durationMs: number;
+  /** Browsing: the table a page was read from, and the rows matching its query. */
+  table: string;
+  total: number;
   refusalReason: string;
   runId: number;
   sourceId: number;

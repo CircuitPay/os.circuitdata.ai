@@ -1,16 +1,19 @@
 import { Banner, Button, Loader, Text } from "@cloudflare/kumo";
-import { ArrowLeft, ArrowsClockwise, Robot, Sparkle, WarningCircle } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowsClockwise, CaretDown, CaretRight, Robot, Sparkle, WarningCircle } from "@phosphor-icons/react";
+import { useEffect, useId, useState } from "react";
+import { flushSync } from "react-dom";
 import type {
   ImportPreview,
   MappingDocument,
   RetailAppClient,
+  RunSummary,
   StagedImport,
 } from "../../src/app-api-types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { focusOnMount } from "../focus";
 import { errorMessage, formatDateTime } from "../format";
 import type { DataAppHost } from "../host";
+import BasicMapping from "./BasicMapping";
 import FileSample from "./FileSample";
 import MappingEditor from "./MappingEditor";
 import { blankMapping, missingRequirements } from "./mapping";
@@ -21,13 +24,13 @@ import StartImportForm, { type SaveAsTemplate } from "./StartImportForm";
 
 export type ImportViewApi = Pick<
   RetailAppClient,
-  "getImport" | "discardImport" | "askAgentPrompt" | "preview" | "startImport"
+  "getImport" | "discardImport" | "askAgentPrompt" | "preview" | "startImport" | "listRuns"
 >;
 
 type Load =
   | { state: "loading" }
   | { state: "failed"; message: string }
-  | { state: "loaded"; staged: StagedImport };
+  | { state: "loaded"; staged: StagedImport; runs: RunSummary[] };
 
 type ImportViewProps = {
   api: ImportViewApi;
@@ -44,8 +47,9 @@ const ImportView = ({ api, host, importId, onBack, onOpenImport, onStarted }: Im
 
   useEffect(() => {
     let current = true;
-    api.getImport(importId).then(
-      (staged) => current && setLoad({ state: "loaded", staged }),
+    // Recent runs tell the member when a file was imported before (research R5).
+    Promise.all([api.getImport(importId), api.listRuns({ limit: 100 })]).then(
+      ([staged, runs]) => current && setLoad({ state: "loaded", staged, runs: runs.items }),
       (error: unknown) => current && setLoad({ state: "failed", message: errorMessage(error) }),
     );
     return () => {
@@ -78,7 +82,8 @@ const ImportView = ({ api, host, importId, onBack, onOpenImport, onStarted }: Im
           api={api}
           host={host}
           staged={load.staged}
-          onReloaded={(staged) => setLoad({ state: "loaded", staged })}
+          runs={load.runs}
+          onReloaded={(staged) => setLoad({ state: "loaded", staged, runs: load.runs })}
           onDiscarded={onBack}
           onOpenImport={onOpenImport}
           onStarted={onStarted}
@@ -92,12 +97,14 @@ const ImportEditor = ({
   api,
   host,
   staged,
+  runs,
   onReloaded,
   onDiscarded,
   onOpenImport,
   onStarted,
 }: Omit<ImportViewProps, "importId" | "onBack"> & {
   staged: StagedImport;
+  runs: RunSummary[];
   onReloaded: (staged: StagedImport) => void;
   onDiscarded: () => void;
 }) => {
@@ -108,7 +115,10 @@ const ImportEditor = ({
   const [preview, setPreview] = useState<{ mapping: string; preview: ImportPreview } | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [moreOptions, setMoreOptions] = useState(false);
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
+  const moreOptionsId = useId();
+  const previewBlockedId = useId();
 
   const missing = missingRequirements(mapping, staged.targets);
   const previewIsCurrent = preview !== null && preview.mapping === JSON.stringify(mapping);
@@ -121,6 +131,12 @@ const ImportEditor = ({
         : !previewIsCurrent
           ? "Preview the current mapping first."
           : null;
+
+  // A preview problem's sample row lives under More options: open it first so the row exists.
+  const showSampleRow = (rowId: string) => {
+    flushSync(() => setMoreOptions(true));
+    document.getElementById(rowId)?.focus();
+  };
 
   const attempt = async (title: string, action: () => Promise<void>) => {
     setError(null);
@@ -214,12 +230,13 @@ const ImportEditor = ({
           .
         </Text>
       )}
+      <BasicMapping staged={staged} mapping={mapping} onChange={setMapping} runs={runs} />
       <section aria-label="The agent" className="flex flex-col gap-3">
         {agentMapping !== null && (
           <Banner
             icon={<Sparkle />}
             title="The agent suggested a mapping"
-            description="Review it below before you preview."
+            description="Review it before you preview."
             action={
               <Button variant="secondary" onClick={() => setMapping(agentMapping)}>
                 Use the agent's suggestion
@@ -241,39 +258,65 @@ const ImportEditor = ({
           </Button>
         </div>
       </section>
-      <ParsingSettings
-        files={staged.files}
-        parsing={mapping.parsing}
-        onChange={(parsing) => {
-          const { parsing: _previous, ...rest } = mapping;
-          setMapping(parsing ? { ...rest, parsing } : rest);
-        }}
-      />
-      {staged.files.map((file, fileIndex) => (
-        <FileSample key={file.rawObjectId} importId={staged.id} fileIndex={fileIndex} file={file} />
-      ))}
-      <MappingEditor
-        mapping={mapping}
-        files={staged.files}
-        targets={staged.targets}
-        onChange={setMapping}
-      />
       <div>
         <Button
+          variant="ghost"
+          icon={moreOptions ? <CaretDown /> : <CaretRight />}
+          aria-expanded={moreOptions}
+          aria-controls={moreOptionsId}
+          onClick={() => setMoreOptions(!moreOptions)}
+        >
+          More options
+        </Button>
+      </div>
+      {moreOptions && (
+        <div id={moreOptionsId} className="flex flex-col gap-6">
+          <ParsingSettings
+            files={staged.files}
+            parsing={mapping.parsing}
+            onChange={(parsing) => {
+              const { parsing: _previous, ...rest } = mapping;
+              setMapping(parsing ? { ...rest, parsing } : rest);
+            }}
+          />
+          {staged.files.map((file, fileIndex) => (
+            <FileSample key={file.rawObjectId} importId={staged.id} fileIndex={fileIndex} file={file} />
+          ))}
+          <MappingEditor
+            mapping={mapping}
+            files={staged.files}
+            targets={staged.targets}
+            onChange={setMapping}
+          />
+        </div>
+      )}
+      <div className="flex items-center gap-3">
+        <Button
           variant="secondary"
-          disabled={missingFiles.length > 0}
+          disabled={missingFiles.length > 0 || missing.length > 0}
           loading={previewing}
           onClick={() => void runPreview()}
+          aria-describedby={missing.length > 0 ? previewBlockedId : undefined}
         >
           Preview
         </Button>
+        {missing.length > 0 && (
+          <Text variant="secondary" id={previewBlockedId}>
+            Map what is still needed first.
+          </Text>
+        )}
       </div>
       {preview !== null && (
         <>
           {!previewIsCurrent && (
             <Text variant="secondary">The mapping changed since this preview. Preview it again.</Text>
           )}
-          <PreviewReport importId={staged.id} files={staged.files} preview={preview.preview} />
+          <PreviewReport
+            importId={staged.id}
+            files={staged.files}
+            preview={preview.preview}
+            onShowSampleRow={showSampleRow}
+          />
         </>
       )}
       <StartImportForm

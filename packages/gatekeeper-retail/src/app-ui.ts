@@ -5,9 +5,10 @@ import { RpcTarget, type RpcStub } from "cloudflare:workers";
 import { validateRpc } from "capnweb-validate";
 import type { TenantAccess, TenantFileDelivery } from "@gadgets/workshop-shared/gatekeeper";
 import type {
-  ConnectFlow, CoverageReport, ImportListEntry, ImportPreview, ImportTarget, LineageTable, MappingDocument, MatchKind,
-  MatchProposal, Page, ProviderKind, ProviderLocationInfo, RetailAppClient, RetailOverview, RowLineage, RunRejection,
-  RunSummary, StagedImport, TemplateDetail, TemplateSummary,
+  BrowseCatalog, BrowsePage, BrowseQuery, BrowseTable, ConnectFlow, CoverageReport, ImportListEntry, ImportPreview,
+  ImportTarget, LineageTable, MappingDocument, MatchKind, MatchProposal, Page, ProviderKind, ProviderLocationInfo,
+  RetailAppClient, RetailOverview, RowDetail, RowLineage, RunRejection, RunSummary, StagedImport, TemplateDetail,
+  TemplateSummary,
 } from "./app-api-types.js";
 import { ERASE_CONFIRMATION } from "./app-api-types.js";
 import { connectionObjectName, sha256Hex, type RetailConnection } from "./connectors/connection-do.js";
@@ -88,6 +89,23 @@ export class RetailAppApi extends RpcTarget implements RetailAppClient {
   async getLineage(table: LineageTable, id: number): Promise<RowLineage> {
     await this.#member();
     return this.#dataset.lineage(this.#datasetId, table, id);
+  }
+
+  // --- Browsing (members; spec 008). The member's own reads: no observation is recorded. ---
+
+  async getBrowseCatalog(): Promise<BrowseCatalog> {
+    await this.#member();
+    return this.#dataset.browseCatalog(this.#datasetId);
+  }
+
+  async browseRows(table: BrowseTable, query?: BrowseQuery): Promise<BrowsePage> {
+    await this.#member();
+    return this.#dataset.browseRows(this.#datasetId, table, query);
+  }
+
+  async getRowDetail(table: BrowseTable, id: number): Promise<RowDetail> {
+    await this.#member();
+    return this.#dataset.rowDetail(this.#datasetId, table, id);
   }
 
   /**

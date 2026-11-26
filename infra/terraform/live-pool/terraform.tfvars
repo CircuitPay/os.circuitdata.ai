@@ -11,12 +11,13 @@ clerk_publishable_key = "pk_test_a2luZC1kcmFnb24tOTk4Mi5jbGVyay5hY2NvdW50cy5kZXY
 # Clerk user ids of the deployment operators (who can open /admin).
 operators = ["user_3KxnKc7gPJNPyeEesyCUWXwooIG"]
 
-# Optional integrations beyond the context library and the scheduler:
-# gatekeepers = { github = {} }
+# Optional integrations beyond the context library and the scheduler. Retail is the Data page
+# (CSV imports work without Square; its secrets are still required, so placeholders do for now).
+gatekeepers = { retail = {} }
 
 # Secrets do not belong in this file. Supply them from the environment instead:
 #   export TF_VAR_clerk_webhook_secret='whsec_...'
-#   export TF_VAR_gatekeeper_secrets='{"github":{"CLIENT_ID":"...","CLIENT_SECRET":"..."}}'
+#   export TF_VAR_gatekeeper_secrets='{"retail":{"SQUARE_CLIENT_ID":"unset","SQUARE_CLIENT_SECRET":"unset","SQUARE_WEBHOOK_SIGNATURE_KEY":"unset"}}'
 
 # One AI Gateway for every organization. Requests are tagged with their client (the organization id),
 # so usage is split per organization from the gateway logs. default_client tags pre-Clerk accounts.

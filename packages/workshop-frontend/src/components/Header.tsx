@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Hexagon, List, X } from '@phosphor-icons/react'
 import { useOptionalAuthenticatedApi } from '../AuthContext'
 import { useGatekeeperApps } from '../useGatekeeperApps'
+import { DATA_VENDOR_ID, useDataArea } from '../features/data/dataArea'
 import { useSiteName } from '../ServerConfigContext'
 import { useClerkBridge } from '../clerk/clerkBridge'
 import { useState, useEffect, useRef } from 'react'
@@ -12,7 +13,11 @@ import SiteLogo from './SiteLogo'
 
 export default function Header() {
   const auth = useOptionalAuthenticatedApi()
-  const gatekeeperApps = useGatekeeperApps()
+  // Data has a fixed entry of its own (shown whether or not the organization has turned it on), so
+  // the dynamic app list skips it.
+  const gatekeeperApps = useGatekeeperApps().filter((app) => app.id !== DATA_VENDOR_ID)
+  const dataState = useDataArea().state
+  const dataOffered = dataState !== 'absent' && dataState !== 'loading'
   const siteName = useSiteName()
   const clerkBridge = useClerkBridge()
   // Files belong to a workspace, so they are offered only where sign-in has workspaces (Clerk).
@@ -93,6 +98,16 @@ export default function Header() {
                 Files
               </Link>
             )}
+            {dataOffered && (
+              <Link
+                to="/data/$"
+                params={{ _splat: '' }}
+                className={navLinkClass}
+                activeProps={{ className: navLinkActiveClass }}
+              >
+                Data
+              </Link>
+            )}
             {gatekeeperApps.map((app) => (
               <Link
                 key={app.id}
@@ -167,6 +182,17 @@ export default function Header() {
                 activeProps={{ className: navLinkActiveClass }}
               >
                 Files
+              </Link>
+            )}
+            {dataOffered && (
+              <Link
+                to="/data/$"
+                params={{ _splat: '' }}
+                onClick={closeMobileMenu}
+                className={navLinkClass}
+                activeProps={{ className: navLinkActiveClass }}
+              >
+                Data
               </Link>
             )}
             {gatekeeperApps.map((app) => (

@@ -62,7 +62,7 @@ declare global {
 const isExport = typeof globalThis.gadgetExportFormatId === "string" && globalThis.gadgetExportFormatId !== "";
 const clientId = Math.random().toString(36).slice(2);
 
-const OFF_TEXT = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const OFF_TEXT = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const EMPTY_TEXT = "No sales data yet. Import a CSV or connect a source in Data, then generate this report.";
 const NOT_GENERATED_TEXT = "This report has not been generated yet.";
 const STALE_TEXT = "Not in the latest edition yet. Regenerate to include it.";

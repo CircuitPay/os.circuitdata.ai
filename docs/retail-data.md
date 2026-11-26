@@ -2,9 +2,28 @@
 
 The retail data layer gives an organization (or a personal workspace) one shared dataset of its
 sales, products, customers and inventory, loaded from Square, Stripe and CSV exports, and read by
-agents through the `RETAIL_DATA` binding. Members manage it in the **Data** app at
-`/gatekeepers/retail`. The design record is `specs/006-retail-data-layer/` (spec, plan, research,
-data model and contracts); this page is the operator's view.
+agents through the `RETAIL_DATA` binding. Members manage it on the **Data** page (`/data`, always
+in the navigation where sign-in has organizations; `/gatekeepers/retail` redirects there). The
+design record is `specs/006-retail-data-layer/` (spec, plan, research, data model and contracts);
+`specs/008-data-page/` adds the page itself. This page is the operator's view.
+
+## The Data page
+
+- **Before Data is on**, the page explains it. An organization's administrator (or a personal
+  workspace's owner) turns it on there with **Turn on Data**; the kernel re-checks the role on that
+  call. Other members are told to ask an administrator. The Connectors page's control still works.
+- **Home** leads with **Upload a CSV** (files from the computer are kept in Files). Once data is in,
+  it shows each table's row count, the dates covered and the recent imports, then the storage,
+  failures and sources the old Overview showed.
+- **Basic mapping** comes first in an import: one column picker per field the import needs (order
+  identifier, date, total, or item and quantity), the timezone, currency and date format, then
+  Preview and Import. **More options** opens the full mapping editor over the same choices.
+- **Browse** lists the rows of orders, line items, payments, products, customers, locations and
+  inventory, 100 at a time, narrowed by dates, by source or import, and by name; a row opens with
+  its related rows and the file and row it came from. It is read-only, reads the public views
+  (customers masked as for the agent), and a large table with no filter opens on its last 30 days
+  (`RETAIL_SCAN_ROW_LIMIT`).
+- Templates, Coverage, Sources and Settings are unchanged tabs.
 
 ## Deploying
 

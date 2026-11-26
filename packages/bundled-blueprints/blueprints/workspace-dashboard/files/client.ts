@@ -57,7 +57,7 @@ const CUSTOM_RANGE = "custom";
 const AGE_TICK_MS = 30_000;
 const LOCATION_PAUSE_MS = 350;
 
-const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const DATA_EMPTY = "No sales data yet. Import a CSV or connect a source in Data, then refresh.";
 
 const VISUAL_LABELS: Record<VisualType, string> = {

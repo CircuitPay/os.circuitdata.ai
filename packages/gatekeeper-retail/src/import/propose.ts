@@ -46,17 +46,18 @@ const DATE_FORMATS = [
 /** Column names that identify an order, best first. */
 const ORDER_KEY_ALIASES = [
   "order id", "transaction id", "receipt id", "check id", "sale id", "ticket id", "invoice id", "id",
-  "order number", "order #", "order no", "receipt number", "receipt", "check number", "invoice number",
+  "order number", "order #", "order no", "receipt number", "receipt #", "receipt no", "receipt", "check number",
+  "check #", "ticket number", "ticket #", "transaction number", "transaction #", "invoice number",
   "invoice", "name", "order",
 ];
 
 /** Header aliases → target and transform. The first alias present wins for each target. */
 const ALIASES: readonly { target: string; transform?: MappingTransform; names: string[] }[] = [
-  { target: "orders.order_number", names: ["order number", "order #", "order no", "receipt number", "check number", "invoice number"] },
+  { target: "orders.order_number", names: ["order number", "order #", "order no", "receipt number", "receipt #", "receipt no", "check number", "check #", "ticket number", "ticket #", "transaction number", "transaction #", "invoice number"] },
   { target: "orders.business_date", transform: "date", names: ["business date", "business day", "trading date"] },
   { target: "orders.opened_at", transform: "datetime", names: ["opened", "opened at", "created at", "order date", "order time", "date", "datetime", "timestamp", "sale date", "transaction date"] },
   { target: "orders.closed_at", transform: "datetime", names: ["closed", "closed at", "paid at", "completed at", "paid date"] },
-  { target: "locations.name", names: ["location", "location name", "store", "store name", "outlet", "shop", "branch"] },
+  { target: "locations.name", names: ["location", "location name", "store", "store name", "store location", "outlet", "shop", "branch"] },
   { target: "orders.currency", names: ["currency", "currency code"] },
   { target: "orders.tip_amount", transform: "money", names: ["tip", "tips", "gratuity"] },
   { target: "orders.total_amount", transform: "money", names: ["total", "order total", "grand total", "total amount", "amount paid"] },
@@ -65,10 +66,10 @@ const ALIASES: readonly { target: string; transform?: MappingTransform; names: s
   { target: "line_items.quantity", transform: "quantity", names: ["qty", "quantity", "units", "lineitem quantity", "count"] },
   { target: "line_items.unit_price_amount", transform: "money", names: ["unit price", "price", "item price", "lineitem price"] },
   { target: "line_items.gross_amount", transform: "money", names: ["gross sales", "gross price", "gross", "line total", "extended price", "gross amount"] },
-  { target: "line_items.discount_amount", transform: "money", names: ["discount", "discounts", "discount amount", "lineitem discount"] },
+  { target: "line_items.discount_amount", transform: "money", names: ["discount", "discounts", "discount amount", "item discount", "line discount", "lineitem discount"] },
   { target: "line_items.tax_amount", transform: "money", names: ["tax", "taxes", "tax amount", "vat", "sales tax"] },
   { target: "line_items.unit_cost_amount", transform: "money", names: ["cost", "unit cost", "cost price"] },
-  { target: "products.sku", names: ["sku", "item sku", "lineitem sku", "product code", "item code"] },
+  { target: "products.sku", names: ["sku", "item sku", "lineitem sku", "product code", "item code", "product id"] },
   { target: "products.category", names: ["category", "department", "menu group", "sales category"] },
   { target: "customers.source_record_id", names: ["customer id"] },
   { target: "customers.email", names: ["email", "customer email", "e-mail"] },
@@ -277,7 +278,8 @@ function detectDecimalMark(file: ProposalFile, targets: MappingTarget[]): "." | 
 }
 
 function findHeader(headers: string[], names: string[]): string | null {
-  const byName = new Map(headers.map(header => [normalizeHeader(header), header] as const));
+  // Exports from databases and spreadsheets often write "order_id" for "Order ID".
+  const byName = new Map(headers.map(header => [normalizeHeader(header.replaceAll("_", " ")), header] as const));
   for (const name of names) {
     const header = byName.get(name);
     if (header) return header;

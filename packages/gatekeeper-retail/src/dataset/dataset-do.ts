@@ -9,8 +9,9 @@ import type {
   RetailDatasetDescription, RetailMetricQuery, RetailMetricResult, RetailTable,
 } from "../types.js";
 import type {
-  CoverageReport, DatasetOverview, ImportListEntry, ImportPreview, ImportTarget, LineageTable, MappingDocument, Page,
-  RowLineage, RunRejection, RunSummary, SourceSummary, StagedImport, StorageStatus, TemplateDetail, TemplateSummary,
+  BrowseCatalog, BrowsePage, BrowseQuery, BrowseTable, CoverageReport, DatasetOverview, ImportListEntry, ImportPreview,
+  ImportTarget, LineageTable, MappingDocument, Page, RowDetail, RowLineage, RunRejection, RunSummary, SourceSummary,
+  StagedImport, StorageStatus, TemplateDetail, TemplateSummary,
   MatchKind, MatchProposal,
 } from "../app-api-types.js";
 import type { RetailPendingImport } from "../types.js";
@@ -21,6 +22,7 @@ import {
   undoImport,
 } from "../import/data-area.js";
 import { type LookupCache, runImportStep } from "../import/import-loop.js";
+import { datasetDates, readBrowseCatalog, readBrowsePage, readRowDetail, rowEstimate } from "./browse.js";
 import { type CoverageOptions, readCoverage, readLineage } from "./coverage.js";
 import { retailLogger } from "../observability.js";
 import { writeBatch, type IngestBatch, type IngestResult, type RunKind, type TableCounts } from "./ingest.js";
@@ -80,22 +82,16 @@ export class RetailDataset extends DurableObject<Cloudflare.Env> {
     const settings = this.#open(datasetId);
     const sql = this.ctx.storage.sql;
     const tables = PUBLIC_TABLES.map(table => {
-      const storage = VIEW_STORAGE[table.name];
       const rows = COUNTED_TABLES.has(table.name)
-        ? sql.exec<{ n: number }>(`SELECT COUNT(*) AS n FROM ${storage}`).one().n
-        : sql.exec<{ n: number | null }>(`SELECT MAX(rowid) AS n FROM ${storage}`).one().n ?? 0;
+        ? sql.exec<{ n: number }>(`SELECT COUNT(*) AS n FROM ${VIEW_STORAGE[table.name]}`).one().n
+        : rowEstimate(sql, table.name);
       return { ...table, rows };
     });
-    const range = sql.exec<{ low: string | null; high: string | null }>(
-      "SELECT MIN(business_date) AS low, MAX(business_date) AS high FROM store_orders").one();
-    const complete = sql.exec<{ through: string | null }>(
-      "SELECT MIN(coverage_to) AS through FROM store_sources WHERE status != 'disconnected'").one();
     return {
       tables,
       metrics: [...METRIC_DEFINITIONS],
       personalDataMasked: settings.pii_unmasked === 0,
-      dateRange: range.low && range.high ? { from: range.low, to: range.high } : null,
-      completeThrough: complete.through,
+      ...datasetDates(sql),
       limits: { maxRows: QUERY_LIMITS.maxRows, maxBytes: QUERY_LIMITS.maxBytes, maxParams: QUERY_LIMITS.maxParams },
     };
   }
@@ -564,6 +560,31 @@ export class RetailDataset extends DurableObject<Cloudflare.Env> {
   lineage(datasetId: string, table: LineageTable, id: number): RowLineage {
     this.#open(datasetId);
     return readLineage(this.ctx.storage.sql, table, id);
+  }
+
+  // --- Browsing (spec 008): a member's own reads through the Data area, not agent observations ---
+
+  /** The browsable tables with exact counts, the dates covered and the sources to filter by. */
+  browseCatalog(datasetId: string): BrowseCatalog {
+    const settings = this.#open(datasetId);
+    return readBrowseCatalog(this.ctx.storage.sql, settings.pii_unmasked === 0);
+  }
+
+  /** One page of a table's rows, newest first. */
+  browseRows(datasetId: string, table: BrowseTable, query?: BrowseQuery): BrowsePage {
+    this.#open(datasetId);
+    const started = Date.now();
+    const page = readBrowsePage(this.ctx.storage.sql, table, query, this.#scanRowLimit());
+    logger.info("browse page read", {
+      event: "browse.rows", table, rowCount: page.rows.length, total: page.total, durationMs: Date.now() - started,
+    });
+    return page;
+  }
+
+  /** One row with every field, its related rows and its origin. */
+  rowDetail(datasetId: string, table: BrowseTable, id: number): RowDetail {
+    this.#open(datasetId);
+    return readRowDetail(this.ctx.storage.sql, table, id);
   }
 
   listTemplates(datasetId: string): TemplateSummary[] {

@@ -52,45 +52,72 @@ export function decodeChunk(bytes: Uint8Array, encoding: string, final: boolean)
 }
 
 /**
- * The number of bytes of `bytes` (decoded with `encoding`) that make up the first `codeUnits`
- * UTF-16 code units of the decoded text, i.e. where a text offset lies in the original bytes.
+ * Where text offsets lie in the bytes `text` was decoded from: for each of `codeUnitEnds` (UTF-16
+ * offsets into `text`, ascending, each on a character boundary), the number of bytes of `bytes`
+ * that decode to the text before it. The work grows with the text, not with offsets × text.
  */
-export function byteOffsetOf(text: string, codeUnits: number, bytes: Uint8Array, encoding: string): number {
-  if (encoding === "utf-8") return utf8Length(text, codeUnits);
-  if (encoding === "utf-16le" || encoding === "utf-16be") return codeUnits * 2;
-  if (SINGLE_BYTE.test(encoding)) return codeUnits;
-  // Other multi-byte encodings (Shift_JIS, GBK, Big5, ...): the shortest prefix that decodes to at
-  // least `codeUnits` code units.
-  let low = 0;
-  let high = bytes.length;
-  while (low < high) {
-    const middle = (low + high) >>> 1;
-    if (decodeChunk(bytes.subarray(0, middle), encoding, false).length >= codeUnits) high = middle;
-    else low = middle + 1;
+export function byteOffsetsOf(text: string, codeUnitEnds: readonly number[], bytes: Uint8Array, encoding: string): number[] {
+  if (encoding === "utf-8") return utf8Lengths(text, codeUnitEnds);
+  if (encoding === "utf-16le" || encoding === "utf-16be") return codeUnitEnds.map(end => end * 2);
+  if (SINGLE_BYTE.test(encoding)) return [...codeUnitEnds];
+  // Other multi-byte encodings (Shift_JIS, GBK, Big5, ...): from the previous offset, the shortest
+  // run of bytes that decodes to the code units up to the next one, bracketed by doubling.
+  const offsets: number[] = [];
+  let start = 0;
+  let decoded = 0;
+  for (const end of codeUnitEnds) {
+    const reaches = (to: number) => decodeChunk(bytes.subarray(start, to), encoding, false).length >= end - decoded;
+    let low = start;
+    let span = Math.max(1, end - decoded);
+    let high = Math.min(bytes.length, start + span);
+    while (high < bytes.length && !reaches(high)) {
+      low = high + 1;
+      span *= 2;
+      high = Math.min(bytes.length, start + span);
+    }
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (reaches(middle)) high = middle;
+      else low = middle + 1;
+    }
+    offsets.push(low);
+    start = low;
+    decoded = end;
   }
-  return low;
+  return offsets;
 }
 
-/** The code-unit index of the text position `utf8Offset` UTF-8 bytes into `text`. */
-export function codeUnitsAtUtf8Offset(text: string, utf8Offset: number): number {
+/**
+ * The code-unit index in `text` of each of `utf8Offsets` (ascending UTF-8 byte offsets into the
+ * text), in one pass.
+ */
+export function codeUnitsAtUtf8Offsets(text: string, utf8Offsets: readonly number[]): number[] {
+  const indexes: number[] = [];
   let bytes = 0;
   let index = 0;
-  while (index < text.length && bytes < utf8Offset) {
-    const code = text.codePointAt(index)!;
-    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
-    index += code >= 0x10000 ? 2 : 1;
+  for (const offset of utf8Offsets) {
+    while (index < text.length && bytes < offset) {
+      const code = text.codePointAt(index)!;
+      bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+      index += code >= 0x10000 ? 2 : 1;
+    }
+    indexes.push(index);
   }
-  return index;
+  return indexes;
 }
 
-/** UTF-8 byte length of the first `codeUnits` code units of `text`. */
-function utf8Length(text: string, codeUnits: number): number {
+/** UTF-8 byte lengths of the text before each of `codeUnitEnds` (ascending), in one pass. */
+function utf8Lengths(text: string, codeUnitEnds: readonly number[]): number[] {
+  const lengths: number[] = [];
   let bytes = 0;
   let index = 0;
-  while (index < codeUnits) {
-    const code = text.codePointAt(index)!;
-    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
-    index += code >= 0x10000 ? 2 : 1;
+  for (const end of codeUnitEnds) {
+    while (index < end) {
+      const code = text.codePointAt(index)!;
+      bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+      index += code >= 0x10000 ? 2 : 1;
+    }
+    lengths.push(bytes);
   }
-  return bytes;
+  return lengths;
 }

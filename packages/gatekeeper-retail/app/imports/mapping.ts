@@ -76,7 +76,7 @@ const DEFAULT_TRANSFORMS: Partial<Record<TargetInfo["kind"], MappingTransform>> 
 export function assignColumn(
   mapping: MappingDocument,
   ref: ColumnRef,
-  target: TargetInfo | null,
+  target: Pick<TargetInfo, "path" | "kind"> | null,
 ): MappingDocument {
   const current = targetOfColumn(mapping, ref);
   let replacement: MappingTarget | null = null;
@@ -110,7 +110,8 @@ export function setColumnTransform(
   };
 }
 
-function withFingerprintPruned(mapping: MappingDocument): MappingDocument {
+/** Drops fingerprint paths no target maps any more. */
+export function withFingerprintPruned(mapping: MappingDocument): MappingDocument {
   if (!mapping.fingerprint) return mapping;
   const mapped = new Set(mapping.targets.map((target) => target.target));
   return { ...mapping, fingerprint: mapping.fingerprint.filter((path) => mapped.has(path)) };

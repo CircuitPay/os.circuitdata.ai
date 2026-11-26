@@ -716,7 +716,7 @@ describe("data access modes", () => {
     expect(opened.sections).toHaveLength(12);
     expect(await dark.getReport()).toMatchObject({ latestEdition: null, meta: { editions: [], title: "Monthly sales report" } });
 
-    const refusal = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+    const refusal = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
     await expect(dark.readEdition()).rejects.toThrow(refusal);
     await expect(dark.getEdition({ id: edition.id })).rejects.toThrow(refusal);
     await expect(dark.generate()).rejects.toThrow(refusal);
