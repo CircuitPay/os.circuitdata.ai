@@ -4,7 +4,7 @@
 
 import type { SniffResult } from "../app-api-types.js";
 import { type CsvSource, type Delimiter, parseCsvText } from "./csv-stream.js";
-import { bomLength, byteOffsetOf, decodeChunk, detectEncoding } from "./decode.js";
+import { bomLength, byteOffsetsOf, decodeChunk, detectEncoding } from "./decode.js";
 
 /** Bytes read from the start of a file to sniff it. */
 export const SNIFF_HEAD_BYTES = 256 * 1024;
@@ -79,7 +79,7 @@ export async function sniffCsv(source: CsvSource, overrides: ParsingOverrides = 
     sniff: { encoding, delimiter, headerRow: headerIndex + 1, footerRows },
     headers,
     sampleRows,
-    dataOffset: bom + byteOffsetOf(text, header.end, body, encoding),
+    dataOffset: bom + byteOffsetsOf(text, [header.end], body, encoding)[0]!,
     dataRow: headerIndex + 2,
   };
 }

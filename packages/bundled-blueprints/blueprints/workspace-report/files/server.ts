@@ -95,7 +95,7 @@ interface GadgetEnv {
   GADGET?: unknown;
 }
 
-const OFF_MESSAGE = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const OFF_MESSAGE = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const EMPTY_MESSAGE = "No sales data yet. Import a CSV or connect a source in Data, then generate this report.";
 const READ_ONLY_MESSAGE = "This is a read-only copy of the report.";
 const NOT_GENERATED_MESSAGE = "This report has not been generated yet. Generate it first.";

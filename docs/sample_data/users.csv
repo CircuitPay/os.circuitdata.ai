@@ -1,0 +1,501 @@
+user_id,customer_id,email,phone,first_name,last_name,address,city,state,zip_code,country,region,postal_code,segment,cc_first_6,cc_last_6
+1,CUST-00001,cameron55@example.org,390-471-1434,Jesse,Cortez,9063 Lindsey Squares Suite 915,Shanebury,DE,43298,US,DE,43298,churn_risk,481499,813801
+2,CUST-00002,christopher63@example.net,(811)465-0768,Eric,Phillips,975 Harrell Pike,West Brianmouth,CO,62226,US,CO,62226,repeat,594052,235491
+3,CUST-00003,simpsonashley@example.org,001-808-503-2937,Jennifer,Williams,48925 Elizabeth Orchard,New Ashley,PW,93989,US,PW,93989,repeat,504928,966401
+4,CUST-00004,amandareed@example.net,549.715.1041,John,Cole,37620 Melissa Station,Johnburgh,GA,60816,US,GA,60816,churn_risk,414019,743207
+5,CUST-00005,fmiles@example.org,892.643.1843,John,Preston,4611 Andrew Lodge Apt. 978,Brownbury,RI,93593,US,RI,93593,new,504742,751840
+6,CUST-00006,johncampbell@example.com,2809400403,Rebecca,Buchanan,17689 Jennifer Plaza,Port Robert,DC,14132,US,DC,14132,new,561603,673773
+7,CUST-00007,mcdanielbonnie@example.org,209-250-9671x93810,Sharon,Smith,075 Joshua Estate Suite 179,Donnaberg,MS,05993,US,MS,05993,new,436930,743156
+8,CUST-00008,nicoledudley@example.org,241.345.1025x51974,Donna,Mann,81451 Lisa Groves,East Aliciamouth,WY,35816,US,WY,35816,repeat,597483,717335
+9,CUST-00009,qmedina@example.net,979.464.8927x405,Benjamin,Murray,878 Erickson Stream Apt. 667,Ianview,VA,26175,US,VA,26175,vip,501131,518112
+10,CUST-00010,cookgary@example.org,001-333-573-8227x81805,Susan,Harris,0038 Andrea Islands Suite 170,Kathleenstad,AR,27964,US,AR,27964,churn_risk,501194,714797
+11,CUST-00011,tonya07@example.org,9082365894,Kevin,Gonzalez,802 Patrick Causeway,North Brittanyshire,VI,16219,US,VI,16219,churn_risk,552766,694545
+12,CUST-00012,deborah54@example.org,001-658-515-3714x461,Lynn,Freeman,734 Kelly Crescent Suite 115,Coleside,FM,82279,US,FM,82279,churn_risk,546255,700678
+13,CUST-00013,randy44@example.net,(908)337-6701,Willie,Moran,480 Kimberly Prairie Apt. 356,Port Tammyfurt,VA,41150,US,VA,41150,churn_risk,435320,983351
+14,CUST-00014,daniellewhite@example.com,+1-249-344-8812x258,Paul,Nelson,74613 Jeffrey Mountain,Garciahaven,PA,79498,US,PA,79498,new,525986,570764
+15,CUST-00015,booneashley@example.org,426-565-5416,Lisa,Garcia,93350 Bailey Point,Andrewsberg,MA,72938,US,MA,72938,new,563169,316820
+16,CUST-00016,davisandrew@example.com,5582054431,Kenneth,Frye,59260 Melissa Loaf,West Patrickburgh,OR,53376,US,OR,53376,new,477064,779193
+17,CUST-00017,richard76@example.com,+1-246-682-3861,Randall,Brown,84933 Tara Skyway,Petersonmouth,MN,99598,US,MN,99598,vip,485704,695009
+18,CUST-00018,jonathan65@example.net,357-815-4476,Ryan,Morris,42677 Tucker Parkways Apt. 882,South Katrinaberg,AK,94381,US,AK,94381,repeat,483422,206995
+19,CUST-00019,tracyjones@example.org,821.575.6798x57589,Laurie,Wolfe,39301 Armstrong Turnpike,East Robin,RI,16606,US,RI,16606,repeat,521736,314757
+20,CUST-00020,mwalker@example.org,396.313.9757x13978,Jennifer,Curry,1160 Edward Fords Suite 757,Jacobhaven,NC,04998,US,NC,04998,churn_risk,413695,746728
+21,CUST-00021,maldonadokatie@example.com,621.489.8608x26487,Jason,Young,2171 Strong Keys,Harringtonside,WV,61687,US,WV,61687,repeat,578113,796849
+22,CUST-00022,stacey08@example.net,+1-234-868-7974x0133,Tamara,Zimmerman,02513 Christensen Underpass Suite 549,Karenburgh,AL,63339,US,AL,63339,repeat,520499,276533
+23,CUST-00023,dnewton@example.net,001-749-693-6335x0265,Susan,Harvey,23020 Dougherty Road Suite 367,North Tracey,NY,33482,US,NY,33482,vip,549145,682733
+24,CUST-00024,todd38@example.org,632.366.8489,Gail,Fisher,39858 Joshua Rue Suite 021,South Cody,PR,98662,US,PR,98662,vip,502270,135675
+25,CUST-00025,miguel25@example.com,988.309.1906x681,John,Young,04127 Troy Mountain Apt. 789,Brownbury,PW,35517,US,PW,35517,churn_risk,565778,905044
+26,CUST-00026,stephenskent@example.com,(419)563-6942,Holly,Banks,78652 Charles Springs Apt. 893,Franciscoshire,WI,08721,US,WI,08721,new,422819,962714
+27,CUST-00027,crystal11@example.org,(531)616-9412,Thomas,Garrett,4016 Kelsey Road,Ericbury,WA,63000,CA,WA,63000,repeat,557416,565946
+28,CUST-00028,vernon52@example.com,+1-709-702-0705x668,Michele,Medina,125 Laura Greens Suite 882,West Tomton,GA,65590,US,GA,65590,vip,400215,531702
+29,CUST-00029,christopherwright@example.org,001-450-544-0097,Ryan,Harper,120 May Mountain Apt. 606,Port Ryan,UT,74424,CA,UT,74424,repeat,450086,986092
+30,CUST-00030,lynn68@example.org,+1-893-450-3135x9756,Jason,Sims,9678 Barbara Turnpike,Lorifort,MN,34493,US,MN,34493,new,475154,695599
+31,CUST-00031,clarkjared@example.org,(407)401-7806,Thomas,Mayo,0850 Richard Fort,Port Markhaven,WY,44603,CA,WY,44603,churn_risk,565231,654033
+32,CUST-00032,hallvictoria@example.com,(296)408-0362,Shane,Johnson,105 Ingram Orchard Apt. 066,East Debra,VT,80393,US,VT,80393,repeat,458300,844462
+33,CUST-00033,markwilliams@example.org,379-562-0021,Cody,Dunn,95453 Brenda Landing Apt. 030,Robertview,MH,61225,US,MH,61225,new,469592,664228
+34,CUST-00034,alyssalynch@example.org,+1-450-289-3007,Crystal,Delgado,1309 Murray Mountain Suite 243,Port Alexanderhaven,NC,66311,US,NC,66311,vip,575610,801752
+35,CUST-00035,imills@example.com,(920)423-2559,Taylor,Barrett,07146 Curry Mountain Apt. 063,Mackland,VI,53448,US,VI,53448,vip,589774,591414
+36,CUST-00036,eric90@example.net,(851)879-8404,Wendy,Ward,547 Garcia Avenue Suite 677,Ryanburgh,MN,79843,US,MN,79843,vip,544380,468145
+37,CUST-00037,bakermatthew@example.net,(969)663-7825,Alyssa,Garcia,5896 Michael Crest Suite 953,Mendozahaven,MD,57759,US,MD,57759,new,511198,385772
+38,CUST-00038,michaelpena@example.net,+1-599-558-5239x14714,Danny,Reyes,03988 Gonzalez Rue Apt. 102,Graymouth,VT,76320,US,VT,76320,new,546564,519703
+39,CUST-00039,lydiawood@example.org,698-411-6740x0945,Candace,Cortez,75841 Arnold Square Suite 153,Teresabury,MD,98528,US,MD,98528,new,427052,134382
+40,CUST-00040,brandonstone@example.org,(700)428-3521x0326,Krystal,Torres,858 Sara Bypass Apt. 513,New Juanmouth,MO,41051,US,MO,41051,vip,505029,139168
+41,CUST-00041,uwilliams@example.net,642.874.8640x299,Melanie,Morris,35089 Julie Lane,Sanchezshire,WV,08835,US,WV,08835,churn_risk,433473,648257
+42,CUST-00042,stonelisa@example.org,(305)467-2407x6006,Terry,Lynn,4265 Stewart Centers,Isaiahville,OK,21133,CA,OK,21133,repeat,599769,532893
+43,CUST-00043,gonzaleztravis@example.net,+1-475-554-7008x944,Brenda,Johnson,267 Jennifer Plains,East Kellyhaven,KS,89564,US,KS,89564,vip,442355,848561
+44,CUST-00044,fosterdaniel@example.org,918.647.3229x8520,Megan,Smith,4280 Dorothy Underpass Suite 804,South Selenaland,WI,36014,US,WI,36014,repeat,455558,615338
+45,CUST-00045,uperez@example.org,001-686-620-2042x83437,Theresa,Stewart,9031 Stephen Tunnel,South Patricia,IN,66164,US,IN,66164,new,443791,810139
+46,CUST-00046,ubrown@example.net,001-493-450-8629x140,Michael,Anderson,6468 Rojas Inlet Suite 343,Kelliburgh,DC,81688,US,DC,81688,vip,482295,294117
+47,CUST-00047,gmartin@example.net,001-950-683-6297,Kelly,Barajas,8194 Cheryl Road Suite 329,Davisstad,KS,95901,CA,KS,95901,churn_risk,459648,390087
+48,CUST-00048,marshalltyler@example.org,859.605.8006x7293,Susan,Hurley,3949 Michael Pines,Hallfort,WA,20141,US,WA,20141,new,505726,912613
+49,CUST-00049,jared63@example.com,001-757-376-6974x32203,Monica,Davis,7212 Hicks Overpass,South Paula,NV,55797,US,NV,55797,churn_risk,499394,330990
+50,CUST-00050,uhenderson@example.com,342.789.2346,Alexandra,Lee,5949 Jones Well Apt. 080,Johnsonmouth,NH,67940,US,NH,67940,vip,405419,714255
+51,CUST-00051,ebarrett@example.org,688-417-3512,Olivia,Moss,93275 Thomas Inlet Apt. 731,Clarkmouth,MD,53053,US,MD,53053,new,575747,717778
+52,CUST-00052,markcardenas@example.net,9499546424,David,Watson,174 Shannon Pine,Robinsonstad,FM,46857,US,FM,46857,churn_risk,549683,165545
+53,CUST-00053,markskatherine@example.com,(404)517-9030x960,Timothy,Larson,00089 Davies Trail,West Alexamouth,ME,55568,CA,ME,55568,vip,476697,115593
+54,CUST-00054,amandageorge@example.com,(411)460-6850x46348,Kimberly,Barton,928 Knox Tunnel,Lake Janethaven,GA,42645,US,GA,42645,new,509920,685714
+55,CUST-00055,mcarter@example.org,324-660-3147,John,Howard,3323 Louis Pike,New Erin,MN,37522,CA,MN,37522,vip,528431,800397
+56,CUST-00056,joshua12@example.org,4202292601,Amber,Johnson,73174 Angela Center Suite 265,Lake Elizabethstad,MT,50313,US,MT,50313,new,599862,485124
+57,CUST-00057,hughestimothy@example.net,(560)432-3339,Austin,Brown,814 Cindy Landing,Mendozamouth,ID,70805,US,ID,70805,new,571495,541513
+58,CUST-00058,hamiltontracy@example.org,(206)264-9355,Philip,Wright,541 Carolyn Track,Adamsshire,GA,93623,US,GA,93623,new,515323,815322
+59,CUST-00059,yadams@example.net,318.998.2246x7770,Michael,Ramos,099 Torres Key,North Cherylmouth,GA,98637,US,GA,98637,vip,556937,358600
+60,CUST-00060,mccormickjames@example.net,(645)979-0377,Jessica,Davis,66313 Melissa Trace,North Codyburgh,FM,60770,US,FM,60770,vip,498954,774841
+61,CUST-00061,johnsonhaley@example.net,868.770.1580x78676,Eric,Robbins,091 Morrison Radial,Cortezchester,RI,28464,US,RI,28464,churn_risk,575364,555649
+62,CUST-00062,brian04@example.org,(694)524-4232x8883,Catherine,Giles,76662 Donna Tunnel Suite 430,East Jeffreyshire,MD,98559,CA,MD,98559,churn_risk,429500,932385
+63,CUST-00063,valenciakathy@example.com,001-832-486-5525x632,David,Johnson,2518 Young Gateway,North James,OR,60294,US,OR,60294,churn_risk,540524,288185
+64,CUST-00064,andersonrobert@example.com,+1-916-200-5859,Bryan,Trevino,1982 Bailey Creek,East Dianaport,MH,70696,CA,MH,70696,churn_risk,450761,808224
+65,CUST-00065,wsmith@example.com,656.273.5072,Daniel,Flynn,37807 Grace Manors Apt. 912,Amyview,TX,90265,US,TX,90265,new,533744,454171
+66,CUST-00066,richard50@example.net,+1-526-771-6829x6569,Jasmin,Sanders,36989 Rachel Haven Apt. 997,North Jacobberg,AS,90853,US,AS,90853,repeat,564576,258057
+67,CUST-00067,dwarren@example.org,340-788-7418x607,Monica,Wright,516 Christopher Locks,Waltonburgh,IA,92865,US,IA,92865,vip,533908,789455
+68,CUST-00068,johnjones@example.com,970-264-5471,Amy,Smith,31223 Stephanie Lane,Lake David,VT,07159,US,VT,07159,churn_risk,590077,441962
+69,CUST-00069,zbrown@example.org,834-358-1644,Bethany,Harris,718 Amber Pass,Annstad,IN,55060,US,IN,55060,churn_risk,478691,769853
+70,CUST-00070,brandon44@example.org,(503)934-2660,Evelyn,Kelley,29777 Peter Green Suite 301,Port Emilytown,GU,34334,CA,GU,34334,churn_risk,459707,957093
+71,CUST-00071,bgarza@example.org,(835)791-2853x803,Aaron,Carter,6470 April Burgs Apt. 174,Lake Molly,MH,66040,US,MH,66040,churn_risk,549835,212512
+72,CUST-00072,juan84@example.net,804-429-2702,Stephanie,Mcfarland,36233 Cindy Ramp,Melvinstad,MI,35589,US,MI,35589,churn_risk,515840,592973
+73,CUST-00073,srichards@example.net,001-427-322-2002,William,Smith,9150 Wells Gardens,Davisberg,MA,46121,US,MA,46121,vip,401984,604369
+74,CUST-00074,tonyaarmstrong@example.org,251.627.2429x41164,Mark,Turner,20445 Davenport Crossing,South Nancy,WI,05211,US,WI,05211,new,509706,896585
+75,CUST-00075,kevin04@example.com,(408)630-4519x7685,Keith,Gonzalez,28718 Gabriel Knolls Suite 346,South Christopherhaven,PA,54761,US,PA,54761,vip,535514,667753
+76,CUST-00076,alexandria54@example.org,746.747.4010,Paul,Warren,99973 Fernandez Wells,North Justin,MN,21577,US,MN,21577,churn_risk,426426,148591
+77,CUST-00077,natalie85@example.net,(452)599-2378,Michelle,Hickman,730 Turner Creek,Derrickside,OK,36124,US,OK,36124,vip,492142,389347
+78,CUST-00078,smithlindsey@example.net,+1-220-934-1573x716,Candace,Collins,5300 Daniel Mountain,Nancyshire,MS,84237,US,MS,84237,churn_risk,518655,929760
+79,CUST-00079,mckeemichelle@example.org,+1-425-985-6725x954,Jennifer,Wilson,04358 Gregory Islands,Johnsonstad,AK,46856,US,AK,46856,vip,414623,847300
+80,CUST-00080,vsalas@example.com,(492)947-5435x46475,Jamie,Quinn,03632 Thomas Loop,Andrademouth,NY,59454,US,NY,59454,vip,581869,601433
+81,CUST-00081,otucker@example.com,406-376-7721x6274,Brenda,Sosa,3319 Ballard Mall Suite 423,North Kathy,OR,47253,US,OR,47253,repeat,551091,552277
+82,CUST-00082,patrickleon@example.org,001-654-246-1484x88425,Tonya,Miller,100 Brown Estate Apt. 119,Carrieview,WA,21596,US,WA,21596,new,451023,412559
+83,CUST-00083,snyderbenjamin@example.com,629.900.4385,Blake,Li,6625 Roberto Dam Suite 145,East Alice,IL,45247,CA,IL,45247,repeat,561796,480336
+84,CUST-00084,hayley51@example.com,8404244026,Chelsey,Ward,3229 Nelson View,South Shelly,GA,65165,US,GA,65165,repeat,435027,147147
+85,CUST-00085,johnsongary@example.org,415-743-1415x5900,Donna,Smith,6137 Jesse Gateway Suite 046,Lake Adamfort,IL,70479,US,IL,70479,churn_risk,542384,528191
+86,CUST-00086,cassandrawhite@example.net,(255)383-7430,Allison,Robertson,2429 Shelly Grove,New Kaylachester,MO,42369,US,MO,42369,repeat,451541,901611
+87,CUST-00087,jonesfrank@example.net,(751)684-2996x54416,Scott,Morgan,6971 Jacqueline Spring Suite 968,New Mary,IA,16959,US,IA,16959,repeat,415067,629537
+88,CUST-00088,luis84@example.com,(441)977-5393,Miranda,Munoz,32729 Carpenter Island,Timothyside,AK,43174,US,AK,43174,new,486584,231031
+89,CUST-00089,nelsonmolly@example.net,608.957.2961x367,Gloria,Lopez,062 Todd Inlet,Port Janet,DC,51131,US,DC,51131,churn_risk,466741,736466
+90,CUST-00090,lindabryan@example.com,(599)221-2533x3415,Amber,Carroll,408 Cheryl Stream,West Erica,MD,78157,US,MD,78157,new,557162,515540
+91,CUST-00091,ohunt@example.com,727-458-2452x7321,Jesse,Kirk,43674 Yang Field Suite 603,North Deborahburgh,OH,37952,US,OH,37952,vip,446222,109229
+92,CUST-00092,devon09@example.net,566.706.4966x43375,Juan,Kim,5947 Willis Creek Suite 546,Port Katie,OH,97078,US,OH,97078,vip,548197,676428
+93,CUST-00093,fhensley@example.com,937-420-1698,Steven,Rodgers,50643 Kenneth Corners,Saraside,MP,33342,CA,MP,33342,repeat,428374,844514
+94,CUST-00094,suzanne04@example.com,(864)503-0450x0402,Jose,Martinez,01955 Clayton Route,New Kenneth,SC,04063,CA,SC,04063,churn_risk,468117,734771
+95,CUST-00095,jenniferbates@example.net,(433)659-5485x36964,Kristen,Lopez,128 Fry Forks Apt. 336,Jacksonland,ID,69840,US,ID,69840,new,570993,325188
+96,CUST-00096,jasonjohnson@example.net,633.780.7284x134,Megan,Moore,01621 Marquez Locks Suite 310,West Rebecca,PR,60048,US,PR,60048,vip,406781,197616
+97,CUST-00097,mcdonalddavid@example.net,(361)237-2609x20022,Elizabeth,Harvey,947 Cook Spurs Apt. 880,Port Amyview,NV,77452,CA,NV,77452,vip,444690,287832
+98,CUST-00098,smithrichard@example.org,903.601.0879x76398,Joshua,Cox,5822 Cody Vista Suite 567,Jenningsburgh,MT,98827,US,MT,98827,repeat,552498,696619
+99,CUST-00099,rodneysharp@example.org,845-757-8113x8500,Crystal,Turner,59158 Kelly Wall Suite 373,West Andrew,UT,86810,US,UT,86810,repeat,495673,943888
+100,CUST-00100,andersonbarbara@example.org,552-706-9434x5733,Julie,Evans,01847 Miller Passage,West Jenniferside,FM,25566,US,FM,25566,new,483179,491108
+101,CUST-00101,frederickhunt@example.org,(252)772-2235x467,Justin,Knox,0477 Jeffrey Street Apt. 325,Waynemouth,WI,77783,US,WI,77783,new,440506,479450
+102,CUST-00102,xcastillo@example.net,001-267-465-9100,John,Hill,136 Anna Lodge Suite 863,East Dalton,FL,01395,US,FL,01395,repeat,428085,800120
+103,CUST-00103,morristheresa@example.org,887-231-4193x7686,Janet,Jones,7780 Sandoval Squares,Sheilatown,MT,18870,US,MT,18870,churn_risk,578343,276319
+104,CUST-00104,johnsonchristopher@example.com,(636)464-4331,Holly,Meyers,35862 James Street,Hansenberg,FL,20836,US,FL,20836,churn_risk,476202,703735
+105,CUST-00105,upeterson@example.org,404.867.9012,Pamela,Fischer,0546 Anderson Squares Suite 404,Lake Matthew,AK,39205,US,AK,39205,churn_risk,443287,952089
+106,CUST-00106,timothy94@example.org,546.930.4325,Mark,Rodriguez,331 Dennis Forges,South Beverlyfurt,CO,82236,US,CO,82236,repeat,555314,817440
+107,CUST-00107,gguzman@example.org,001-706-263-9465x475,Bradley,Moore,668 Mcgee Key,Everettville,OR,13176,US,OR,13176,repeat,549549,226393
+108,CUST-00108,alexanderjessica@example.org,(754)877-2767,Madeline,Owens,86013 Jason Ridge Suite 360,Candaceview,MN,21968,US,MN,21968,repeat,555757,423648
+109,CUST-00109,sandrews@example.com,(564)614-3627x7473,Shaun,Hodges,18146 Moody Plains,Michaelstad,PA,66404,US,PA,66404,churn_risk,419668,472473
+110,CUST-00110,christinawilkins@example.com,978.418.9128,Robert,Ramirez,345 Jacqueline Bridge Suite 988,North Alexandershire,TN,86705,US,TN,86705,vip,436102,833564
+111,CUST-00111,stephengonzalez@example.org,621-529-1412x46538,Vickie,Trevino,2083 Eric Overpass,Lorichester,ME,47000,US,ME,47000,churn_risk,530139,591475
+112,CUST-00112,lryan@example.com,001-470-260-8941,Adrian,Martinez,0393 Nathaniel Keys Suite 836,Jonesside,ND,15606,US,ND,15606,new,494229,403306
+113,CUST-00113,htorres@example.net,348.369.3706x41210,Jason,Nash,56765 Allen Trace,New Johnberg,TX,58069,US,TX,58069,churn_risk,424450,379234
+114,CUST-00114,mkirk@example.org,5256962254,Christine,Allen,5159 Sean Unions Suite 390,Trujillomouth,NH,79886,CA,NH,79886,vip,436479,485065
+115,CUST-00115,evanscott@example.com,710.756.7351x637,Steven,Smith,0281 Kennedy Fall Suite 677,New Jacob,VI,92923,US,VI,92923,new,564308,124483
+116,CUST-00116,marcus37@example.net,+1-811-487-6144x741,Tonya,White,7568 Drake Pines Suite 171,Simmonsshire,SC,17663,US,SC,17663,churn_risk,404721,288672
+117,CUST-00117,stevenssarah@example.net,001-579-738-2840x01463,Kevin,Velazquez,119 Amy Mountain Suite 488,Lake Ronaldburgh,PR,44135,US,PR,44135,new,533071,485270
+118,CUST-00118,wendypittman@example.org,(879)484-5699x52884,Leah,Cruz,073 Reed Mountains Apt. 190,Saraside,AR,67027,US,AR,67027,new,510287,561437
+119,CUST-00119,dball@example.net,310.528.6759,David,Green,83938 Stephanie Summit Apt. 352,Joshuachester,PR,15633,US,PR,15633,churn_risk,444772,841764
+120,CUST-00120,jasmine29@example.org,+1-999-372-9203x239,Karen,Pittman,996 Peter Shores,Hickshaven,DC,70286,US,DC,70286,churn_risk,522764,104357
+121,CUST-00121,gregoryschwartz@example.org,001-305-626-8724x61569,Jeffrey,Anderson,9852 Rose Greens,Kayleemouth,MH,32439,US,MH,32439,churn_risk,595808,640923
+122,CUST-00122,bryandavis@example.org,001-343-344-4531x5205,Tina,Williams,92660 Amanda Shores Suite 954,Jenniferbury,VT,71361,US,VT,71361,new,528771,931170
+123,CUST-00123,lindasmith@example.org,001-861-860-9004x81139,Janet,Grant,94974 Mark Views,Acostamouth,IN,47314,CA,IN,47314,vip,566082,345652
+124,CUST-00124,brian80@example.com,771-299-0251x45141,Christine,Ramsey,548 Keith Summit,Nguyentown,FL,71351,US,FL,71351,repeat,582216,426261
+125,CUST-00125,harrisashley@example.org,(438)891-4634x35315,Anthony,Yu,44609 Kathryn Spurs,North Jamiemouth,AZ,57073,CA,AZ,57073,new,557885,209147
+126,CUST-00126,sara75@example.net,+1-211-809-8087x335,Michele,Miller,5040 Danielle Center,Reynoldsbury,AS,78282,US,AS,78282,churn_risk,589394,923592
+127,CUST-00127,craigchang@example.com,771.254.4961,Meghan,Campbell,632 Jeffery Terrace Suite 451,Richardport,OR,21660,US,OR,21660,vip,528903,575073
+128,CUST-00128,btaylor@example.org,(277)645-1351x243,Phillip,Wilkins,14378 Joseph Inlet Apt. 703,Fordfurt,CT,74285,US,CT,74285,vip,467792,591015
+129,CUST-00129,lisacarey@example.com,001-765-608-2335x01375,William,Jones,780 Jackson Fields,East Michael,GA,97978,US,GA,97978,vip,475317,454523
+130,CUST-00130,ambernichols@example.com,951-404-4617,Jeremy,Anderson,11762 Wade Mews,Martinchester,CA,47304,US,CA,47304,vip,595164,255911
+131,CUST-00131,bdillon@example.com,001-608-719-9250x9240,James,Holland,698 Emma Heights Suite 865,Rogersfurt,FM,11111,US,FM,11111,vip,543430,785885
+132,CUST-00132,lambertalexis@example.org,572-302-7635x79662,Steven,Hopkins,123 Mercado Via Suite 420,Stephaniefurt,WV,77817,US,WV,77817,new,491426,548775
+133,CUST-00133,friedmanjustin@example.net,311-468-9380x171,William,Johnson,75696 Carmen Wells,Port Kimberly,AL,01485,US,AL,01485,repeat,472499,381574
+134,CUST-00134,juan30@example.net,(514)449-6195,Becky,Simmons,79008 Schwartz River Suite 200,Obrienfort,DC,73801,US,DC,73801,new,574361,634095
+135,CUST-00135,martinezshirley@example.net,901.587.5720,George,Thomas,5879 Roberts Corners Suite 610,Lake Matthewshire,HI,23743,US,HI,23743,vip,536626,140572
+136,CUST-00136,ccampbell@example.com,557-314-0477x483,Edward,Warren,35435 Sweeney Estates,West Danielton,NH,41233,US,NH,41233,new,468947,453234
+137,CUST-00137,connierojas@example.org,606-600-2656x27955,Julia,Ochoa,79499 Michael Crossing,North Cassandrafurt,KY,19367,US,KY,19367,churn_risk,533753,576046
+138,CUST-00138,jasonhodge@example.net,(312)343-8228x2181,Maria,Cunningham,512 Samuel Mill,South Victoria,VI,51263,US,VI,51263,repeat,508870,264255
+139,CUST-00139,brandon96@example.org,+1-771-282-6342,Dana,Charles,63335 Wright Locks Apt. 987,North Jesse,MN,79623,US,MN,79623,new,439032,709862
+140,CUST-00140,markmorgan@example.com,313.615.0723,Pamela,Rubio,670 Sanford Inlet Suite 635,Henryhaven,FL,21377,US,FL,21377,new,439086,562621
+141,CUST-00141,tgutierrez@example.net,+1-556-579-2007x7740,Debra,Reese,336 Alicia Summit,East Brendaville,NE,21199,US,NE,21199,churn_risk,469062,543136
+142,CUST-00142,judithpeters@example.org,821.625.9212,Kimberly,Kidd,640 William Vista,Lake Brandy,MS,12550,US,MS,12550,churn_risk,525238,950105
+143,CUST-00143,gmeza@example.org,(538)642-5583,Jamie,Hernandez,96010 Timothy Common Suite 185,Jennafurt,DE,39677,US,DE,39677,repeat,566404,897974
+144,CUST-00144,beltranjon@example.net,(407)400-8533,Jose,Webster,30205 Jason Walk,North Sherriville,WI,89970,US,WI,89970,vip,572162,970562
+145,CUST-00145,samantha20@example.net,001-312-915-4748x5512,Isaiah,Chambers,8537 Jennifer Club,Hudsonport,IA,27157,US,IA,27157,vip,447522,922874
+146,CUST-00146,martinezsamantha@example.org,(637)691-7664x5602,Ryan,Hall,80327 Karen Roads,Lisamouth,MP,04260,US,MP,04260,repeat,482744,941337
+147,CUST-00147,david69@example.net,262.853.1891,David,Davis,5978 Megan Isle,Mannbury,FL,19790,US,FL,19790,new,491594,743029
+148,CUST-00148,sharpsara@example.org,852-575-1376x803,Jesus,Williams,3491 Mccall Street Apt. 667,Brownmouth,MI,07169,US,MI,07169,vip,508278,445563
+149,CUST-00149,tmcguire@example.net,(218)214-1931x567,Susan,Kelly,43663 Kathleen Cliffs,Lake Cory,GA,50200,US,GA,50200,repeat,510779,703157
+150,CUST-00150,janeherrera@example.net,3366508562,Philip,Butler,44459 Trevino Street,Weaverton,MA,40047,CA,MA,40047,vip,457136,912168
+151,CUST-00151,jball@example.net,607.673.7355,Stacy,Ortiz,6657 Carroll Forges,Port Pamelaborough,MT,53697,US,MT,53697,churn_risk,511873,735495
+152,CUST-00152,brianhoward@example.org,785-617-1168x97425,Alisha,Ball,105 Annette Trace,Valdezborough,NY,66104,US,NY,66104,vip,510472,204965
+153,CUST-00153,brentsmith@example.org,+1-670-670-9543x155,Elizabeth,Dean,58165 Adriana Squares,Carolside,DC,11262,CA,DC,11262,churn_risk,491217,302674
+154,CUST-00154,sarahwilson@example.org,475.568.6093x538,Brandon,Odonnell,4716 Derrick Fields Suite 574,New Michellehaven,WY,71495,US,WY,71495,vip,536175,159321
+155,CUST-00155,richard54@example.org,+1-217-679-9530x666,Kenneth,Andrade,03343 Jennifer Vista,Fosterborough,KY,79883,US,KY,79883,vip,505649,340315
+156,CUST-00156,kellyedwards@example.net,+1-213-747-7262,Tami,Hudson,12133 Angela Ridge,West Christine,HI,05825,US,HI,05825,churn_risk,526316,754760
+157,CUST-00157,stuartmichael@example.com,001-248-893-7161,Mariah,Smith,4122 Lisa Junction,Jamesland,KY,15857,US,KY,15857,new,454571,518679
+158,CUST-00158,andersoneugene@example.org,+1-810-964-7731,Mary,Jones,71239 Steven Inlet,Mcdanielside,NV,14919,US,NV,14919,new,564462,158666
+159,CUST-00159,floresemily@example.org,316-252-1573,Karen,Norris,749 Paul Ferry,Angelachester,MD,03582,US,MD,03582,repeat,535358,154858
+160,CUST-00160,lrivera@example.net,263.260.5200x70201,Mark,Hunter,28334 William Estate Apt. 762,West Matthew,OR,22046,US,OR,22046,repeat,445688,891422
+161,CUST-00161,pamelacole@example.com,+1-290-582-9473x50070,Leslie,Mitchell,078 Martin Brook,Phillipsburgh,ME,42113,US,ME,42113,churn_risk,417612,871030
+162,CUST-00162,kimberlyluna@example.org,990-783-5924x4298,Robert,Miller,4160 Johnson Roads Suite 887,South Jacobborough,AZ,03026,US,AZ,03026,new,516996,530203
+163,CUST-00163,wmcknight@example.net,381.926.6516x331,Shawn,Campbell,47313 Brittney Junction,Nicholasborough,WI,24791,US,WI,24791,repeat,525914,670496
+164,CUST-00164,qwall@example.net,987-350-9726,Carolyn,Wells,338 White Views Suite 565,North Geneborough,OK,99595,US,OK,99595,vip,468177,703816
+165,CUST-00165,alexandria26@example.net,001-876-835-7703x9163,Jacob,Jones,2479 Williams Manor,North Lindahaven,DE,49369,US,DE,49369,churn_risk,473030,845852
+166,CUST-00166,michellesimmons@example.org,+1-831-859-1545x87369,John,Cox,9147 Steele Pine Apt. 507,Williamsmouth,DC,95843,US,DC,95843,repeat,492841,782295
+167,CUST-00167,wrightmarco@example.org,001-233-504-4209x35559,Gabriel,Macias,957 Matthews Views,New Brandi,MT,25705,US,MT,25705,new,461460,180463
+168,CUST-00168,johnsonsarah@example.com,327.274.1475x1132,Todd,Howard,680 Derek Gateway,West Billyville,NM,25967,US,NM,25967,new,556304,126618
+169,CUST-00169,johnsonjohnny@example.net,+1-504-539-4977,Heather,Pollard,5042 Stephen Estate Apt. 480,Port Nicholas,HI,25686,US,HI,25686,new,580490,607696
+170,CUST-00170,kathy74@example.net,747.921.2322,Lindsay,Santos,34024 Leon Turnpike Suite 490,Kristinbury,NV,83425,US,NV,83425,repeat,454347,632068
+171,CUST-00171,kellis@example.com,001-256-968-8223,Alan,Ayers,6623 Dennis Courts,Port Dennis,UT,87187,US,UT,87187,vip,561409,412384
+172,CUST-00172,stefanie00@example.com,(223)288-8426x026,Nicole,Johnston,945 Dunlap Dale Suite 592,Robertshire,MI,81572,US,MI,81572,repeat,438518,367036
+173,CUST-00173,cfrey@example.org,+1-982-382-8017x298,Cory,Martin,384 Kelly Shoal,Brownchester,ND,42955,US,ND,42955,new,441804,957224
+174,CUST-00174,marymckinney@example.net,314-557-3356,Matthew,Mills,428 Lauren Dale Suite 422,North Jessica,ID,27398,US,ID,27398,churn_risk,428922,889509
+175,CUST-00175,monique75@example.com,714-332-0239x421,Jonathan,Hughes,964 Calderon Avenue Apt. 433,South Robinport,IL,83433,US,IL,83433,vip,563188,291576
+176,CUST-00176,roblestina@example.org,917.893.8801x123,Patrick,Lamb,42472 Walker Bridge,South Julia,IA,78256,CA,IA,78256,new,502938,727879
+177,CUST-00177,lovenancy@example.net,001-423-815-4153x8790,Daniel,Gonzales,31143 Karen Cove,South Kristen,WA,44043,US,WA,44043,churn_risk,477130,527623
+178,CUST-00178,ericbutler@example.net,5258982695,Tracy,Boone,421 Gates Center Suite 952,Jacobview,AR,37389,US,AR,37389,repeat,555313,639565
+179,CUST-00179,austinjohnson@example.org,790.974.1738x823,Annette,Garcia,74838 Carpenter Forks Apt. 916,Lake Kirstenside,WA,67930,US,WA,67930,vip,440971,799645
+180,CUST-00180,ogross@example.net,6595095684,Kelsey,Marshall,71366 Lauren Parkway Suite 641,Guzmanfurt,ND,99538,US,ND,99538,churn_risk,422674,147673
+181,CUST-00181,kevin48@example.net,001-660-507-8347x00990,Vincent,Castillo,607 Lee Overpass,East Matthewmouth,NV,42618,US,NV,42618,vip,464376,288020
+182,CUST-00182,ujohnson@example.org,670.832.0793x01894,Christopher,Perez,72251 Garcia Station Suite 178,Garciaborough,UT,47555,US,UT,47555,vip,557769,319741
+183,CUST-00183,pwest@example.com,+1-934-589-2513,Cynthia,Jimenez,6849 Kim Divide Suite 683,East Donna,NC,37557,US,NC,37557,repeat,540700,892403
+184,CUST-00184,ryanhendrix@example.net,+1-391-647-4109x42007,Tammie,Johnston,3002 Stacy Station Apt. 490,Port Rickyhaven,OR,14134,US,OR,14134,new,576125,832377
+185,CUST-00185,carneyeric@example.net,303-755-6027x7198,Randy,Butler,604 Bethany Corner,Port Paulachester,VI,18272,US,VI,18272,churn_risk,406604,680757
+186,CUST-00186,awilcox@example.net,9703250779,Stephen,Sanford,40914 Michael Points Apt. 856,Port Mark,VI,88395,US,VI,88395,new,540136,357494
+187,CUST-00187,kcastro@example.com,+1-730-972-7278x6306,Eric,Douglas,565 Ramos Forks,New Eileenburgh,AL,43829,US,AL,43829,repeat,461159,584627
+188,CUST-00188,millerkristy@example.net,313.233.0243x993,Eric,Wheeler,584 Haley Unions,Ortizmouth,NJ,60142,US,NJ,60142,new,400720,978327
+189,CUST-00189,rparker@example.org,+1-734-726-1485,James,Russell,213 Mason Motorway Suite 870,West Jonathanview,NH,67939,CA,NH,67939,churn_risk,481228,371837
+190,CUST-00190,davidhodge@example.com,867.355.4350,Shane,Hubbard,138 Parsons Divide,Piercechester,OK,34450,US,OK,34450,new,475208,796774
+191,CUST-00191,erinfernandez@example.net,9756444074,Robin,Dean,10772 Robert Glens,Port Jason,TN,18760,US,TN,18760,churn_risk,502114,840634
+192,CUST-00192,donnabaker@example.net,+1-256-750-4303x084,Scott,Powell,43530 Smith Meadow Suite 190,West Benjaminfurt,LA,73016,US,LA,73016,churn_risk,597527,699319
+193,CUST-00193,jacobhawkins@example.com,(588)647-9456,Joseph,Stewart,9975 Anderson Forks,Olsenfurt,IL,72262,US,IL,72262,churn_risk,401525,520886
+194,CUST-00194,ann42@example.com,001-857-701-3366,John,Ross,0207 Mann View,South Jennifer,AS,10963,US,AS,10963,new,567625,517220
+195,CUST-00195,ilewis@example.net,202-695-7954,Clayton,Fitzgerald,304 Burton Vista Apt. 697,West Karen,MI,63301,US,MI,63301,churn_risk,549181,982901
+196,CUST-00196,yeseniahorton@example.org,(778)436-9119x396,Kristine,Jones,175 Bradley Manor Suite 661,Jacksonland,KY,67800,US,KY,67800,vip,497968,674603
+197,CUST-00197,martinezjeffery@example.com,4042614051,Phillip,King,797 Chad Estate Apt. 432,Luisview,AK,61884,US,AK,61884,vip,512001,457192
+198,CUST-00198,hayleyhowell@example.net,(313)730-4843x3265,Erik,Mejia,3528 Mccullough Isle Suite 101,Davidmouth,IL,02517,CA,IL,02517,new,439030,447879
+199,CUST-00199,anthonyrogers@example.com,992.345.2804x629,Kenneth,Paul,2286 Christina Drive,Smithberg,FL,86115,US,FL,86115,new,403224,936797
+200,CUST-00200,shirley78@example.org,(955)230-3700,Elizabeth,Blackburn,619 Jesse Common Suite 279,Lauraview,KS,31703,US,KS,31703,churn_risk,510261,230211
+201,CUST-00201,scottmegan@example.net,251.897.1875,Gabriel,Grant,17366 Stephanie Mountain Apt. 455,North Ryanstad,VT,71511,CA,VT,71511,repeat,539404,355673
+202,CUST-00202,christine05@example.org,380.875.2412x345,Pedro,Blair,6212 Amber Mews Suite 640,Port Nicole,OK,51998,US,OK,51998,churn_risk,486689,800101
+203,CUST-00203,foxlee@example.org,886-551-5688x98928,Jessica,Lang,25609 Desiree Plaza Apt. 803,Bradleyborough,WY,29810,CA,WY,29810,vip,401864,781633
+204,CUST-00204,christopherwright@example.net,660.507.8167x33188,Christine,Lopez,91628 Rodriguez Trafficway Apt. 616,South Angelafort,ME,36169,CA,ME,36169,new,572143,887391
+205,CUST-00205,donald30@example.org,(275)437-3687x747,Lauren,King,641 Burton Cliffs,East Jerry,AK,92578,US,AK,92578,vip,434356,412155
+206,CUST-00206,gjuarez@example.com,8378383020,Donald,Luna,77710 Thomas Way Suite 677,Lake Allen,PA,83314,US,PA,83314,vip,415082,962502
+207,CUST-00207,valerieanderson@example.com,+1-212-850-1043x4060,Jason,Fernandez,584 Scott Ferry Suite 252,Port Andrewbury,HI,72019,US,HI,72019,vip,426536,753622
+208,CUST-00208,tuckerbenjamin@example.com,001-391-926-9288,Michael,Johnson,8224 Diana Mission Suite 445,New Victoriaport,NV,88630,US,NV,88630,repeat,522023,712057
+209,CUST-00209,gloria05@example.net,642.753.1602x09093,Brandi,Carrillo,6482 David Locks Apt. 751,East Jason,MI,91696,CA,MI,91696,churn_risk,475396,667486
+210,CUST-00210,rtaylor@example.com,284-867-7628,Craig,Brock,283 Knapp Trail Apt. 257,Robertfort,KY,16309,US,KY,16309,repeat,509274,128477
+211,CUST-00211,wellsalexander@example.com,001-527-268-0725x02317,David,Pratt,9141 Ricky Dam Apt. 778,Barrerashire,AR,88922,US,AR,88922,new,583624,163276
+212,CUST-00212,smithjeffery@example.org,926.714.3324x457,Charles,Reynolds,23876 April Extensions Apt. 358,North Kyleton,IL,67669,US,IL,67669,repeat,578220,694575
+213,CUST-00213,april86@example.org,969.728.2665x6222,Allison,Thompson,86680 Steven Plaza Apt. 528,Port Danatown,NM,62191,CA,NM,62191,new,501517,162868
+214,CUST-00214,lindawebb@example.org,6175614397,Shannon,Cook,28496 Jeremy Isle,Thompsonstad,VI,84192,US,VI,84192,vip,572921,352275
+215,CUST-00215,kingbrenda@example.com,+1-485-335-4254,Ivan,Baker,7818 Chan River Suite 907,Khanhaven,FM,51528,US,FM,51528,churn_risk,489442,867302
+216,CUST-00216,rburns@example.com,+1-641-297-1469x475,Richard,Rodgers,57150 Anderson Port,Davisborough,DC,00654,US,DC,00654,churn_risk,577673,670525
+217,CUST-00217,kirkmark@example.com,(764)211-3090,Corey,White,29932 Richard Trafficway,West Brian,RI,84548,CA,RI,84548,churn_risk,544258,334070
+218,CUST-00218,robinsoncurtis@example.org,451.660.6650x940,Anna,Parker,7862 Hall Place,East David,UT,47085,US,UT,47085,churn_risk,499025,453671
+219,CUST-00219,esmith@example.org,431-486-5073x757,Shane,Gomez,5092 Neil Grove,New Christopherland,ND,93829,US,ND,93829,repeat,580877,252711
+220,CUST-00220,anthonyesparza@example.net,(466)758-6107x372,Traci,Anderson,68397 Brandon Divide Apt. 010,Jillborough,NV,45574,US,NV,45574,vip,416869,662685
+221,CUST-00221,nhamilton@example.net,443-639-2240x809,Christopher,Hernandez,567 Patterson Mountains Apt. 205,East Kimberlystad,AK,77653,US,AK,77653,repeat,473340,257183
+222,CUST-00222,kmassey@example.com,001-620-594-1958x7456,Anna,Stevens,10800 Mark Drives Suite 317,Jacobtown,SC,08197,US,SC,08197,new,520574,493988
+223,CUST-00223,tinaroth@example.net,(475)202-5666x893,Barbara,Stone,296 Kimberly Locks Suite 016,East Michael,LA,95484,US,LA,95484,vip,494688,832558
+224,CUST-00224,quinnkaren@example.net,001-349-893-2833x5702,Debra,Barnes,66390 Eric Forest Apt. 130,Lake Lisa,OR,03977,CA,OR,03977,new,484051,472214
+225,CUST-00225,kcarroll@example.org,946.519.1262,Brandon,Russell,2764 Sarah Mountain Apt. 748,Erinville,PW,11809,US,PW,11809,new,405190,971265
+226,CUST-00226,joseph73@example.com,(872)761-7467x01079,Christina,Rivera,6877 Ortega Motorway,New Samantha,AS,57162,US,AS,57162,new,450955,362295
+227,CUST-00227,jmcmillan@example.org,+1-395-528-3091x655,Brandon,Lowery,8451 Myers Stravenue Apt. 914,Amandaburgh,WA,75741,US,WA,75741,vip,454585,411979
+228,CUST-00228,meyerskaren@example.com,915.762.8568x556,Robin,Marshall,6622 Ramirez Canyon,East Michael,AZ,95629,US,AZ,95629,churn_risk,572938,625434
+229,CUST-00229,mariaclark@example.net,+1-373-446-6374x14723,Holly,Davidson,863 Schwartz Tunnel Suite 282,Kleinville,MN,11827,US,MN,11827,new,492898,289722
+230,CUST-00230,gutierrezstephanie@example.com,727-777-0533,Steven,Gregory,924 Tina Canyon Suite 184,Port Margaret,WI,61066,US,WI,61066,repeat,474044,736802
+231,CUST-00231,brookssarah@example.org,+1-337-571-7908x16969,Amanda,Davenport,9881 Davis Stream,South Heather,MD,40411,US,MD,40411,vip,490664,464219
+232,CUST-00232,lewiskaitlin@example.org,+1-253-654-6005,Amber,Carlson,41078 Darlene Roads,Michealtown,PW,84777,US,PW,84777,new,524845,615766
+233,CUST-00233,james21@example.org,+1-564-318-6987x154,Paul,Underwood,282 Huffman Groves,North Kathleen,ND,11635,US,ND,11635,repeat,518788,527589
+234,CUST-00234,hallcameron@example.net,(281)323-4739x359,David,Moore,26779 Conner Island Apt. 943,Lake Jennifer,DC,46452,US,DC,46452,new,429767,325617
+235,CUST-00235,jeremy71@example.org,+1-637-708-0493x05437,Sarah,Wyatt,860 Laurie Corner Apt. 634,Castroberg,NY,36872,US,NY,36872,new,559512,633446
+236,CUST-00236,holmesmichael@example.net,796-255-6221,Danielle,Patel,26724 Pitts Knolls,East Benjamin,RI,48437,US,RI,48437,churn_risk,597413,808979
+237,CUST-00237,webbbrian@example.org,(511)857-5983x89372,Michael,Kim,942 Christopher Cliff,Lake Joshua,RI,11876,US,RI,11876,churn_risk,477155,407862
+238,CUST-00238,melissaspencer@example.org,938-988-7830,Joyce,Cooper,399 Ryan Stravenue Apt. 521,South Matthew,NE,10125,US,NE,10125,repeat,414163,391653
+239,CUST-00239,knunez@example.net,7133388140,Kevin,Webster,20929 Kimberly Lock,East Jacobbury,ME,71416,US,ME,71416,repeat,584383,803437
+240,CUST-00240,pwilliams@example.org,+1-656-508-3040x04532,Tracey,Torres,5763 Julie Key,Juanbury,LA,23932,US,LA,23932,vip,565367,440882
+241,CUST-00241,tchristensen@example.org,(869)761-3746x869,Kara,Brown,05285 Harris Course Suite 162,New Craigborough,UT,08015,CA,UT,08015,new,551715,659934
+242,CUST-00242,joshua08@example.com,(779)670-1359x625,Paul,Thomas,20407 Katie Tunnel,Lake Julie,GU,43641,US,GU,43641,new,418396,121092
+243,CUST-00243,jerry23@example.com,001-716-525-7798x48010,Mary,Perez,1005 Eileen River,South Bryanborough,DE,97892,US,DE,97892,vip,461795,934859
+244,CUST-00244,sierrablair@example.org,725.311.0880x2599,Kathy,Scott,1017 Marshall Camp Suite 931,New Kennethport,CA,59618,US,CA,59618,churn_risk,514900,386381
+245,CUST-00245,darrell46@example.net,+1-288-239-3206,Lori,Moore,07445 Blanchard Prairie,Adamview,VI,65211,CA,VI,65211,repeat,449358,269557
+246,CUST-00246,elizabethharris@example.org,969-263-0908,Olivia,Price,94013 Bowen Branch Apt. 581,Johnsonfort,CO,66317,US,CO,66317,new,559938,552235
+247,CUST-00247,maxking@example.net,5795512495,Adam,King,45033 Kenneth Bridge,East Davidville,MA,56278,US,MA,56278,churn_risk,436435,188124
+248,CUST-00248,glassashley@example.net,410.285.8383x82896,Desiree,Baldwin,5844 Farmer Fork,North Katiemouth,WI,51465,US,WI,51465,churn_risk,575969,642079
+249,CUST-00249,abigail79@example.org,(539)584-0305,Michael,Garza,839 Victoria Plain Suite 021,Bethanyborough,OK,73224,US,OK,73224,repeat,491412,982925
+250,CUST-00250,karl03@example.org,(443)828-9367x7485,Matthew,Matthews,89313 Michael Cove,Josephton,NY,80843,US,NY,80843,repeat,493453,276458
+251,CUST-00251,austin62@example.net,+1-692-523-6420x1842,Nicole,Jenkins,78062 Richardson Throughway,West Debrastad,MN,64532,US,MN,64532,vip,592755,389473
+252,CUST-00252,evan09@example.com,+1-499-345-3530x175,James,Bryant,72932 Thomas Freeway Apt. 447,North Martha,IN,42163,US,IN,42163,repeat,518495,224494
+253,CUST-00253,ecraig@example.net,(586)869-1934x208,Angela,Morris,0605 Pierce Stravenue Apt. 419,Javiermouth,ID,72124,US,ID,72124,vip,419725,660084
+254,CUST-00254,richard38@example.com,321.584.2775,Gail,Santos,36572 Stephen Roads,Lanceburgh,DC,42582,US,DC,42582,churn_risk,407480,712478
+255,CUST-00255,leslie47@example.org,9538566106,Maria,Parks,40900 Myers Springs,South Autumn,OK,35314,US,OK,35314,new,554367,796413
+256,CUST-00256,lpowell@example.net,700.367.9960,Emily,Reyes,255 Atkinson Glens Suite 859,Michelleport,KY,62247,US,KY,62247,churn_risk,441525,353099
+257,CUST-00257,gentrykenneth@example.net,001-912-968-4781x30223,Ryan,Ortiz,1677 Emily Court,Kylehaven,WA,09822,US,WA,09822,new,431161,884301
+258,CUST-00258,gregorysmith@example.net,(297)846-0125x95845,Richard,Barker,34384 Russell Gateway Apt. 379,North Kellyside,PR,94868,CA,PR,94868,new,502561,456863
+259,CUST-00259,yjackson@example.org,387.472.2867x932,Robert,Rojas,58037 Kevin Fords Suite 252,North Jose,KS,43736,CA,KS,43736,vip,557545,938847
+260,CUST-00260,shepherdjason@example.org,001-345-311-4983x94846,Brenda,Burns,35326 Robert Dam,Michaelview,AR,83952,CA,AR,83952,vip,569131,141301
+261,CUST-00261,philipmunoz@example.org,001-400-944-9825x059,Garrett,Garcia,7667 Amber Common Apt. 985,Chambersville,CA,29518,US,CA,29518,repeat,443437,318607
+262,CUST-00262,petersonkristin@example.com,(856)342-7756x0297,Michael,Adams,4358 Gutierrez Cape Apt. 435,West Raymond,SD,96345,CA,SD,96345,churn_risk,427557,536517
+263,CUST-00263,vchavez@example.net,(423)973-3858,Michael,Macdonald,93521 Kenneth Ridge,Websterside,CT,01454,US,CT,01454,repeat,560089,523186
+264,CUST-00264,ericbrown@example.com,+1-515-672-4897x994,Carrie,Torres,0339 Whitney Keys Suite 887,South Patrick,DE,92423,CA,DE,92423,repeat,569939,183893
+265,CUST-00265,susanjohns@example.net,+1-664-567-6809x58464,Deborah,Morse,752 Donald Shoal,Pricebury,NV,74466,US,NV,74466,repeat,430771,872087
+266,CUST-00266,amberclark@example.com,001-930-495-9377x552,Caroline,Velazquez,57831 Natalie View Apt. 071,South Daniel,NC,78889,US,NC,78889,churn_risk,592743,811902
+267,CUST-00267,gabriel58@example.net,001-634-427-8334x48092,Matthew,Brown,9418 Richards Lakes Apt. 927,East David,HI,13474,US,HI,13474,churn_risk,584011,470973
+268,CUST-00268,zlittle@example.com,247-726-8739,Hannah,Mitchell,328 Justin Way,East Ericaville,DE,40980,US,DE,40980,repeat,408643,563509
+269,CUST-00269,bmcdonald@example.org,001-945-662-6704,Denise,Schneider,0179 Laura Islands Apt. 255,Port Andrewfurt,HI,34755,US,HI,34755,repeat,471979,942325
+270,CUST-00270,samuel80@example.org,641.824.0128,Natalie,Douglas,6532 Jeffrey Court,Lake Joanne,TX,39964,US,TX,39964,vip,567656,232809
+271,CUST-00271,thomasrobinson@example.com,+1-937-823-8249x42152,Laura,Barr,5734 Hill Loaf Apt. 136,South Samuel,OH,99605,US,OH,99605,vip,599449,593408
+272,CUST-00272,tara15@example.com,+1-562-739-6084,Alexandra,Jones,398 Robert Stravenue,Dennischester,VT,20065,US,VT,20065,repeat,426073,452221
+273,CUST-00273,robertsondanielle@example.com,+1-559-233-4336x774,Jennifer,Perry,002 Gray Via Suite 386,Salinasshire,MT,90949,US,MT,90949,repeat,570809,479847
+274,CUST-00274,aguilarsamantha@example.net,001-551-498-7287,Robert,Harmon,41552 Miller Fall,North Michelle,VT,06088,US,VT,06088,new,426353,579572
+275,CUST-00275,nunezrose@example.com,338.322.0364x22238,Leroy,King,79741 Ross Vista Suite 132,Petersonstad,WI,91753,US,WI,91753,churn_risk,544546,188586
+276,CUST-00276,bwatson@example.com,(583)452-5756,Phyllis,Roberson,627 Thomas Corners,Rachaelshire,MO,07585,US,MO,07585,churn_risk,557158,652266
+277,CUST-00277,rcummings@example.net,(381)707-8394x2692,Hannah,Garrison,8529 Mcdowell Overpass Suite 110,North Kathleenland,KS,29416,CA,KS,29416,vip,521737,893277
+278,CUST-00278,coxnicole@example.org,953-728-7641x105,George,Wright,86186 Calvin Ways,Isaacberg,OH,93301,US,OH,93301,repeat,478603,143571
+279,CUST-00279,janetleblanc@example.net,398-610-3141,Ryan,Hahn,970 Frank Shores Apt. 533,Russellville,PR,06847,US,PR,06847,vip,482450,698053
+280,CUST-00280,dsantiago@example.net,+1-874-929-3632x158,Dylan,Ramos,451 Lori Land Suite 779,Port Julie,NM,20819,US,NM,20819,repeat,544828,846054
+281,CUST-00281,amanda80@example.org,001-694-774-6062x7743,Kevin,Ross,31383 Harris Ferry Suite 729,Austinmouth,AZ,75342,US,AZ,75342,repeat,410129,337634
+282,CUST-00282,lisa27@example.net,379.405.9695x5593,Amanda,Miller,11747 Lewis River,Alvaradotown,TX,28936,US,TX,28936,new,404028,631174
+283,CUST-00283,perezdavid@example.com,281-230-8504x350,Joy,Hardin,94748 David Ways,Nicholasville,SC,35506,US,SC,35506,new,456672,854018
+284,CUST-00284,justindelacruz@example.net,(388)447-3393x629,William,Barnett,120 Hill Freeway,Mcdonaldfurt,GU,48013,CA,GU,48013,churn_risk,547415,273833
+285,CUST-00285,nguyenaaron@example.org,+1-956-325-3510x3048,Angela,Barnes,95197 Joshua Radial Suite 109,Port Tanya,NM,42018,US,NM,42018,churn_risk,419629,601026
+286,CUST-00286,alan01@example.com,001-838-735-6269x871,Henry,Bird,2080 Smith Knolls,New Perry,ME,69271,US,ME,69271,churn_risk,498771,856244
+287,CUST-00287,samuelabbott@example.net,(301)668-6276x4941,Monica,Russell,18983 Linda Court,Huertaborough,CA,54488,US,CA,54488,churn_risk,437702,323869
+288,CUST-00288,rnelson@example.com,8957810610,James,Schmitt,824 Adams Turnpike Apt. 980,New Brandon,AK,62043,US,AK,62043,vip,497549,773113
+289,CUST-00289,henrybeard@example.com,001-790-475-8150x8195,Andrew,Schneider,5622 Lisa Wells,Kennethmouth,RI,43184,CA,RI,43184,new,424179,963855
+290,CUST-00290,mike95@example.net,(221)322-7553,Christina,Kelly,197 Thomas Well,Floydburgh,VT,24989,US,VT,24989,churn_risk,440445,260638
+291,CUST-00291,patricia83@example.com,001-751-475-9053x132,Emily,Burke,643 Lucas Brooks,South Stephen,AR,16656,US,AR,16656,churn_risk,549330,902562
+292,CUST-00292,qsolomon@example.net,+1-731-484-7839x795,Mary,Fleming,98559 Wesley Fords Apt. 161,Port James,IA,19193,US,IA,19193,repeat,490684,468706
+293,CUST-00293,cathy96@example.net,517.290.2176,Dorothy,Chandler,891 Jane Lock,Lake Katherine,ME,86451,US,ME,86451,repeat,430760,193884
+294,CUST-00294,maureennovak@example.com,001-743-408-1402,Charles,Ewing,13361 Bush Keys,Samuelview,NV,25781,US,NV,25781,churn_risk,511555,215758
+295,CUST-00295,sullivanlisa@example.org,232.945.4784x7248,Alicia,Evans,99807 Lopez Circle,North Shaneside,IA,60598,US,IA,60598,vip,590104,112011
+296,CUST-00296,jorgebishop@example.net,604-511-5277x51401,Makayla,Johnston,55244 Amanda Summit,East Timothy,WA,10865,US,WA,10865,churn_risk,439890,964078
+297,CUST-00297,anthonyharris@example.net,(752)373-0350x57392,Jennifer,Thompson,0946 Eric Shore Suite 343,East Emma,CA,69493,US,CA,69493,new,522865,230233
+298,CUST-00298,deborahhenderson@example.net,+1-857-383-7576x8849,Phillip,Jensen,8595 Timothy Wells Suite 145,Stouthaven,CO,18662,US,CO,18662,new,479408,667605
+299,CUST-00299,james50@example.org,943-611-8473,Jessica,Glass,6409 Morrison Streets,East Nicole,MS,29359,US,MS,29359,repeat,556275,789275
+300,CUST-00300,andrew19@example.net,232-904-5696x56443,Ryan,Miller,76335 Pope Common Suite 954,Shawnhaven,MD,51915,US,MD,51915,churn_risk,441494,576746
+301,CUST-00301,coreythomas@example.org,808-543-6063x5963,Anthony,Porter,536 Winters Ramp,Reginaborough,TX,68242,US,TX,68242,new,476786,186180
+302,CUST-00302,josephvega@example.net,602-480-4279,Louis,Hansen,933 Clayton Walks Suite 854,New Joshualand,AR,53597,US,AR,53597,new,528872,710676
+303,CUST-00303,james40@example.org,603.903.2680,Ronald,Cole,54514 Weaver Expressway,East Annachester,MD,59427,CA,MD,59427,vip,512506,806315
+304,CUST-00304,ybeard@example.org,001-812-988-0807,Laurie,Ford,0009 Gross Trace Apt. 446,Lake Philip,TX,56561,US,TX,56561,churn_risk,493723,815451
+305,CUST-00305,sandrahayden@example.org,927.623.9843x649,Tiffany,Williams,89169 Myers Crest,East Breanna,AK,61774,US,AK,61774,new,423762,162109
+306,CUST-00306,tiffany38@example.org,001-212-292-2172x831,Holly,Berry,834 Johnson Valley,Wallaceside,MS,32628,US,MS,32628,repeat,509148,170515
+307,CUST-00307,jonathanmoore@example.net,001-238-727-2115,Alicia,Martinez,424 Ferguson Plaza Apt. 234,Cherylbury,VI,44535,US,VI,44535,repeat,418297,334103
+308,CUST-00308,cruzjennifer@example.org,001-985-363-5000,Stephanie,Peterson,92072 Michele Falls Apt. 514,Paulbury,SC,31791,CA,SC,31791,new,572049,169260
+309,CUST-00309,patriciajenkins@example.com,713-684-0238,Annette,Powell,0478 Delgado Lake,West Dawntown,MP,12630,US,MP,12630,churn_risk,564721,936512
+310,CUST-00310,rwilson@example.org,355.498.3944,Melissa,Butler,496 Woods Dam,Christinaberg,AR,65156,US,AR,65156,new,596421,180311
+311,CUST-00311,bduncan@example.net,001-459-702-0819x48783,William,Bailey,04955 Roger Square,Port Antoniostad,DE,11946,US,DE,11946,repeat,599017,628756
+312,CUST-00312,teresaturner@example.org,001-760-247-9411x520,Curtis,Martinez,17484 Stewart Summit Apt. 040,Ashleymouth,SC,08245,US,SC,08245,new,505185,798691
+313,CUST-00313,jalvarez@example.com,430-332-6782,Brendan,Brown,8848 Marilyn Ways Apt. 411,Rodriguezfurt,PA,23746,US,PA,23746,churn_risk,549460,783714
+314,CUST-00314,alyssa05@example.com,(786)640-3776,Manuel,Mitchell,16313 Krystal Ville Suite 559,Bradfordchester,UT,39526,CA,UT,39526,new,530183,864226
+315,CUST-00315,twright@example.net,+1-645-582-7436x2362,Ryan,Ho,6338 Jason Circle Apt. 989,Lake Nathantown,CO,36489,US,CO,36489,new,491886,512870
+316,CUST-00316,vargassusan@example.com,297-837-7169,Reginald,Adkins,71902 Nguyen Inlet Apt. 401,Mckaybury,CA,64452,US,CA,64452,vip,444341,412096
+317,CUST-00317,tanderson@example.net,+1-748-598-6867x1121,Karen,Richards,45573 Michele Ford Suite 863,Lake Sarahtown,FM,15711,US,FM,15711,vip,432205,235342
+318,CUST-00318,yorkapril@example.com,588-871-2461x221,James,Thomas,666 Gloria Stream,Lake Wendybury,VA,20760,US,VA,20760,new,572127,730325
+319,CUST-00319,mcmahonjohn@example.com,(958)923-5101x356,Brandon,Johnson,48732 Kayla Forks Suite 779,Owensview,DC,30814,US,DC,30814,churn_risk,581114,969748
+320,CUST-00320,fcervantes@example.org,(430)853-7699,Patrick,Burke,6922 Gillespie Springs Suite 791,Willishaven,WY,83504,US,WY,83504,churn_risk,483213,444884
+321,CUST-00321,peggy97@example.org,001-236-945-9172x180,Katherine,Martinez,4128 Stevens Mountain Apt. 858,Gomezport,ND,36065,CA,ND,36065,repeat,471170,357445
+322,CUST-00322,jesse09@example.org,(335)229-4371x2538,Alexis,Jackson,137 Wells Mills,Leonardton,CT,91715,US,CT,91715,vip,528731,749555
+323,CUST-00323,deborahperry@example.com,506.447.6140,Brian,Moss,734 Randall Island,Lake Kelly,DC,97103,US,DC,97103,new,514205,167504
+324,CUST-00324,hayesamy@example.org,594-743-5550x3163,Luke,Reynolds,778 Ferguson Mall,East Jeffreystad,OK,84822,US,OK,84822,vip,470047,129808
+325,CUST-00325,tracypadilla@example.org,(652)551-7823x2999,Pamela,Christensen,300 Jody Skyway Suite 579,Sharpborough,ND,96362,CA,ND,96362,churn_risk,424973,595894
+326,CUST-00326,matthew92@example.net,874.400.2179x5512,Ricky,Parker,59979 Wise Mission,West Robinfort,PW,17648,US,PW,17648,new,445288,138503
+327,CUST-00327,johnsonwilliam@example.org,+1-202-383-8823,Kylie,Hoffman,133 David Turnpike,East Adam,AK,64907,US,AK,64907,new,441312,248847
+328,CUST-00328,hbaker@example.net,775.363.3798,Deborah,Rodriguez,859 John Inlet,Shaunfurt,GA,12965,US,GA,12965,repeat,447104,494785
+329,CUST-00329,nschmidt@example.org,968-793-9852,Anthony,Taylor,696 Zavala Squares Suite 886,Zimmermanton,MI,75281,US,MI,75281,repeat,486264,946102
+330,CUST-00330,wagnerjoanna@example.com,(837)997-0884,Colton,Adams,133 Frost Viaduct Suite 963,South Rebeccaland,CO,25917,US,CO,25917,vip,574503,904366
+331,CUST-00331,ibarraangelica@example.com,(682)348-9797x5114,Jonathan,Warren,492 Matthew Groves,East Alexisport,VA,80586,CA,VA,80586,vip,554857,319438
+332,CUST-00332,browncarolyn@example.org,001-603-349-9038x84925,Sarah,Gill,295 Shaffer Square,Huertafort,DE,66028,US,DE,66028,repeat,442486,970937
+333,CUST-00333,jasonmerritt@example.org,(598)941-4072,Sandra,Ramsey,29346 Brooke Vista,Seanbury,CT,54911,US,CT,54911,repeat,431694,725066
+334,CUST-00334,maryrush@example.net,+1-984-805-2008x6596,John,Moore,18282 Spencer Row Suite 732,Natalieport,AS,66178,US,AS,66178,new,579907,268798
+335,CUST-00335,travis97@example.net,336.288.7024,Tyler,Harrell,687 Cindy Alley,North Robert,DE,14944,US,DE,14944,vip,525707,614711
+336,CUST-00336,susan74@example.com,001-484-912-6559x08575,Christine,Ford,31906 John Gateway,North Robert,LA,57996,US,LA,57996,churn_risk,579804,714700
+337,CUST-00337,mkeller@example.net,+1-419-637-1652x723,Melissa,Williams,13866 Garcia Loaf Apt. 015,Lake Kylefort,AZ,35959,US,AZ,35959,vip,495463,820255
+338,CUST-00338,linda37@example.com,663-931-0872x03852,Maria,Olson,9760 Lee Curve,Contrerasport,NE,75365,CA,NE,75365,repeat,549943,873998
+339,CUST-00339,jmorgan@example.org,8683019567,Tyler,Perry,95022 Ayala Skyway Suite 810,South Jamesside,CO,19642,US,CO,19642,repeat,521143,524296
+340,CUST-00340,bsmith@example.com,359-262-2759,Brandon,Gill,271 Munoz Causeway,Justinland,ME,63256,US,ME,63256,new,546378,605322
+341,CUST-00341,thompsonmario@example.org,+1-972-774-7661,Jennifer,Andrade,718 Anderson Port Apt. 051,Emilyside,WI,51305,US,WI,51305,repeat,565773,415041
+342,CUST-00342,ryanmack@example.org,(339)939-1564x337,Chad,Pearson,8238 Alexander Meadows Suite 303,East Johnfurt,NV,04316,US,NV,04316,vip,400892,516585
+343,CUST-00343,tonybarnes@example.com,845-664-4891x0758,William,Williams,7496 Lang Springs,Port Ellen,AL,63888,US,AL,63888,vip,497928,799598
+344,CUST-00344,qmartinez@example.org,784-578-6329,Julie,Tapia,122 Anderson Island Suite 896,Pachecoshire,VT,94151,US,VT,94151,churn_risk,596706,428809
+345,CUST-00345,lmelton@example.com,+1-251-405-2509x2274,Cole,Cherry,94808 Edward Orchard Suite 021,Jillshire,ME,56922,CA,ME,56922,repeat,525651,623608
+346,CUST-00346,samuel14@example.net,700-215-4125,Andrew,Reynolds,19468 Carroll Ports,Vaughnview,IN,83250,US,IN,83250,churn_risk,516590,381422
+347,CUST-00347,janewilliams@example.net,324-680-8794x41773,Phyllis,Cobb,030 Harris Mission Apt. 718,Petersonview,VA,60836,CA,VA,60836,churn_risk,578069,682636
+348,CUST-00348,lawrence60@example.com,(644)843-7983x722,Nicole,Ryan,4726 Davila Land,Lawsonborough,NH,72630,US,NH,72630,new,443815,578750
+349,CUST-00349,mendezsteven@example.com,745-222-9628,Donald,Holland,480 Gregory Cliffs Apt. 922,South Triciaborough,WV,69513,US,WV,69513,repeat,427624,306732
+350,CUST-00350,caseyhall@example.net,7114677951,Marilyn,Turner,60730 Gibson Manors,Port Christina,NJ,89013,US,NJ,89013,new,591399,463389
+351,CUST-00351,orozcoregina@example.net,001-739-547-8592x4884,Paul,Clark,42886 Adam Unions Apt. 603,Robertton,UT,14602,US,UT,14602,vip,400944,789967
+352,CUST-00352,kgarcia@example.com,673.823.6439x8329,Jennifer,Campbell,24663 Jermaine Manor,New Lisa,DE,08973,US,DE,08973,churn_risk,546844,652628
+353,CUST-00353,vpoole@example.org,(821)442-4899x9871,Kimberly,Mendoza,9150 Daniel Canyon,Yvetteton,NE,09659,US,NE,09659,vip,570554,939472
+354,CUST-00354,ascott@example.org,310-812-8959,Steven,Mcintosh,807 Chelsey River Suite 814,South Cassandra,ID,42931,US,ID,42931,churn_risk,509593,919356
+355,CUST-00355,michelle90@example.com,(707)657-9951,Austin,Perez,3990 Jason Street,New Amanda,CT,85730,US,CT,85730,churn_risk,574515,422648
+356,CUST-00356,aguirreamanda@example.org,233-389-1289x1008,Joel,Cook,7958 Michael Drive Suite 672,Alvarezstad,WA,86430,US,WA,86430,repeat,563086,985055
+357,CUST-00357,gsoto@example.com,+1-404-853-1296x19773,Teresa,Montoya,15901 Andersen Trail,Taylorfort,ME,16865,CA,ME,16865,new,422139,648317
+358,CUST-00358,mperry@example.org,+1-257-441-8450x349,Melissa,Williams,042 Larry Well,Oliviaport,FM,84207,US,FM,84207,vip,498054,874817
+359,CUST-00359,adam98@example.net,+1-277-962-7666x38391,John,Vargas,09059 Herrera Ville,Port Michaelville,UT,88449,US,UT,88449,churn_risk,401220,560754
+360,CUST-00360,jennifer45@example.org,+1-518-493-5985x95111,Kelly,Smith,657 Ford Falls Suite 692,Johnnytown,IA,85593,CA,IA,85593,new,567771,772019
+361,CUST-00361,ravenmoss@example.net,+1-515-614-0646x104,Carla,Brown,9467 Lewis View Suite 144,Gutierrezview,NE,93118,US,NE,93118,vip,581197,564875
+362,CUST-00362,baileycaleb@example.org,778.705.6565x670,Susan,Hill,499 Jody Ville Suite 124,South Jeffreyport,AZ,52581,US,AZ,52581,vip,578195,661185
+363,CUST-00363,aaronhoward@example.com,618-691-8382x111,Angela,Vargas,72204 James Heights Suite 017,Port Tammieberg,MN,31748,US,MN,31748,vip,536038,771387
+364,CUST-00364,jermaine67@example.net,001-392-323-9459x11908,Connie,Marquez,8688 Young Village,North Jademouth,KY,37249,US,KY,37249,new,469104,338401
+365,CUST-00365,marierice@example.com,868-363-1708,Francisco,Hawkins,59053 Mark Flat Apt. 100,Jeremiahchester,VA,10684,US,VA,10684,vip,452232,432100
+366,CUST-00366,williamsingh@example.org,221.659.1044x406,Melissa,Mclaughlin,80359 Mcconnell Crest,East Joseph,MS,74057,US,MS,74057,new,472655,392297
+367,CUST-00367,palmerryan@example.com,(733)812-6851x282,Gavin,Sanders,162 Lawrence Knolls,Josephview,NM,80878,US,NM,80878,new,459031,880563
+368,CUST-00368,daniel17@example.net,001-744-294-8716x063,Amanda,Rodriguez,0022 Lee Forks Suite 479,Lake Jacob,FL,76677,US,FL,76677,vip,431860,759388
+369,CUST-00369,scotthunt@example.com,+1-330-705-4937x091,Natalie,Smith,948 Mitchell Plain,New Sherryshire,ND,27975,US,ND,27975,repeat,484398,395461
+370,CUST-00370,dawsonchelsea@example.net,227.422.6543x035,Edward,Francis,387 Stewart Flat Suite 002,Grantton,NM,81555,CA,NM,81555,new,466821,775576
+371,CUST-00371,katelyn87@example.org,556.680.0309x3144,Jesse,Khan,82061 Katherine Summit Suite 489,Tammybury,LA,23951,US,LA,23951,new,589760,706143
+372,CUST-00372,lynchapril@example.com,001-693-401-8767,Jack,Palmer,0276 Allen Lakes Apt. 453,East Melissamouth,KS,87662,US,KS,87662,churn_risk,562813,635791
+373,CUST-00373,clarkchristina@example.org,+1-337-485-1380x41788,Alejandro,Spence,05210 Carter Knolls,North Michaelmouth,UT,34914,US,UT,34914,vip,597155,253345
+374,CUST-00374,robertsontaylor@example.com,001-331-536-0701x2647,Robert,Webb,76078 Park Shore,Sarahside,AR,92179,US,AR,92179,churn_risk,429178,328596
+375,CUST-00375,wendymoore@example.com,001-746-403-9535,Alvin,Fisher,11024 Benjamin Groves,Lisaberg,OH,58961,US,OH,58961,vip,412999,288541
+376,CUST-00376,richard20@example.org,+1-693-428-3503x9667,Tony,Montgomery,3095 Alexis Fork Suite 092,Myersburgh,MP,34201,US,MP,34201,repeat,564411,984089
+377,CUST-00377,agriffin@example.org,8796077515,Sara,Hernandez,623 Savannah Squares Apt. 665,Sandraborough,MI,13771,US,MI,13771,repeat,586301,562016
+378,CUST-00378,pglenn@example.net,560-463-3839,Terri,Smith,9520 Samantha Manors Suite 605,Anitaland,HI,36397,US,HI,36397,churn_risk,547884,579455
+379,CUST-00379,jill23@example.com,(658)547-8088x0288,Joshua,Stein,7652 Stout Fork Suite 716,East Lukeville,MA,17189,US,MA,17189,repeat,598760,363504
+380,CUST-00380,ryanbennett@example.com,001-339-717-8421x3062,Barbara,Miller,2982 Angela Mountains,South Abigail,VT,42753,US,VT,42753,new,458296,849840
+381,CUST-00381,griffincharles@example.net,001-593-267-3172x089,Joseph,Cummings,347 Martinez Avenue Apt. 377,South Barbara,FM,11024,US,FM,11024,repeat,597134,864048
+382,CUST-00382,antoniohaley@example.net,956-867-0358x9616,Mark,Allen,55390 Robinson Loaf,Marialand,MS,98850,US,MS,98850,vip,487625,788964
+383,CUST-00383,jenniferpatrick@example.org,534.474.7316x8846,Scott,Bush,4284 Jacob Summit Apt. 619,New Sherrymouth,AZ,29745,US,AZ,29745,vip,578908,714085
+384,CUST-00384,dhutchinson@example.com,+1-973-299-5869x842,Rachel,Pittman,116 Derek Way,East Chaseton,HI,47515,US,HI,47515,repeat,449877,874509
+385,CUST-00385,leederek@example.com,001-423-950-3304x8864,Peter,Morgan,44761 Monica Plains,Port Alexton,SD,98311,CA,SD,98311,vip,406094,682478
+386,CUST-00386,blong@example.com,702-425-4573x738,Robert,Garcia,5386 Melissa Parkway,West Matthew,MP,60845,US,MP,60845,repeat,540270,156572
+387,CUST-00387,morrowcraig@example.net,001-280-243-2195x84066,Kevin,Blake,278 Ramsey Harbors Suite 174,Evansville,AK,55965,US,AK,55965,vip,549548,281484
+388,CUST-00388,mckenziehanson@example.org,(734)664-1734x4525,Gary,Lewis,5321 Amber Field,North Tony,PA,56595,US,PA,56595,new,432525,677767
+389,CUST-00389,fosterchristopher@example.net,705-609-0803x34300,Denise,Valencia,635 Evans Expressway,Royshire,OK,81761,US,OK,81761,vip,500911,358360
+390,CUST-00390,ashley18@example.org,+1-543-329-0361x3739,Ryan,Perez,752 Olsen Dam Apt. 220,East Gary,NE,50781,US,NE,50781,repeat,568765,665786
+391,CUST-00391,joseph15@example.com,542-663-8059x531,Jeremy,Gonzalez,92800 Palmer Street Suite 849,Port Sierramouth,SC,16371,US,SC,16371,new,516020,143020
+392,CUST-00392,lewisdaniel@example.net,+1-737-323-3021,Aaron,Fitzpatrick,519 Robertson Field,Michelleberg,NC,87355,US,NC,87355,churn_risk,561702,179752
+393,CUST-00393,muellernathaniel@example.org,+1-612-902-6073,Patrick,Pollard,87057 Scott View,Port Emilyland,TX,54368,US,TX,54368,churn_risk,546790,652533
+394,CUST-00394,barrybenitez@example.net,(663)255-5749x33291,John,Hardy,762 Walton Extensions Suite 779,Lake Paulton,NJ,48994,US,NJ,48994,repeat,593776,716337
+395,CUST-00395,uphillips@example.com,409.208.1595x86177,Kristen,Green,8131 Brown Harbors Suite 449,West Dawn,MN,47650,US,MN,47650,new,515460,146564
+396,CUST-00396,fwoods@example.net,905-219-8678,Leon,Steele,301 Frank Mountains Suite 956,Hoffmanville,FL,79156,US,FL,79156,vip,496220,130561
+397,CUST-00397,ameyer@example.net,001-811-928-8965x9186,Vicki,Davis,048 Hamilton Village Suite 793,Tranview,CT,91684,US,CT,91684,vip,510030,787796
+398,CUST-00398,james13@example.org,556.512.5443x0487,Casey,Murphy,293 Melissa Parkways,Lake Annport,PR,59511,US,PR,59511,churn_risk,497515,372289
+399,CUST-00399,mary74@example.org,(451)522-7960,Daniel,Murillo,7567 Brown Cliff Suite 552,New Bridgetport,PR,98939,US,PR,98939,repeat,535029,948325
+400,CUST-00400,scottbarbara@example.org,(291)273-9426,Margaret,Graham,929 Yvette Village Suite 493,Hortonfurt,IA,45318,US,IA,45318,repeat,476356,367767
+401,CUST-00401,nicole21@example.com,+1-329-711-6251x792,Joe,Estrada,636 Ann Alley Suite 670,Fergusonside,CO,15127,CA,CO,15127,new,542711,369675
+402,CUST-00402,paulcarroll@example.org,5363741720,Lauren,Hensley,42180 Garcia Pass,Graytown,AR,54360,US,AR,54360,new,441272,886304
+403,CUST-00403,haley18@example.org,+1-793-398-1286x44144,Lisa,Martin,634 Cook Place,West Louis,OR,26935,US,OR,26935,vip,479445,504631
+404,CUST-00404,wolfekaitlin@example.org,339.203.9860x47328,Joshua,Booker,65246 Cheryl Flat Suite 902,Kimberlyport,WI,03553,US,WI,03553,repeat,571677,169083
+405,CUST-00405,tiffanynash@example.com,(394)228-8758x7287,Teresa,Lee,7622 Morris Inlet Apt. 760,Mackhaven,KS,91386,US,KS,91386,churn_risk,463934,546997
+406,CUST-00406,matthewmartin@example.net,859-733-1492,Dawn,Lee,046 Zachary Plaza,Chanhaven,LA,67414,US,LA,67414,repeat,529988,250852
+407,CUST-00407,lisadaniels@example.org,001-743-451-6327x01473,Andrew,Boyer,785 Ryan Well,North Sarah,CO,84967,US,CO,84967,churn_risk,416247,293731
+408,CUST-00408,robertwells@example.org,+1-850-325-1999,Kristine,Marsh,16009 Rhonda Rest,Wilkinsonstad,AL,10694,US,AL,10694,new,572383,369261
+409,CUST-00409,michael50@example.com,(440)318-6024x5844,David,Foster,87129 Courtney Ridge,Jamesfort,NE,66944,US,NE,66944,repeat,408653,786067
+410,CUST-00410,matthewmoore@example.org,442.599.7187x63371,Jeff,Rodriguez,722 Taylor Islands,East Veronica,DC,88898,US,DC,88898,vip,567570,127352
+411,CUST-00411,jonesbryan@example.com,(816)354-4121,Christy,Bryan,1278 Logan Drive Apt. 562,Ashleymouth,PA,01627,US,PA,01627,new,433945,541139
+412,CUST-00412,suzanne14@example.org,001-206-652-8361x0637,Carrie,Turner,61508 Mercer Ridge Apt. 549,Hollandton,RI,09015,CA,RI,09015,churn_risk,571272,528600
+413,CUST-00413,xgarcia@example.com,(347)468-4829x2264,Patrick,Harris,310 Jacob Bridge,Whiteview,MT,76743,US,MT,76743,repeat,439646,564819
+414,CUST-00414,xhernandez@example.org,(584)622-2050x444,Anna,Blanchard,6386 Navarro Branch Apt. 935,Rothborough,AR,01056,CA,AR,01056,new,529398,935887
+415,CUST-00415,marcdunn@example.com,4657581211,Bryan,Mullen,041 Kelly Greens,Michaelside,MP,97071,US,MP,97071,churn_risk,532311,535711
+416,CUST-00416,carrgina@example.org,449-293-8562x412,Erik,Gordon,42781 Jones Loop Suite 155,Lake Michael,OH,53549,US,OH,53549,vip,549884,264270
+417,CUST-00417,lancesimmons@example.com,(847)278-7707x596,Tanya,Clements,5128 David Radial Suite 386,Rosalesburgh,DE,09349,CA,DE,09349,repeat,437454,743335
+418,CUST-00418,alejandrocross@example.org,524-950-4288x745,Michael,Gomez,5264 Jamie Coves,Sandovaltown,MP,60990,US,MP,60990,new,440938,687291
+419,CUST-00419,dturner@example.com,6388807494,Amy,Ray,8281 Parker Mall,Port Josephhaven,IN,80793,CA,IN,80793,churn_risk,411191,879969
+420,CUST-00420,wudavid@example.com,(522)897-2285x728,Sharon,Erickson,820 Aaron Mount,West Timothy,IA,73849,US,IA,73849,new,410572,368475
+421,CUST-00421,cameronbennett@example.net,(290)825-3315x3300,Matthew,Friedman,8634 Kenneth Ranch,Olivershire,NH,81667,US,NH,81667,repeat,403314,365048
+422,CUST-00422,elizabethfischer@example.com,+1-853-336-7735x43056,Jessica,Palmer,63442 Allison Street Apt. 953,Brianfort,RI,29397,US,RI,29397,new,427452,741703
+423,CUST-00423,melvinrogers@example.org,814.563.9868,Lisa,Barton,2352 Cory Parkways Suite 488,Thomasburgh,NE,63576,US,NE,63576,repeat,583866,469949
+424,CUST-00424,robertwilson@example.net,+1-286-438-2311x67908,John,Warner,816 Clarence Springs Suite 782,Johnsonchester,MS,12130,US,MS,12130,repeat,436889,311016
+425,CUST-00425,ywilliams@example.net,(207)975-4346,Thomas,Taylor,043 Ellis Bridge,Danielborough,TN,57100,CA,TN,57100,new,508173,932942
+426,CUST-00426,jefferyhenderson@example.org,(880)482-0177,Heidi,Harris,52005 Reese Oval,East Dennisstad,NJ,69874,US,NJ,69874,vip,514951,217024
+427,CUST-00427,nicoleroach@example.org,882-988-7102x720,Yolanda,Valencia,81533 Larry Shoal Apt. 060,Erinview,TX,07482,US,TX,07482,churn_risk,497853,396409
+428,CUST-00428,karenmoore@example.net,(640)953-8894,Kara,Webb,37127 Lisa Knolls,Heatherview,MO,83334,US,MO,83334,repeat,565888,191590
+429,CUST-00429,pschultz@example.net,001-824-937-7433x48353,Laura,Frye,75109 George Island Apt. 547,Matthewmouth,OH,60039,US,OH,60039,repeat,566471,570690
+430,CUST-00430,kyoung@example.org,655.882.7866x287,Samantha,Robertson,98988 Grant Tunnel Suite 734,Amandastad,CT,92132,US,CT,92132,new,590370,465796
+431,CUST-00431,uholmes@example.net,786-918-1782x039,Juan,Anderson,7697 Ross Tunnel Apt. 399,West Vanessafort,WI,08166,US,WI,08166,churn_risk,545906,599176
+432,CUST-00432,davidgregory@example.net,564-653-3778,Danielle,Smith,0176 Chapman Keys,Port Richardton,WV,58154,US,WV,58154,vip,554940,193709
+433,CUST-00433,ariel37@example.org,228.934.4140,Maureen,Lewis,75760 Smith Road,Port Joseph,UT,63246,CA,UT,63246,churn_risk,518076,840726
+434,CUST-00434,snyderjon@example.com,6979578518,Amber,Hill,82792 Austin Canyon Suite 237,Barberview,CO,90368,US,CO,90368,vip,403243,382971
+435,CUST-00435,gmcconnell@example.org,+1-274-797-1695,Marvin,Parker,7375 Johnson Mission,Joshuastad,DE,44972,US,DE,44972,repeat,445080,232954
+436,CUST-00436,courtney03@example.net,270-222-7986x0231,Anthony,Gomez,981 Vazquez Inlet,Port Andrewville,AZ,66449,US,AZ,66449,churn_risk,473913,966277
+437,CUST-00437,paulmiguel@example.net,2696075365,Brian,Carter,97765 Melissa Glen,Scottside,MN,99865,US,MN,99865,vip,597950,829372
+438,CUST-00438,jared35@example.net,(916)810-4257,Timothy,Taylor,6446 Harris Pine,West Kenneth,NC,97701,US,NC,97701,churn_risk,509158,928111
+439,CUST-00439,jgill@example.com,325.322.5947,Jennifer,Walker,83461 Steven Prairie,Caseytown,TN,65286,US,TN,65286,vip,410274,491513
+440,CUST-00440,richard60@example.org,(510)711-3524,Traci,White,8830 Owens Streets,Wallerchester,CO,31921,US,CO,31921,vip,598801,638120
+441,CUST-00441,thomasjay@example.net,9874506258,Kyle,Woods,982 Robert Ridge,Aguilarview,NY,59085,US,NY,59085,churn_risk,521076,490519
+442,CUST-00442,tanya01@example.org,6227285602,Andrew,Kelly,9229 Olson Lights,Jasontown,IL,02426,US,IL,02426,new,475036,950956
+443,CUST-00443,sarahmorales@example.org,3268284344,Catherine,Simon,844 Danielle Ramp,Toddshire,IL,23710,US,IL,23710,repeat,564483,451706
+444,CUST-00444,david75@example.com,001-266-228-7434x843,Christine,Stephens,3022 Sarah Overpass,New Christopher,KY,68227,US,KY,68227,vip,571029,446135
+445,CUST-00445,robertterry@example.org,910.709.8697x069,Vanessa,Haas,5932 Mclaughlin Shoals Suite 640,North Timothyshire,NC,54833,US,NC,54833,churn_risk,538801,453545
+446,CUST-00446,ktaylor@example.com,(225)810-9960x790,Aaron,Edwards,460 Michael View,Port Maria,KY,59330,US,KY,59330,new,534861,230914
+447,CUST-00447,lauraedwards@example.com,859-351-3694x97958,Jeff,Griffin,6727 Duncan Mountains,Smithland,KS,87787,CA,KS,87787,churn_risk,535978,727302
+448,CUST-00448,taylor99@example.net,001-721-823-9757x45495,John,Rivera,677 Caldwell Lock,New Sharon,ND,99667,US,ND,99667,vip,591027,232165
+449,CUST-00449,pnelson@example.com,977-971-5383x247,Stephanie,Durham,7505 Cantu Manor,Bushborough,MO,75841,US,MO,75841,vip,520030,697032
+450,CUST-00450,bradshawcraig@example.net,9493613656,Michael,Hawkins,69014 Walker Junctions Suite 254,Vasquezton,IA,76059,US,IA,76059,new,495505,849034
+451,CUST-00451,wallteresa@example.com,+1-929-848-9671x71873,Ryan,Mccoy,2982 Ryan Forges Apt. 112,North Jessica,AL,27554,US,AL,27554,new,510769,303380
+452,CUST-00452,hannahpace@example.org,974.340.1802,Michael,Wright,33767 Henry Unions,Lake Joseph,NH,24924,US,NH,24924,repeat,407160,757650
+453,CUST-00453,robertlutz@example.net,(207)547-1508x9625,Kimberly,Wright,5004 Christy Valley Suite 275,Petermouth,WY,26188,US,WY,26188,churn_risk,544902,363275
+454,CUST-00454,johnramirez@example.com,653-299-3568,Whitney,Walker,8865 Chapman Lights Suite 589,Williamsfort,GU,06021,US,GU,06021,new,440744,677552
+455,CUST-00455,sthornton@example.com,001-940-476-4474x760,Jose,Martin,513 Miller Oval,Port Maryshire,DE,72561,US,DE,72561,new,540799,812211
+456,CUST-00456,browningdestiny@example.org,(786)426-2211x71251,Carl,Gonzales,3162 Ballard Valley Suite 656,Tiffanychester,MD,07760,US,MD,07760,new,598697,607827
+457,CUST-00457,millsmary@example.org,771.561.7003x549,John,May,7395 Diaz Tunnel,Hallhaven,MO,47164,CA,MO,47164,vip,441200,109495
+458,CUST-00458,nancy93@example.net,480.899.8618x551,Jacob,Kelley,1998 Cheyenne Plain Apt. 431,Codyburgh,KY,03453,US,KY,03453,new,568813,905658
+459,CUST-00459,gabrielle46@example.com,224-989-6780x46381,Brittney,Johnson,071 Montgomery Motorway,West Sandrabury,VA,73695,US,VA,73695,vip,474073,300049
+460,CUST-00460,youngrobert@example.org,(259)532-9138x403,Joseph,Bradley,72734 Miller Hills Suite 320,Lake Lauren,PW,34674,CA,PW,34674,repeat,580439,180743
+461,CUST-00461,bdaniels@example.com,735.943.8954x173,Michelle,Bailey,0295 Graham Street Suite 471,West Dakotachester,TX,89137,US,TX,89137,new,566747,189107
+462,CUST-00462,bridget42@example.org,906.341.1645x7846,Andrew,Schroeder,65077 Gordon Rapid,Abigailton,NM,35646,CA,NM,35646,new,561993,240036
+463,CUST-00463,lsantos@example.org,708.697.1075x2879,Andrea,Deleon,085 Obrien Avenue Apt. 788,Andersonberg,OR,40829,US,OR,40829,vip,586678,828385
+464,CUST-00464,williambell@example.com,708-445-8022x600,Robin,Ramirez,9320 Brooks Hollow Apt. 647,Holmesstad,PW,53581,US,PW,53581,churn_risk,531771,121302
+465,CUST-00465,paulshaffer@example.net,001-974-666-8012x8976,Matthew,Chapman,266 Jacobson Shoals Apt. 510,Zamorahaven,TX,46467,CA,TX,46467,vip,426366,382244
+466,CUST-00466,anthony06@example.com,981-337-2843,Rachel,Williams,93913 Gomez Port Suite 102,Amytown,OK,73774,US,OK,73774,churn_risk,564934,189555
+467,CUST-00467,jmerritt@example.com,756.427.1742x7746,Kristen,Castillo,913 Robert Bypass,Morenoside,ME,73278,US,ME,73278,vip,492454,928593
+468,CUST-00468,taylorelizabeth@example.org,301.919.7257x9805,Timothy,Alexander,98496 Curtis Roads,Port Michael,SC,09732,US,SC,09732,new,467323,358608
+469,CUST-00469,andrewsgrace@example.net,(649)375-5833,Kaitlyn,Robinson,875 Mary Expressway Apt. 298,North Lisa,MS,79571,CA,MS,79571,churn_risk,529476,284408
+470,CUST-00470,taylorrichard@example.org,+1-531-907-8740x89531,Rachel,Smith,9355 Susan Road Apt. 255,Michellefurt,MI,81372,US,MI,81372,vip,432704,642541
+471,CUST-00471,annette56@example.com,001-235-932-7870x2358,Veronica,Butler,57383 Day Skyway,Jefferyburgh,NE,41924,US,NE,41924,repeat,417992,894734
+472,CUST-00472,zbrown@example.com,001-954-226-5986x1143,Karen,Clayton,0214 Willie Highway,Lewistown,NV,82637,US,NV,82637,new,424678,637266
+473,CUST-00473,triciarandall@example.net,+1-378-932-0600x52473,Holly,Mccormick,1910 Burns Summit,South Shannonshire,KY,34926,US,KY,34926,new,553792,639345
+474,CUST-00474,mirandasara@example.org,001-788-642-5180x2012,Allison,Mercado,83457 Brandon Pike,Morrisonshire,CT,15129,US,CT,15129,new,444199,750029
+475,CUST-00475,harpercharlene@example.org,+1-932-755-8083x41763,Steven,Kelley,0372 Thomas Point Suite 751,New Timothy,GA,13066,US,GA,13066,vip,564710,656371
+476,CUST-00476,valeriejones@example.com,001-557-831-9430,Jennifer,Guzman,435 Carroll Valleys Apt. 152,East Nathanmouth,KS,72399,US,KS,72399,repeat,559262,542859
+477,CUST-00477,andersonkevin@example.com,5094212392,Mary,Davis,08947 Smith Springs Apt. 359,North Amy,AS,13473,US,AS,13473,repeat,525149,172282
+478,CUST-00478,robertstanley@example.net,393.208.8231x13116,Meghan,Armstrong,481 White Brooks Apt. 930,New Andreastad,NE,99314,US,NE,99314,vip,483912,168246
+479,CUST-00479,danielwilliamson@example.net,+1-967-891-4501x481,David,Finley,751 Cameron Springs,East Wendyview,NY,97946,CA,NY,97946,repeat,472469,784739
+480,CUST-00480,vincentschneider@example.org,+1-859-866-9990,Brittany,Davenport,4707 Jason Valley,Luiston,TN,48788,US,TN,48788,churn_risk,588337,738467
+481,CUST-00481,rhondaoconnell@example.com,(760)486-7952,Julie,Logan,5168 Holmes Plain,Allenhaven,WY,61418,US,WY,61418,new,598958,488147
+482,CUST-00482,igomez@example.org,201-960-6977x1653,Bill,Johns,512 King Junction Suite 279,Robertsstad,MO,40204,US,MO,40204,new,467556,409683
+483,CUST-00483,slee@example.com,+1-856-328-3588x1341,Matthew,Brown,303 Turner Circles Apt. 994,Austinfurt,AZ,02582,US,AZ,02582,vip,553772,659815
+484,CUST-00484,johntran@example.net,+1-521-564-0602,Andrea,Moore,09602 Oconnell Village,Port Kimberly,RI,25232,US,RI,25232,new,564977,437916
+485,CUST-00485,phillipwoodard@example.org,(904)826-9974x07765,Michael,Flowers,16140 Kevin Stream Suite 425,New Brian,MI,62399,US,MI,62399,new,566506,549257
+486,CUST-00486,sean17@example.net,940-452-8879x8316,Ashley,Horton,22322 Kelly Cove Suite 504,East Nicoleville,WV,03778,US,WV,03778,churn_risk,486726,884122
+487,CUST-00487,yolandavaldez@example.org,756-984-6334x70632,Claudia,Martinez,13157 Bonnie Isle,Juliamouth,WY,89974,US,WY,89974,churn_risk,420040,843203
+488,CUST-00488,bradleyhunt@example.org,+1-352-461-1270x37618,Brett,Martin,14107 Deborah Ports Apt. 889,East Melissatown,PW,28344,US,PW,28344,churn_risk,505311,105307
+489,CUST-00489,ylyons@example.com,269-263-3330x2689,Morgan,Jones,141 Jonathan Street,Jillianchester,GA,03551,US,GA,03551,new,457946,734370
+490,CUST-00490,hamiltonallison@example.net,656.729.8404,Heather,Mack,132 Santana Hill,East Robertburgh,NJ,94887,US,NJ,94887,churn_risk,400854,820389
+491,CUST-00491,laurieowens@example.org,(991)780-0059x160,Erika,Odonnell,60285 Saunders Common Apt. 738,West Danielview,DC,73503,US,DC,73503,new,597584,359510
+492,CUST-00492,hmarshall@example.com,001-994-956-2031,David,Robbins,09302 Sarah Fort,East Katherinefort,GA,90233,US,GA,90233,churn_risk,528561,725436
+493,CUST-00493,christina81@example.net,+1-864-849-0015x40055,Christopher,Davis,7865 Reed Estates,Lake Philipmouth,NE,84943,US,NE,84943,vip,470590,594088
+494,CUST-00494,jonathan39@example.net,774.298.5955x6383,Cathy,Dunn,0553 David Circle Suite 004,Sueborough,TX,45147,US,TX,45147,new,404083,912450
+495,CUST-00495,hannah28@example.com,5216430397,Zachary,Williams,934 Stafford Walk Apt. 942,Cooleymouth,MD,57587,US,MD,57587,churn_risk,522021,310458
+496,CUST-00496,dennisfuller@example.net,371-285-1010,Debra,Walker,5361 Sharon Well Apt. 944,Chenview,MH,89184,US,MH,89184,vip,548373,292741
+497,CUST-00497,amanda95@example.org,001-734-464-0129x64653,Patrick,Nguyen,781 Simon Vista Apt. 920,Lawrenceland,CT,75185,US,CT,75185,new,508464,909512
+498,CUST-00498,rramirez@example.com,6643845244,Candace,Coffey,665 Keller Rapids Suite 536,Port Jillmouth,CO,19902,US,CO,19902,churn_risk,432977,182307
+499,CUST-00499,qwilson@example.net,(924)233-2624,Alan,Morris,029 Ramirez Lodge,South Monicaville,ND,80366,US,ND,80366,repeat,596531,928512
+500,CUST-00500,moraleschristina@example.org,397-641-3056,Vanessa,Reyes,43998 William Lodge Suite 599,Katherinestad,VI,22976,CA,VI,22976,repeat,584395,511367

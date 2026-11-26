@@ -5,6 +5,7 @@ import type { ImportListEntry, RetailAppClient, RunSummary } from "../../src/app
 import { focusOnMount } from "../focus";
 import { errorMessage, formatDateTime } from "../format";
 import type { DataAppHost } from "../host";
+import type { BrowseTarget } from "../navigation";
 import { RUN_KIND_LABELS, RUN_STATUS_LABELS } from "../runs/runLabels";
 import ImportCsvDialog from "./ImportCsvDialog";
 import ImportView, { type ImportViewApi } from "./ImportView";
@@ -14,6 +15,9 @@ export type ImportsApi = ImportViewApi &
   RunReportApi &
   Pick<RetailAppClient, "getOverview" | "listImports" | "listRuns">;
 
+/** Another panel asking to show an import or a run's report; a new `seq` opens it again. */
+export type ImportsRequest = { kind: "import" | "run"; id: number; seq: number };
+
 // `returned`: the list was reached with Back, so its heading takes focus (not on first show, where
 // focus stays on the tab).
 type View =
@@ -21,15 +25,29 @@ type View =
   | { kind: "import"; importId: number }
   | { kind: "run"; runId: number };
 
+function requestedView(request: ImportsRequest | undefined): View {
+  if (!request) return { kind: "list", returned: false };
+  return request.kind === "import" ? { kind: "import", importId: request.id } : { kind: "run", runId: request.id };
+}
+
 /** The Imports tab: staged imports and recent runs, the import flow and run reports (US2). */
 const ImportsPage = ({
   api,
   host,
+  request,
+  onBrowse,
 }: {
   api: ImportsApi;
   host: Pick<DataAppHost, "openPrompt" | "pickTenantFiles">;
+  request?: ImportsRequest;
+  onBrowse: (target: BrowseTarget) => void;
 }) => {
-  const [view, setView] = useState<View>({ kind: "list", returned: false });
+  const [view, setView] = useState<View>(() => requestedView(request));
+  const [requestSeq, setRequestSeq] = useState(request?.seq);
+  if (request && request.seq !== requestSeq) {
+    setRequestSeq(request.seq);
+    setView(requestedView(request));
+  }
   const showList = () => setView({ kind: "list", returned: true });
   const openImport = (importId: number) => setView({ kind: "import", importId });
   const openRun = (runId: number) => setView({ kind: "run", runId });
@@ -48,7 +66,7 @@ const ImportsPage = ({
     );
   }
   if (view.kind === "run") {
-    return <RunReport key={view.runId} api={api} runId={view.runId} onBack={showList} />;
+    return <RunReport key={view.runId} api={api} runId={view.runId} onBack={showList} onBrowse={onBrowse} />;
   }
   return (
     <ImportsList

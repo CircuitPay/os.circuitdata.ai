@@ -758,6 +758,11 @@ const VIEWS = [
  */
 export const SCHEMA_MIGRATIONS: readonly string[][] = [
   [TABLES, ...VIEWS],
+  // Spec 008: browsing narrows by the run that last wrote a row and by its source.
+  ["orders", "line_items", "transactions", "products", "customers", "locations", "inventory"].flatMap(table => [
+    `CREATE INDEX store_${table}_run ON store_${table} (run_id)`,
+    `CREATE INDEX store_${table}_source ON store_${table} (source_id)`,
+  ]),
 ];
 
 /** The schema version the code expects. */

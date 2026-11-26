@@ -111,7 +111,7 @@ const DEFAULT_MARK = "default:";
 const FILTER_NAMES: FilterName[] = ["dateRange", "locations"];
 
 const READ_ONLY = "This is a read-only copy of the dashboard.";
-const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const DATA_EMPTY = "No sales data yet. Import a CSV or connect a source in Data, then refresh.";
 const COPY_WITHOUT_DATA = "This copy was made before the dashboard had loaded any data.";
 

@@ -24,7 +24,7 @@ import {
 const OCTOBER = { from: "2025-10-01", to: "2025-10-31" };
 const SEPTEMBER = { from: "2025-09-01", to: "2025-09-30" };
 
-const OFF_TEXT = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const OFF_TEXT = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const EMPTY_TEXT = "No sales data yet. Import a CSV or connect a source in Data, then generate this report.";
 const NOT_GENERATED_TEXT = "This report has not been generated yet.";
 const STALE_TEXT = "Not in the latest edition yet. Regenerate to include it.";

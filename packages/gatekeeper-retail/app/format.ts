@@ -15,6 +15,17 @@ export function formatDateTime(iso: string): string {
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
 }
 
+/**
+ * A day in the member's locale: a calendar date "YYYY-MM-DD" (a business date) stays that day in
+ * every timezone; an ISO 8601 timestamp shows its local day.
+ */
+export function formatDate(value: string): string {
+  const calendar = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = new Date(calendar ? `${value}T00:00:00Z` : value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, calendar ? { dateStyle: "medium", timeZone: "UTC" } : { dateStyle: "medium" });
+}
+
 export function formatCount(count: number): string {
   return count.toLocaleString();
 }

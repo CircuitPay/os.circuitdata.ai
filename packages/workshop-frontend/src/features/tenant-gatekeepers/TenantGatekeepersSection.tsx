@@ -6,6 +6,7 @@ import { useAuthenticatedApi } from '../../AuthContext'
 import { SectionEyebrow } from '../../components/SectionEyebrow'
 import { logRpcFailure } from '../../rpcErrors'
 import { refreshGatekeeperApps } from '../../useGatekeeperApps'
+import { refreshDataArea } from '../data/dataArea'
 
 // The capability is wrapped, because useState would call a bare stub (every stub is callable).
 type Capability = { api: RpcStub<TenantGatekeepersApi> }
@@ -61,8 +62,9 @@ export const TenantGatekeepersSection = () => {
       if (enabled) await capability.api.disable(vendorId)
       else await capability.api.enable(vendorId)
       setGatekeepers(await capability.api.list())
-      // Its management UI's nav entry appears or disappears without a reload.
+      // Its management UI's nav entry, and the Data page, follow without a reload.
       refreshGatekeeperApps(authenticatedApi)
+      refreshDataArea(authenticatedApi)
     } catch (err) {
       console.error('Failed to change organization gatekeeper:', err)
       toasts.add({

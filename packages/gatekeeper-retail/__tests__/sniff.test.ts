@@ -111,6 +111,40 @@ describe("streaming reader", () => {
     }
   });
 
+  it("gives every record the byte offset just after it in a multi-byte encoding", async () => {
+    // Shift_JIS: 品 is 0x95 0x69 and 目 is 0x96 0xDA; ASCII is one byte.
+    const bytes = Uint8Array.from([
+      0x95, 0x69, 0x2c, 0x31, 0x0a, // 品,1
+      0x96, 0xda, 0x95, 0x69, 0x2c, 0x32, 0x0a, // 目品,2
+      0x61, 0x2c, 0x33, 0x0a, // a,3
+    ]);
+    for (const rangeBytes of [6, 1024]) {
+      const source = bytesCsvSource(bytes);
+      const ends: number[] = [];
+      const cells: string[][] = [];
+      let position = { offset: 0, row: 1 };
+      for (;;) {
+        const range = await readCsvRange(source, position, { encoding: "shift_jis", delimiter: ",", rangeBytes });
+        ends.push(...range.records.map(record => record.end));
+        cells.push(...range.records.map(record => record.cells));
+        if (range.eof) break;
+        position = range.next;
+      }
+      expect(cells).toEqual([["品", "1"], ["目品", "2"], ["a", "3"]]);
+      expect(ends).toEqual([5, 12, 16]);
+    }
+  });
+
+  it("reads a 20,000-row export in one range without slowing down as it goes", async () => {
+    const rows = Array.from({ length: 20_000 }, (_, index) => `${index},Crème brûlée ${index},2,4.50`);
+    const bytes = utf8(`id,item,qty,price\n${rows.join("\n")}\n`);
+    const { records } = await readAll(bytes, 4 * 1024 * 1024);
+    expect(records).toHaveLength(20_000);
+    expect(records.at(-1)!.end).toBe(bytes.length);
+    const tenth = records[9]!;
+    expect(new TextDecoder().decode(bytes.subarray(tenth.end))).toMatch(/^10,Crème brûlée 10,/);
+  });
+
   it("refuses an unclosed quote at the end of the file", async () => {
     const source = bytesCsvSource(utf8("a,b\n1,\"open\n"));
     await expect(readCsvRange(source, { offset: 4, row: 2 }, { encoding: "utf-8", delimiter: "," }))

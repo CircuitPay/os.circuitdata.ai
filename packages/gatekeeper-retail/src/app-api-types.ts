@@ -360,6 +360,97 @@ export type RowLineage = {
   file?: { name: string; row: number };
 };
 
+// --- Browsing (spec 008, contracts/data-app-api.md) ---
+
+/** Tables the Data area browses. */
+export type BrowseTable =
+  | "orders" | "line_items" | "transactions" | "products" | "customers" | "locations" | "inventory";
+
+/** A column as the browser shows it (same types as the binding's RetailColumn). */
+export type BrowseColumn = {
+  name: string;
+  type: "integer" | "real" | "text" | "boolean" | "json" | "timestamp" | "date" | "money";
+  /** For money: the column in the same row holding the ISO 4217 code. */
+  currencyColumn?: string;
+  personal?: boolean;
+  description?: string;
+};
+
+/** One browsable table. */
+export type BrowseTableInfo = {
+  name: BrowseTable;
+  /** "Orders", "Line items", "Payments", ... */
+  label: string;
+  description: string;
+  /** Exact row count, deleted rows excluded. */
+  rows: number;
+  /** The column date ranges filter on, or null (products, customers, locations, inventory). */
+  dateColumn: "business_date" | null;
+  /** Whether `search` applies, and what it searches, for the placeholder text. */
+  search: { columns: string[]; label: string } | null;
+  /** Columns the grid shows, in order. */
+  gridColumns: BrowseColumn[];
+};
+
+export type BrowseCatalog = {
+  tables: BrowseTableInfo[];
+  /** Earliest and latest business date with orders, or null when there are none. */
+  dateRange: { from: string; to: string } | null;
+  completeThrough: string | null;
+  personalDataMasked: boolean;
+  /** Sources rows can be narrowed to. */
+  sources: { id: number; kind: SourceKind; label: string }[];
+};
+
+export type BrowseQuery = {
+  /** 0-based row offset; a multiple of 100. Default 0. */
+  offset?: number;
+  /** Inclusive business dates "YYYY-MM-DD"; only for tables with a dateColumn. */
+  from?: string;
+  to?: string;
+  /** Rows last written by this run (an import's run id). */
+  runId?: number;
+  sourceId?: number;
+  /** Substring to find in the table's search columns; 1-100 characters. */
+  search?: string;
+};
+
+/** One row of a grid: its id, then the grid columns' values in order. */
+export type BrowseRow = { id: number; values: (string | number | boolean | null)[] };
+
+export type BrowsePage = {
+  table: BrowseTable;
+  /** The table's gridColumns. */
+  columns: BrowseColumn[];
+  /** Each row: `id` first, then the grid columns' values in order. */
+  rows: BrowseRow[];
+  offset: number;
+  /** Rows matching the query (all pages). */
+  total: number;
+  pageSize: 100;
+  /** Set when the server narrowed an unfiltered query on a large table (FR-024). */
+  narrowedTo: { from: string; to: string } | null;
+};
+
+export type RowDetail = {
+  table: BrowseTable;
+  id: number;
+  /** Every column of the public view, with its value. */
+  fields: { column: BrowseColumn; value: string | number | boolean | null }[];
+  related: {
+    table: BrowseTable;
+    /** "Line items", "Payments", "Order", "Product", ... */
+    label: string;
+    /** The related table's gridColumns. */
+    columns: BrowseColumn[];
+    rows: BrowseRow[];
+    /** True when more than 50 matched. */
+    truncated: boolean;
+  }[];
+  /** Where the row came from; null when lineage cannot be read. */
+  origin: RowLineage | null;
+};
+
 /** The Data area capability, as the app sees it. */
 export interface RetailAppClient extends RetailConnectionsClient {
   /** Sources, storage, settings and failures, with the member's live rights. */
@@ -374,6 +465,13 @@ export interface RetailAppClient extends RetailConnectionsClient {
   getCoverage(options?: { from?: string; to?: string; locationIds?: number[] }): Promise<CoverageReport>;
   /** Where one row came from. */
   getLineage(table: LineageTable, id: number): Promise<RowLineage>;
+
+  /** The browsable tables with exact row counts, the date range, and the sources to filter by. */
+  getBrowseCatalog(): Promise<BrowseCatalog>;
+  /** One page of a table's rows, newest first. Refuses an unknown table or an invalid query. */
+  browseRows(table: BrowseTable, query?: BrowseQuery): Promise<BrowsePage>;
+  /** One row with every field, its related rows and its origin. Throws "This row no longer exists." */
+  getRowDetail(table: BrowseTable, id: number): Promise<RowDetail>;
 
   /** Staged imports that are not finished, newest first. */
   listImports(): Promise<ImportListEntry[]>;

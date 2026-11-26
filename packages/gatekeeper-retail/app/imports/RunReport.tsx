@@ -1,10 +1,11 @@
 import { Badge, Banner, Button, Loader, Text } from "@cloudflare/kumo";
-import { ArrowLeft, Warning, WarningCircle } from "@phosphor-icons/react";
+import { ArrowLeft, Rows, Warning, WarningCircle } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { RetailAppClient, RunSummary } from "../../src/app-api-types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { focusOnMount } from "../focus";
 import { errorMessage, formatBytes, formatDateTime } from "../format";
+import type { BrowseTarget } from "../navigation";
 import RunCountsTable from "../runs/RunCountsTable";
 import RunProgress from "../runs/RunProgress";
 import RunRejections from "../runs/RunRejections";
@@ -15,7 +16,17 @@ import { warningMessages } from "./warnings";
 export type RunReportApi = Pick<RetailAppClient, "getRun" | "listRejections" | "cancelRun" | "undoImport">;
 
 /** A run's report: progress while it runs, then counts, warnings, rejections and undo (FR-011). */
-const RunReport = ({ api, runId, onBack }: { api: RunReportApi; runId: number; onBack: () => void }) => {
+const RunReport = ({
+  api,
+  runId,
+  onBack,
+  onBrowse,
+}: {
+  api: RunReportApi;
+  runId: number;
+  onBack: () => void;
+  onBrowse: (target: BrowseTarget) => void;
+}) => {
   const { load, refresh } = useRun(api, runId);
   const [undoRunId, setUndoRunId] = useState<number | null>(null);
   // When the undo run settles, read this run again so it shows "Undone".
@@ -59,6 +70,7 @@ const RunReport = ({ api, runId, onBack }: { api: RunReportApi; runId: number; o
           error={error}
           undo={undo.load.state === "loaded" ? undo.load.run : null}
           onCancel={() => void cancel()}
+          onBrowse={onBrowse}
           onUndo={async () => {
             setUndoRunId((await api.undoImport(runId)).undoRunId);
           }}
@@ -74,6 +86,7 @@ const Report = ({
   error,
   undo,
   onCancel,
+  onBrowse,
   onUndo,
 }: {
   api: RunReportApi;
@@ -81,9 +94,13 @@ const Report = ({
   error: string | null;
   undo: RunSummary | null;
   onCancel: () => void;
+  onBrowse: (target: BrowseTarget) => void;
   onUndo: () => Promise<void>;
 }) => {
   const active = isRunActive(run);
+  const orders = run.counts.orders;
+  // An import of items alone (no order rows written) is browsed by its line items.
+  const wroteOrders = (orders?.written ?? 0) + (orders?.updated ?? 0) > 0;
   const warnings = warningMessages(run.warnings);
   return (
     <>
@@ -136,6 +153,21 @@ const Report = ({
           Rows
         </Text>
         <RunCountsTable caption="Rows per table" counts={run.counts} />
+        {run.kind === "import" && run.status === "succeeded" && (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="secondary"
+              icon={<Rows />}
+              aria-describedby="imported-rows-note"
+              onClick={() => onBrowse({ table: wroteOrders ? "orders" : "line_items", runId: run.id })}
+            >
+              View the imported rows
+            </Button>
+            <Text variant="secondary" id="imported-rows-note">
+              Rows last written by this import.
+            </Text>
+          </div>
+        )}
       </section>
       {warnings.length > 0 && (
         <Banner

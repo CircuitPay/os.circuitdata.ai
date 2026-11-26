@@ -19,7 +19,7 @@ const LOCATION_PAUSE_MS = 400;
 
 const PERIOD = { from: "2026-10-22", to: "2026-11-20" };
 const RESOLVED = { ...PERIOD, locations: [] };
-const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on under Connectors → Data.";
+const DATA_OFF = "Retail data is not turned on for this organization. An administrator can turn it on from Data in the navigation.";
 const DATA_EMPTY = "No sales data yet. Import a CSV or connect a source in Data, then refresh.";
 const SQL = "SELECT product, units FROM daily_product_sales LIMIT 5";
 

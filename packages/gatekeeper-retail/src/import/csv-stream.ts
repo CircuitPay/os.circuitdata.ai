@@ -4,7 +4,7 @@
 // so a quoted newline never straddles two ranges.
 
 import { parse, type CsvError } from "csv-parse/browser/esm/sync";
-import { byteOffsetOf, codeUnitsAtUtf8Offset, decodeChunk } from "./decode.js";
+import { byteOffsetsOf, codeUnitsAtUtf8Offsets, decodeChunk } from "./decode.js";
 
 /** Bytes read per range. */
 export const DEFAULT_RANGE_BYTES = 4 * 1024 * 1024;
@@ -58,7 +58,8 @@ export function parseCsvText(text: string, delimiter: Delimiter, final: boolean)
     if (final || (error as CsvError).code !== "CSV_QUOTE_NOT_CLOSED") throw describeCsvError(error);
   }
   if (!final) records.pop();
-  return records.map(record => ({ cells: record.cells, end: codeUnitsAtUtf8Offset(text, record.utf8End) }));
+  const ends = codeUnitsAtUtf8Offsets(text, records.map(record => record.utf8End));
+  return records.map((record, index) => ({ cells: record.cells, end: ends[index]! }));
 }
 
 /**
@@ -79,10 +80,11 @@ export async function readCsvRange(
     const text = decodeChunk(bytes, options.encoding, eof);
     const parsed = parseCsvText(text, options.delimiter, eof);
     if (parsed.length > 0 || eof) {
+      const ends = byteOffsetsOf(text, parsed.map(record => record.end), bytes, options.encoding);
       const records = parsed.map((record, index) => ({
         cells: record.cells,
         row: position.row + index,
-        end: position.offset + byteOffsetOf(text, record.end, bytes, options.encoding),
+        end: position.offset + ends[index]!,
       }));
       const last = records.at(-1);
       return {

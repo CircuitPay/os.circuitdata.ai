@@ -9,6 +9,7 @@ import type {
   StagedImport,
 } from "../../src/app-api-types";
 import type { DataAppHost } from "../host";
+import type { BrowseTarget } from "../navigation";
 import { button, byRole, choose, cleanup, click, render, settle } from "../testDom";
 import ImportsPage, { type ImportsApi } from "./ImportsPage";
 
@@ -171,7 +172,7 @@ const stillNeeded = () => document.querySelector('[aria-live="polite"][aria-labe
 
 /** Opens import 7 the way a member does: Import CSV → existing source → pick files. */
 async function openImport(api: ImportsApi, host: Pick<DataAppHost, "openPrompt" | "pickTenantFiles">) {
-  await render(<ImportsPage api={api} host={host} />);
+  await render(<ImportsPage api={api} host={host} onBrowse={vi.fn<(target: BrowseTarget) => void>()} />);
   await click(button("Import CSV"));
   await click(button("Choose files", document.querySelector('[role="dialog"]')!));
 }
@@ -191,6 +192,7 @@ describe("ImportsPage", () => {
     expect(api.getImport).toHaveBeenCalledWith(7);
     expect(document.querySelector("h2")!.textContent).toBe("Import into Front counter exports");
     expect(document.activeElement).toBe(document.querySelector("h2"));
+    await click(button("More options"));
     expect(document.body.textContent).toContain("sales_october.csv: first 2 rows");
     expect(document.body.textContent).toContain("utf-8");
   });
@@ -202,6 +204,7 @@ describe("ImportsPage", () => {
     expect(stillNeeded()).toContain("Quantity");
     expect(stillNeeded()).toContain("An order key");
 
+    await click(button("More options"));
     await choose("Imported as, for Qty", "Quantity (line_items.quantity)");
     expect(stillNeeded()).not.toContain("Quantity");
     expect(byRole("combobox", "Transform for Qty").textContent).toContain("Quantity");
@@ -320,7 +323,7 @@ describe("ImportsPage", () => {
         run({ undo: { possible: false, reason: "Import 52 changed the same rows later." } }),
       ),
     });
-    await render(<ImportsPage api={api} host={fakeHost()} />);
+    await render(<ImportsPage api={api} host={fakeHost()} onBrowse={vi.fn<(target: BrowseTarget) => void>()} />);
     await click(button("Report of import 40"));
 
     expect(document.body.textContent).toContain("Import 52 changed the same rows later.");

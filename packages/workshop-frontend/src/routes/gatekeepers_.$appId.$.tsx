@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { DATA_VENDOR_ID } from '../features/data/dataArea'
 import GatekeeperAppPage from '../GatekeeperAppPage'
 import { useDocumentTitle } from '../useDocumentTitle'
 import { useGatekeeperApps } from '../useGatekeeperApps'
@@ -13,8 +14,20 @@ import { useGatekeeperApps } from '../useGatekeeperApps'
  *
  * Anything after the app id is the app's own path, the splat, which may be empty. Changing it keeps
  * this match (and the app's iframe) mounted, since TanStack doesn't remount on param changes.
+ *
+ * The retail app lives at /data, so its old links (and the Connectors page) land there.
  */
 export const Route = createFileRoute('/gatekeepers_/$appId/$')({
+  beforeLoad: ({ params }) => {
+    if (params.appId !== DATA_VENDOR_ID) return
+    throw redirect({
+      to: '/data/$',
+      params: { _splat: params._splat ?? '' },
+      search: true,
+      hash: true,
+      replace: true,
+    })
+  },
   component: GatekeeperApp,
 })
 

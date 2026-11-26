@@ -4,6 +4,7 @@ import {
   Blueprint,
   BookOpen,
   Compass,
+  Database,
   Hexagon,
   House,
   MagnifyingGlass,
@@ -14,6 +15,7 @@ import {
 import { useSiteName } from '../../ServerConfigContext'
 import SiteLogo from '../SiteLogo'
 import { useGatekeeperApps } from '../../useGatekeeperApps'
+import { DATA_VENDOR_ID, useDataArea } from '../../features/data/dataArea'
 import { openCommandPalette } from './commandPaletteBus'
 import SidebarItem from './SidebarItem'
 import {
@@ -47,8 +49,10 @@ export default function Sidebar({
   const siteName = useSiteName()
   // Gatekeeper-served management apps the user can reach now (one per gatekeeper that provides a UI
   // and is connected / enabled for everyone). Disabled or not-yet-connected ones aren't returned, so
-  // they simply don't appear. The set is fully dynamic — no gatekeeper is hardcoded.
-  const gatekeeperApps = useGatekeeperApps()
+  // they simply don't appear. The set is fully dynamic, except for Data, which has a fixed entry of
+  // its own (shown whether or not the organization has turned it on) and so is skipped here.
+  const gatekeeperApps = useGatekeeperApps().filter((app) => app.id !== DATA_VENDOR_ID)
+  const dataState = useDataArea().state
 
   return (
     <aside
@@ -144,6 +148,16 @@ export default function Sidebar({
               icon={<Stack size={14} weight="regular" />}
               collapsed={collapsed}
             />
+            {dataState !== 'absent' && dataState !== 'loading' && (
+              <SidebarItem
+                to="/data/$"
+                params={{ _splat: '' }}
+                matchPrefix
+                label="Data"
+                icon={<Database size={14} weight="regular" />}
+                collapsed={collapsed}
+              />
+            )}
             {/* Gatekeeper management apps (e.g. the Context Library), listed dynamically. */}
             {gatekeeperApps.map((app) => {
               // Escape the icon URL for safe interpolation into a CSS url("…") string.

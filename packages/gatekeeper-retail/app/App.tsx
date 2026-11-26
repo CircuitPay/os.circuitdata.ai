@@ -1,18 +1,21 @@
 import { Tabs, Text } from "@cloudflare/kumo";
 import { useState } from "react";
 import type { RetailAppClient } from "../src/app-api-types";
+import BrowsePage, { type BrowseRequest } from "./browse/BrowsePage";
 import CoveragePage from "./coverage/CoveragePage";
+import HomePage from "./home/HomePage";
 import type { DataAppHost } from "./host";
-import ImportsPage from "./imports/ImportsPage";
-import OverviewPage from "./overview/OverviewPage";
+import ImportsPage, { type ImportsRequest } from "./imports/ImportsPage";
+import type { BrowseTarget } from "./navigation";
 import SettingsPage from "./settings/SettingsPage";
 import SourcesPage from "./sources/SourcesPage";
 import TemplatesPage from "./templates/TemplatesPage";
 
-type Tab = "overview" | "imports" | "templates" | "coverage" | "sources" | "settings";
+type Tab = "home" | "browse" | "imports" | "templates" | "coverage" | "sources" | "settings";
 
 const TABS: { value: Tab; label: string }[] = [
-  { value: "overview", label: "Overview" },
+  { value: "home", label: "Home" },
+  { value: "browse", label: "Browse" },
   { value: "imports", label: "Imports" },
   { value: "templates", label: "Templates" },
   { value: "coverage", label: "Coverage" },
@@ -21,20 +24,53 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 /**
- * The Data app: tabs over the overview, imports, templates, coverage, sources and settings. A tab's panel
- * mounts on its first visit and then stays mounted (hidden), so an import being mapped or a run
- * being followed survives switching tabs.
+ * The Data app: tabs over home, browse, imports, templates, coverage, sources and settings. A tab's
+ * panel mounts on its first visit and then stays mounted (hidden), so an import being mapped or a
+ * run being followed survives switching tabs. One panel sends the member to another through
+ * requests the target panel opens when their `seq` changes.
  */
 const App = ({ api, host }: { api: RetailAppClient; host: DataAppHost }) => {
-  const [tab, setTab] = useState<Tab>("overview");
-  const [visited, setVisited] = useState<ReadonlySet<Tab>>(() => new Set<Tab>(["overview"]));
+  const [tab, setTab] = useState<Tab>("home");
+  const [visited, setVisited] = useState<ReadonlySet<Tab>>(() => new Set<Tab>(["home"]));
+  const [importsRequest, setImportsRequest] = useState<ImportsRequest>();
+  const [browseRequest, setBrowseRequest] = useState<BrowseRequest>();
+  // Home is read again on each visit, so it shows what imports and syncs changed meanwhile.
+  const [homeVisits, setHomeVisits] = useState(0);
+
+  const show = (next: Tab) => {
+    if (next === "home" && tab !== "home") setHomeVisits(homeVisits + 1);
+    setTab(next);
+    setVisited((previous) => (previous.has(next) ? previous : new Set(previous).add(next)));
+  };
+  const openImports = (kind: ImportsRequest["kind"], id: number) => {
+    setImportsRequest({ kind, id, seq: (importsRequest?.seq ?? 0) + 1 });
+    show("imports");
+  };
+  const openImport = (importId: number) => openImports("import", importId);
+  const openRun = (runId: number) => openImports("run", runId);
+  const browse = (target: BrowseTarget) => {
+    setBrowseRequest({ ...target, seq: (browseRequest?.seq ?? 0) + 1 });
+    show("browse");
+  };
 
   const panel = (value: Tab) => {
     switch (value) {
-      case "overview":
-        return <OverviewPage api={api} />;
+      case "home":
+        return (
+          <HomePage
+            key={homeVisits}
+            api={api}
+            host={host}
+            onOpenImport={openImport}
+            onOpenRun={openRun}
+            onBrowse={browse}
+            onOpenSources={() => show("sources")}
+          />
+        );
+      case "browse":
+        return <BrowsePage api={api} request={browseRequest} />;
       case "imports":
-        return <ImportsPage api={api} host={host} />;
+        return <ImportsPage api={api} host={host} request={importsRequest} onBrowse={browse} />;
       case "templates":
         return <TemplatesPage api={api} />;
       case "coverage":
@@ -62,9 +98,7 @@ const App = ({ api, host }: { api: RetailAppClient; host: DataAppHost }) => {
         value={tab}
         onValueChange={(value) => {
           const next = TABS.find((entry) => entry.value === value)?.value;
-          if (!next) return;
-          setTab(next);
-          setVisited((previous) => new Set(previous).add(next));
+          if (next) show(next);
         }}
       />
       {TABS.map(

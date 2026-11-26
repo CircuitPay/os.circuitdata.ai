@@ -116,7 +116,8 @@ export function readLineage(sql: SqlStorage, table: LineageTable, id: number): R
   };
 }
 
-function addDays(date: string, days: number): string {
+/** The date `days` after `date` (both "YYYY-MM-DD"; negative goes back). */
+export function addDays(date: string, days: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
